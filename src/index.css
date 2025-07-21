@@ -8,24 +8,24 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Planik App Design System */
-    --background: 0 0% 98%;  /* Lighter grey background */
-    --foreground: 0 0% 20%;
+    /* Planik App Design System - Light Theme */
+    --background: 0 0% 98%;  /* Light grey background */
+    --foreground: 0 0% 15%;  /* Darker text for better readability */
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 20%;
+    --card-foreground: 0 0% 15%;  /* Darker text for better contrast */
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 20%;
+    --popover-foreground: 0 0% 15%;
 
     --primary: 211 100% 50%;  /* #007BFF blue */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 93%;
-    --secondary-foreground: 0 0% 20%;
+    --secondary-foreground: 0 0% 15%;  /* Darker for better readability */
 
-    --muted: 0 0% 93%;
-    --muted-foreground: 0 0% 50%;
+    --muted: 0 0% 95%;
+    --muted-foreground: 0 0% 40%;  /* Better contrast for small text */
 
     --accent: 211 100% 50%;
     --accent-foreground: 0 0% 100%;
@@ -40,20 +40,13 @@ All colors MUST be HSL.
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-foreground: 0 0% 15%;  /* Better contrast */
+    --sidebar-primary: 211 100% 50%;  /* Match primary */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 95%;
+    --sidebar-accent-foreground: 0 0% 15%;
+    --sidebar-border: 0 0% 88%;
+    --sidebar-ring: 211 100% 50%;
   }
 
   .dark {
