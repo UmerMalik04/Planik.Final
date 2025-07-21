@@ -60,6 +60,7 @@ interface WorkoutStore {
   workoutTypes: WorkoutType[];
   progressKg: number;
   lastWeekProgress: number;
+  currentWorkoutSession: WorkoutSession | null;
   
   // Actions
   addWorkoutPlan: (plan: Omit<WorkoutPlan, "id">) => void;
@@ -70,6 +71,9 @@ interface WorkoutStore {
   deleteExercise: (exerciseId: string) => void;
   startWorkout: (planId: string) => WorkoutSession;
   completeWorkout: (sessionId: string, exercises: CompletedExercise[]) => void;
+  pauseWorkout: () => void;
+  resumeWorkout: () => WorkoutSession | null;
+  addExerciseToCurrentWorkout: (exercise: Omit<Exercise, "id" | "planId">) => void;
   updatePersonalRecord: (exerciseName: string, weight: number, reps: number) => void;
   getPersonalRecord: (exerciseName: string) => PersonalRecord | undefined;
   getExerciseHistory: (exerciseName: string) => CompletedExercise[];
@@ -90,6 +94,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
       personalRecords: [],
       currentStreak: 0,
       lastWorkoutDate: null,
+      currentWorkoutSession: null,
       workoutTypes: [
         { name: "Push Day", color: "bg-black border-red-500 text-white" },
         { name: "Pull Day", color: "bg-black border-blue-500 text-white" },
@@ -149,10 +154,39 @@ export const useWorkoutStore = create<WorkoutStore>()(
         };
 
         set((state) => ({
-          workoutSessions: [...state.workoutSessions, session]
+          workoutSessions: [...state.workoutSessions, session],
+          currentWorkoutSession: session
         }));
 
         return session;
+      },
+
+      pauseWorkout: () => {
+        // Keep current session but don't clear it
+      },
+
+      resumeWorkout: () => {
+        return get().currentWorkoutSession;
+      },
+
+      addExerciseToCurrentWorkout: (exercise) => {
+        const id = Date.now().toString();
+        const { currentWorkoutSession } = get();
+        if (!currentWorkoutSession) return;
+
+        const newExercise = { ...exercise, id, planId: currentWorkoutSession.planId };
+        
+        set((state) => {
+          const updatedPlans = state.workoutPlans.map((plan) =>
+            plan.id === currentWorkoutSession.planId
+              ? { ...plan, exercises: [...plan.exercises, newExercise] }
+              : plan
+          );
+
+          return {
+            workoutPlans: updatedPlans,
+          };
+        });
       },
 
       completeWorkout: (sessionId, exercises) => {
@@ -161,7 +195,10 @@ export const useWorkoutStore = create<WorkoutStore>()(
             session.id === sessionId ? { ...session, exercises } : session
           );
 
-          return { workoutSessions: updatedSessions };
+          return { 
+            workoutSessions: updatedSessions,
+            currentWorkoutSession: null // Clear current session when completed
+          };
         });
 
         // Update personal records
