@@ -10,12 +10,28 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from "@/components/ui/alert-dialog";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export default function Progress() {
   const navigate = useNavigate();
   const { personalRecords, getExerciseHistory } = useWorkoutStore();
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
+
+  const handleReset = () => {
+    localStorage.clear();
+    window.location.reload();
+  };
 
   const handleRecordClick = (exerciseName: string) => {
     setSelectedExercise(exerciseName);
@@ -142,6 +158,34 @@ export default function Progress() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Reset Button */}
+      <div className="mt-8 pt-6 border-t border-border">
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full bg-destructive/10 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+            >
+              Reset All Progress
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reset All Progress</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will delete all your workout data, plans, and progress. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleReset} className="bg-destructive text-destructive-foreground">
+                Reset Everything
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 }

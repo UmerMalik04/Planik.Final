@@ -1,19 +1,32 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
-import mascotImage from "@/assets/mascot.jpg";
+import { Plus, Minus, TrendingUp, TrendingDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import mascotImage from "@/assets/mascot-3d.png";
 
-const workoutTypes = [
-  { name: "Push Day", color: "bg-red-100 border-red-300 text-red-800" },
-  { name: "Pull Day", color: "bg-blue-100 border-blue-300 text-blue-800" },
-  { name: "Leg Day", color: "bg-green-100 border-green-300 text-green-800" },
-  { name: "Arm Day", color: "bg-purple-100 border-purple-300 text-purple-800" }
-];
 
 export default function Home() {
   const navigate = useNavigate();
-  const { workoutPlans, exercises, currentStreak } = useWorkoutStore();
+  const { 
+    workoutPlans, 
+    exercises, 
+    currentStreak, 
+    workoutTypes, 
+    progressPercentage,
+    addWorkoutType, 
+    deleteWorkoutType, 
+    calculateProgress 
+  } = useWorkoutStore();
+  
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customWorkoutName, setCustomWorkoutName] = useState("");
+
+  useEffect(() => {
+    calculateProgress();
+  }, [exercises]);
 
   const getWorkoutSummary = () => {
     const threeMonthsAgo = new Date();
@@ -41,6 +54,30 @@ export default function Home() {
     }
   };
 
+  const handleAddCustomWorkout = () => {
+    if (customWorkoutName.trim()) {
+      const colors = [
+        "bg-orange-100 border-orange-300 text-orange-800",
+        "bg-pink-100 border-pink-300 text-pink-800",
+        "bg-teal-100 border-teal-300 text-teal-800",
+        "bg-yellow-100 border-yellow-300 text-yellow-800",
+      ];
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      
+      addWorkoutType({
+        name: customWorkoutName,
+        color: randomColor
+      });
+      setCustomWorkoutName("");
+      setShowCustomInput(false);
+    }
+  };
+
+  const handleDeleteWorkout = (workoutName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteWorkoutType(workoutName);
+  };
+
   return (
     <div className="min-h-screen p-6 space-y-6">
       {/* Header */}
@@ -54,8 +91,15 @@ export default function Home() {
         <CardContent className="p-4">
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <div className="text-2xl font-bold text-primary">{currentStreak}</div>
-              <div className="text-sm text-muted-foreground">Day Streak</div>
+              <div className="flex items-center justify-center gap-2">
+                <div className="text-2xl font-bold text-primary">{progressPercentage}%</div>
+                {progressPercentage > 0 ? (
+                  <TrendingUp className="w-5 h-5 text-green-500" />
+                ) : progressPercentage < 0 ? (
+                  <TrendingDown className="w-5 h-5 text-red-500" />
+                ) : null}
+              </div>
+              <div className="text-sm text-muted-foreground">Progress</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-primary">{summary.totalWorkouts}</div>
@@ -69,18 +113,23 @@ export default function Home() {
         </CardContent>
       </Card>
 
-      {/* Mascot */}
+      {/* 3D Mascot */}
       <div className="flex justify-center">
         <div className="relative">
-          <img
-            src={mascotImage}
-            alt="Planik Mascot"
-            className={`w-48 h-48 rounded-full border-4 border-primary object-cover ${
-              currentStreak > 0 ? 'animate-flex-bounce' : ''
-            }`}
-          />
+          <div className="w-48 h-48 rounded-full border-4 border-primary overflow-hidden shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
+            <img
+              src={mascotImage}
+              alt="Planik 3D Mascot"
+              className={`w-full h-full object-cover transition-transform duration-300 ${
+                currentStreak > 0 ? 'animate-pulse hover:scale-110' : 'hover:scale-105'
+              }`}
+              style={{
+                filter: 'drop-shadow(0 4px 8px rgba(0, 123, 255, 0.3))'
+              }}
+            />
+          </div>
           {currentStreak > 0 && (
-            <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+            <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold animate-bounce">
               🔥
             </div>
           )}
@@ -101,27 +150,66 @@ export default function Home() {
 
       {/* Workout Type Buttons */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-center">Choose Your Workout</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Choose Your Workout</h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowCustomInput(!showCustomInput)}
+            className="flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Custom
+          </Button>
+        </div>
+        
+        {showCustomInput && (
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter workout name..."
+                  value={customWorkoutName}
+                  onChange={(e) => setCustomWorkoutName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddCustomWorkout()}
+                />
+                <Button onClick={handleAddCustomWorkout} size="sm">
+                  Add
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
         <div className="grid grid-cols-2 gap-4">
           {workoutTypes.map((workout) => {
             const hasExistingPlan = workoutPlans.some(plan => plan.type === workout.name);
             return (
-              <Button
-                key={workout.name}
-                variant="outline"
-                onClick={() => handleWorkoutTypeClick(workout.name)}
-                className={`h-20 text-lg font-semibold border-2 transition-all duration-200 hover:scale-105 ${workout.color}`}
-              >
-                <div className="flex flex-col items-center">
-                  <span>{workout.name}</span>
-                  {hasExistingPlan && (
-                    <span className="text-xs opacity-75">Tap to continue</span>
-                  )}
-                  {!hasExistingPlan && (
-                    <span className="text-xs opacity-75">Create plan</span>
-                  )}
-                </div>
-              </Button>
+              <div key={workout.name} className="relative">
+                <Button
+                  variant="outline"
+                  onClick={() => handleWorkoutTypeClick(workout.name)}
+                  className={`w-full h-20 text-lg font-semibold border-2 transition-all duration-200 hover:scale-105 ${workout.color}`}
+                >
+                  <div className="flex flex-col items-center">
+                    <span>{workout.name}</span>
+                    {hasExistingPlan && (
+                      <span className="text-xs opacity-75">Tap to continue</span>
+                    )}
+                    {!hasExistingPlan && (
+                      <span className="text-xs opacity-75">Create plan</span>
+                    )}
+                  </div>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/80"
+                  onClick={(e) => handleDeleteWorkout(workout.name, e)}
+                >
+                  <Minus className="w-3 h-3" />
+                </Button>
+              </div>
             );
           })}
         </div>

@@ -28,7 +28,6 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   const navItems = [
-    { icon: RotateCcw, path: "/reset", label: "Reset", action: true },
     { icon: Home, path: "/", label: "Home" },
     { icon: BarChart3, path: "/progress", label: "Progress" }
   ];
@@ -44,39 +43,6 @@ export default function Layout({ children }: LayoutProps) {
         <div className="flex justify-around items-center max-w-md mx-auto">
           {navItems.map((item, index) => {
             const isActive = location.pathname === item.path;
-            
-            if (item.action) {
-              return (
-                <AlertDialog key={item.path}>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={`flex flex-col items-center gap-1 p-2 h-auto ${
-                        isActive ? 'text-primary' : 'text-muted-foreground'
-                      }`}
-                    >
-                      <item.icon className="w-6 h-6" />
-                      <span className="text-xs">{item.label}</span>
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Reset All Progress</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will delete all your workout data, plans, and progress. This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleReset} className="bg-destructive text-destructive-foreground">
-                        Reset Everything
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              );
-            }
 
             return (
               <Button

@@ -12,9 +12,14 @@ export interface Exercise {
 export interface WorkoutPlan {
   id: string;
   name: string;
-  type: "Push" | "Pull" | "Leg" | "Arm";
+  type: string;
   exercises: Exercise[];
   sets: number;
+}
+
+export interface WorkoutType {
+  name: string;
+  color: string;
 }
 
 export interface PersonalRecord {
@@ -30,6 +35,9 @@ interface WorkoutStore {
   personalRecords: PersonalRecord[];
   currentStreak: number;
   lastWorkoutDate: string | null;
+  workoutTypes: WorkoutType[];
+  progressPercentage: number;
+  lastWeekProgress: number;
   
   // Actions
   addWorkoutPlan: (plan: Omit<WorkoutPlan, "id">) => void;
@@ -42,6 +50,9 @@ interface WorkoutStore {
   getPersonalRecord: (exerciseName: string) => PersonalRecord | undefined;
   getExerciseHistory: (exerciseName: string) => Exercise[];
   updateStreak: () => void;
+  addWorkoutType: (type: WorkoutType) => void;
+  deleteWorkoutType: (name: string) => void;
+  calculateProgress: () => void;
 }
 
 export const useWorkoutStore = create<WorkoutStore>()(
@@ -52,6 +63,14 @@ export const useWorkoutStore = create<WorkoutStore>()(
       personalRecords: [],
       currentStreak: 0,
       lastWorkoutDate: null,
+      workoutTypes: [
+        { name: "Push Day", color: "bg-red-100 border-red-300 text-red-800" },
+        { name: "Pull Day", color: "bg-blue-100 border-blue-300 text-blue-800" },
+        { name: "Leg Day", color: "bg-green-100 border-green-300 text-green-800" },
+        { name: "Arm Day", color: "bg-purple-100 border-purple-300 text-purple-800" }
+      ],
+      progressPercentage: 0,
+      lastWeekProgress: 0,
 
       addWorkoutPlan: (plan) => {
         const id = Date.now().toString();
@@ -198,6 +217,45 @@ export const useWorkoutStore = create<WorkoutStore>()(
           set({ currentStreak: 1, lastWorkoutDate: today });
         }
       },
+
+      addWorkoutType: (type: WorkoutType) => {
+        set((state) => ({
+          workoutTypes: [...state.workoutTypes, type]
+        }));
+      },
+
+      deleteWorkoutType: (name: string) => {
+        set((state) => ({
+          workoutTypes: state.workoutTypes.filter(type => type.name !== name),
+          workoutPlans: state.workoutPlans.filter(plan => plan.type !== name)
+        }));
+      },
+
+      calculateProgress: () => {
+        const { exercises } = get();
+        const now = new Date();
+        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+        
+        const thisWeekExercises = exercises.filter(
+          exercise => new Date(exercise.date) >= oneWeekAgo
+        );
+        const lastWeekExercises = exercises.filter(
+          exercise => new Date(exercise.date) >= twoWeeksAgo && new Date(exercise.date) < oneWeekAgo
+        );
+        
+        const thisWeekTotal = thisWeekExercises.reduce((sum, e) => sum + (e.weight * e.reps), 0);
+        const lastWeekTotal = lastWeekExercises.reduce((sum, e) => sum + (e.weight * e.reps), 0);
+        
+        let percentage = 0;
+        if (lastWeekTotal > 0) {
+          percentage = Math.round(((thisWeekTotal - lastWeekTotal) / lastWeekTotal) * 100);
+        } else if (thisWeekTotal > 0) {
+          percentage = 100;
+        }
+        
+        set({ progressPercentage: percentage, lastWeekProgress: lastWeekTotal });
+      }
     }),
     {
       name: "planik-workout-store",
