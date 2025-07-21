@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Check } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Check, Plus, Minus } from "lucide-react";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
 import { CompletedExercise } from "@/stores/useWorkoutStore";
 
@@ -20,9 +21,12 @@ export default function StartWorkout() {
   interface SetData {
     weight: number;
     reps: number;
+    dropSetWeight?: number;
+    dropSetReps?: number;
   }
   
   const [exerciseSets, setExerciseSets] = useState<{ [exerciseIndex: number]: SetData[] }>({});
+  const [extraSets, setExtraSets] = useState<{ [exerciseIndex: number]: number }>({});
   
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'short',
@@ -74,7 +78,7 @@ export default function StartWorkout() {
     );
   }
 
-  const updateExerciseSet = (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps', value: number) => {
+  const updateExerciseSet = (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'dropSetWeight' | 'dropSetReps', value: number) => {
     setExerciseSets(prev => {
       const updated = { ...prev };
       if (!updated[exerciseIndex]) {
@@ -103,15 +107,46 @@ export default function StartWorkout() {
     });
   };
 
+  const addExtraSet = (exerciseIndex: number) => {
+    setExtraSets(prev => ({
+      ...prev,
+      [exerciseIndex]: (prev[exerciseIndex] || 0) + 1
+    }));
+    
+    setExerciseSets(prev => {
+      const updated = { ...prev };
+      if (!updated[exerciseIndex]) {
+        updated[exerciseIndex] = [];
+      }
+      updated[exerciseIndex].push({ weight: 0, reps: 0 });
+      return updated;
+    });
+  };
+
+  const removeExtraSet = (exerciseIndex: number) => {
+    setExtraSets(prev => ({
+      ...prev,
+      [exerciseIndex]: Math.max(0, (prev[exerciseIndex] || 0) - 1)
+    }));
+    
+    setExerciseSets(prev => {
+      const updated = { ...prev };
+      if (updated[exerciseIndex] && updated[exerciseIndex].length > 0) {
+        updated[exerciseIndex].pop();
+      }
+      return updated;
+    });
+  };
+
   const getPerformanceColor = (current: number, previous: number | undefined, field: 'weight' | 'reps') => {
-    if (!previous) return 'border-gray-300';
+    if (!previous) return 'border-gray-300 bg-gray-900 text-white';
     
     let currentScore = field === 'weight' ? current : current;
     let previousScore = field === 'weight' ? previous : previous;
     
-    if (currentScore > previousScore) return 'border-green-500 bg-green-50';
-    if (currentScore < previousScore) return 'border-red-500 bg-red-50';
-    return 'border-yellow-500 bg-yellow-50';
+    if (currentScore > previousScore) return 'border-green-500 bg-green-900 text-green-100';
+    if (currentScore < previousScore) return 'border-red-500 bg-red-900 text-red-100';
+    return 'border-yellow-500 bg-yellow-900 text-yellow-100';
   };
 
   const handleCompleteWorkout = () => {
@@ -167,14 +202,29 @@ export default function StartWorkout() {
               
               {/* Individual Sets */}
               <div className="space-y-3">
-                {Array(exercise.sets).fill(0).map((_, setIndex) => (
+                {Array(exercise.sets + (extraSets[index] || 0)).fill(0).map((_, setIndex) => (
                   <div key={setIndex} className="border border-gray-700 rounded p-3">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-300">Set {setIndex + 1}</span>
+                      <span className="text-sm font-medium text-gray-300">
+                        {setIndex < exercise.sets ? `Set ${setIndex + 1}` : `Extra Set ${setIndex - exercise.sets + 1}`}
+                      </span>
+                      <Select onValueChange={(value) => {
+                        if (value === "dropset") {
+                          // Enable dropset for this set
+                        }
+                      }}>
+                        <SelectTrigger className="w-24 h-6 text-xs">
+                          <SelectValue placeholder="Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="normal">Normal</SelectItem>
+                          <SelectItem value="dropset">Drop Set</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <Label className="text-gray-400 text-xs">Weight (kg)</Label>
+                        <Label className="text-gray-300 text-xs font-medium">Weight (kg)</Label>
                         <Input
                           type="number"
                           placeholder="0"
@@ -188,7 +238,7 @@ export default function StartWorkout() {
                         />
                       </div>
                       <div>
-                        <Label className="text-gray-400 text-xs">Reps</Label>
+                        <Label className="text-gray-300 text-xs font-medium">Reps</Label>
                         <Input
                           type="number"
                           placeholder="0"
@@ -202,8 +252,55 @@ export default function StartWorkout() {
                         />
                       </div>
                     </div>
+                    
+                    {/* Drop Set Fields */}
+                    {exerciseSets[index]?.[setIndex] && (
+                      <div className="mt-3 p-2 bg-gray-800 rounded border border-gray-600">
+                        <Label className="text-gray-400 text-xs">Drop Set</Label>
+                        <div className="grid grid-cols-2 gap-2 mt-1">
+                          <Input
+                            type="number"
+                            placeholder="Drop weight"
+                            value={exerciseSets[index]?.[setIndex]?.dropSetWeight || ''}
+                            onChange={(e) => updateExerciseSet(index, setIndex, 'dropSetWeight', Number(e.target.value))}
+                            className="h-8 text-xs bg-gray-700 border-gray-600 text-white"
+                          />
+                          <Input
+                            type="number"
+                            placeholder="Drop reps"
+                            value={exerciseSets[index]?.[setIndex]?.dropSetReps || ''}
+                            onChange={(e) => updateExerciseSet(index, setIndex, 'dropSetReps', Number(e.target.value))}
+                            className="h-8 text-xs bg-gray-700 border-gray-600 text-white"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
+              </div>
+              
+              {/* Add/Remove Set Buttons */}
+              <div className="flex gap-2 justify-center mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addExtraSet(index)}
+                  className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Set
+                </Button>
+                {(extraSets[index] || 0) > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeExtraSet(index)}
+                    className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                  >
+                    <Minus className="w-4 h-4 mr-1" />
+                    Remove Set
+                  </Button>
+                )}
               </div>
               
               {/* Progress indicators */}

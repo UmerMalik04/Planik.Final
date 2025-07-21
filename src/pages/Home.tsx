@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
-import { Plus, Minus, TrendingUp, TrendingDown } from "lucide-react";
+import { Plus, Minus, TrendingUp, TrendingDown, Utensils } from "lucide-react";
 import { useState, useEffect } from "react";
 import mascotImage from "@/assets/mascot-3d.png";
 
@@ -271,6 +271,22 @@ export default function Home() {
           })}
         </div>
       </div>
+
+      {/* Diet Tracker */}
+      <Card 
+        className="p-4 cursor-pointer hover:shadow-md transition-all border-2 border-gray-700 bg-black" 
+        onClick={() => navigate("/diet-tracker")}
+      >
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center">
+            <Utensils className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-white">Diet Tracker</h3>
+            <p className="text-sm text-gray-400">Track nutrition & calories</p>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }
