@@ -9,7 +9,7 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Planik App Design System */
-    --background: 0 0% 96.1%;  /* #F5F5F5 light grey */
+    --background: 0 0% 98%;  /* Lighter grey background */
     --foreground: 0 0% 20%;
 
     --card: 0 0% 100%;
