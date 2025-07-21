@@ -9,6 +9,7 @@ import CreatePlan from "./pages/CreatePlan";
 import WorkoutPlan from "./pages/WorkoutPlan";
 import AddExercise from "./pages/AddExercise";
 import EditExercise from "./pages/EditExercise";
+import StartWorkout from "./pages/StartWorkout";
 import Progress from "./pages/Progress";
 import NotFound from "./pages/NotFound";
 
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/workout-plan/:planId" element={<WorkoutPlan />} />
             <Route path="/add-exercise/:planId" element={<AddExercise />} />
             <Route path="/edit-exercise/:exerciseId" element={<EditExercise />} />
+            <Route path="/start-workout/:planId" element={<StartWorkout />} />
             <Route path="/progress" element={<Progress />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

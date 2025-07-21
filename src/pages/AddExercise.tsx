@@ -4,13 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Save } from "lucide-react";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 
 export default function AddExercise() {
   const navigate = useNavigate();
@@ -19,9 +15,8 @@ export default function AddExercise() {
 
   const plan = workoutPlans.find(p => p.id === planId);
   const [exerciseName, setExerciseName] = useState("");
-  const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
-  const [date, setDate] = useState<Date>(new Date());
+  const [hasWarmup, setHasWarmup] = useState(false);
 
   if (!plan) {
     return (
@@ -35,20 +30,19 @@ export default function AddExercise() {
   }
 
   const handleSaveExercise = () => {
-    if (!exerciseName.trim() || !weight || !reps) return;
+    if (!exerciseName.trim() || !reps) return;
 
     const exercise = {
       name: exerciseName.trim(),
-      weight: Number(weight),
       reps: Number(reps),
-      date: date.toISOString()
+      hasWarmup
     };
 
     addExercise(plan.id, exercise);
     navigate(`/workout-plan/${plan.id}`);
   };
 
-  const isValid = exerciseName.trim() && weight && reps && Number(weight) > 0 && Number(reps) > 0;
+  const isValid = exerciseName.trim() && reps && Number(reps) > 0;
 
   return (
     <div className="min-h-screen p-6 space-y-6">
@@ -84,60 +78,26 @@ export default function AddExercise() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="weight">Weight (kg)</Label>
-              <Input
-                id="weight"
-                type="number"
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
-                placeholder="20"
-                min="0"
-                step="0.5"
-                className="mt-1"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="reps">Reps</Label>
-              <Input
-                id="reps"
-                type="number"
-                value={reps}
-                onChange={(e) => setReps(e.target.value)}
-                placeholder="12"
-                min="1"
-                className="mt-1"
-              />
-            </div>
+          <div>
+            <Label htmlFor="reps">Target Reps</Label>
+            <Input
+              id="reps"
+              type="number"
+              value={reps}
+              onChange={(e) => setReps(e.target.value)}
+              placeholder="12"
+              min="1"
+              className="mt-1"
+            />
           </div>
 
-          <div>
-            <Label>Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal mt-1",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(newDate) => newDate && setDate(newDate)}
-                  initialFocus
-                  className="p-3 pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="warmup"
+              checked={hasWarmup}
+              onCheckedChange={(checked) => setHasWarmup(!!checked)}
+            />
+            <Label htmlFor="warmup">Add warmup set</Label>
           </div>
         </CardContent>
       </Card>

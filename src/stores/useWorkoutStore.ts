@@ -4,9 +4,29 @@ import { persist } from "zustand/middleware";
 export interface Exercise {
   id: string;
   name: string;
+  weight?: number;
+  reps: number;
+  date?: string;
+  planId: string;
+  hasWarmup?: boolean;
+}
+
+export interface WorkoutSession {
+  id: string;
+  planId: string;
+  date: string;
+  exercises: CompletedExercise[];
+}
+
+export interface CompletedExercise {
+  id: string;
+  name: string;
   weight: number;
   reps: number;
+  sets: number;
   date: string;
+  previousWeight?: number;
+  previousReps?: number;
 }
 
 export interface WorkoutPlan {
@@ -32,23 +52,28 @@ export interface PersonalRecord {
 interface WorkoutStore {
   workoutPlans: WorkoutPlan[];
   exercises: Exercise[];
+  workoutSessions: WorkoutSession[];
   personalRecords: PersonalRecord[];
   currentStreak: number;
   lastWorkoutDate: string | null;
   workoutTypes: WorkoutType[];
-  progressPercentage: number;
+  progressKg: number;
   lastWeekProgress: number;
   
   // Actions
   addWorkoutPlan: (plan: Omit<WorkoutPlan, "id">) => void;
   updateWorkoutPlan: (id: string, plan: Partial<WorkoutPlan>) => void;
   deleteWorkoutPlan: (id: string) => void;
-  addExercise: (planId: string, exercise: Omit<Exercise, "id">) => void;
+  addExercise: (planId: string, exercise: Omit<Exercise, "id" | "planId">) => void;
   updateExercise: (exerciseId: string, exercise: Partial<Exercise>) => void;
   deleteExercise: (exerciseId: string) => void;
+  startWorkout: (planId: string) => WorkoutSession;
+  completeWorkout: (sessionId: string, exercises: CompletedExercise[]) => void;
   updatePersonalRecord: (exerciseName: string, weight: number, reps: number) => void;
   getPersonalRecord: (exerciseName: string) => PersonalRecord | undefined;
-  getExerciseHistory: (exerciseName: string) => Exercise[];
+  getExerciseHistory: (exerciseName: string) => CompletedExercise[];
+  getWorkoutFrequency: (workoutType: string) => number;
+  getWorkoutProgress: (workoutType: string) => 'increase' | 'decrease' | 'same' | 'none';
   updateStreak: () => void;
   addWorkoutType: (type: WorkoutType) => void;
   deleteWorkoutType: (name: string) => void;
@@ -60,16 +85,17 @@ export const useWorkoutStore = create<WorkoutStore>()(
     (set, get) => ({
       workoutPlans: [],
       exercises: [],
+      workoutSessions: [],
       personalRecords: [],
       currentStreak: 0,
       lastWorkoutDate: null,
       workoutTypes: [
-        { name: "Push Day", color: "bg-red-100 border-red-300 text-red-800" },
-        { name: "Pull Day", color: "bg-blue-100 border-blue-300 text-blue-800" },
-        { name: "Leg Day", color: "bg-green-100 border-green-300 text-green-800" },
-        { name: "Arm Day", color: "bg-purple-100 border-purple-300 text-purple-800" }
+        { name: "Push Day", color: "bg-black border-red-500 text-white" },
+        { name: "Pull Day", color: "bg-black border-blue-500 text-white" },
+        { name: "Leg Day", color: "bg-black border-yellow-500 text-white" },
+        { name: "Arm Day", color: "bg-black border-green-500 text-white" }
       ],
-      progressPercentage: 0,
+      progressKg: 0,
       lastWeekProgress: 0,
 
       addWorkoutPlan: (plan) => {
@@ -95,7 +121,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
       addExercise: (planId, exercise) => {
         const id = Date.now().toString();
-        const newExercise = { ...exercise, id };
+        const newExercise = { ...exercise, id, planId };
         
         set((state) => {
           const updatedExercises = [...state.exercises, newExercise];
@@ -105,23 +131,52 @@ export const useWorkoutStore = create<WorkoutStore>()(
               : plan
           );
 
-          // Update personal record if this is a new best
-          const currentPR = get().getPersonalRecord(exercise.name);
-          const score = exercise.weight * exercise.reps;
-          const currentScore = currentPR ? currentPR.weight * currentPR.reps : 0;
-
-          if (score > currentScore) {
-            get().updatePersonalRecord(exercise.name, exercise.weight, exercise.reps);
-          }
-
           return {
             exercises: updatedExercises,
             workoutPlans: updatedPlans,
           };
         });
+      },
+
+      startWorkout: (planId) => {
+        const sessionId = Date.now().toString();
+        const session: WorkoutSession = {
+          id: sessionId,
+          planId,
+          date: new Date().toISOString(),
+          exercises: []
+        };
+
+        set((state) => ({
+          workoutSessions: [...state.workoutSessions, session]
+        }));
+
+        return session;
+      },
+
+      completeWorkout: (sessionId, exercises) => {
+        set((state) => {
+          const updatedSessions = state.workoutSessions.map(session =>
+            session.id === sessionId ? { ...session, exercises } : session
+          );
+
+          return { workoutSessions: updatedSessions };
+        });
+
+        // Update personal records
+        exercises.forEach(exercise => {
+          const currentPR = get().getPersonalRecord(exercise.name);
+          const score = exercise.weight * exercise.reps * exercise.sets;
+          const currentScore = currentPR ? currentPR.weight * currentPR.reps : 0;
+
+          if (score > currentScore) {
+            get().updatePersonalRecord(exercise.name, exercise.weight, exercise.reps);
+          }
+        });
 
         // Update streak
         get().updateStreak();
+        get().calculateProgress();
       },
 
       updateExercise: (exerciseId, updates) => {
@@ -184,9 +239,75 @@ export const useWorkoutStore = create<WorkoutStore>()(
       },
 
       getExerciseHistory: (exerciseName) => {
-        return get().exercises
-          .filter((exercise) => exercise.name === exerciseName)
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const { workoutSessions } = get();
+        const allExercises: CompletedExercise[] = [];
+        
+        workoutSessions.forEach(session => {
+          session.exercises
+            .filter(exercise => exercise.name === exerciseName)
+            .forEach(exercise => allExercises.push(exercise));
+        });
+
+        return allExercises.sort((a, b) => new Date(b.id).getTime() - new Date(a.id).getTime());
+      },
+
+      getWorkoutFrequency: (workoutType) => {
+        const { workoutSessions, workoutPlans } = get();
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+        
+        const planIds = workoutPlans
+          .filter(plan => plan.type === workoutType)
+          .map(plan => plan.id);
+        
+        return workoutSessions.filter(session => 
+          planIds.includes(session.planId) && 
+          new Date(session.date) >= threeMonthsAgo
+        ).length;
+      },
+
+      getWorkoutProgress: (workoutType) => {
+        const { workoutSessions, workoutPlans } = get();
+        const now = new Date();
+        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+        
+        const planIds = workoutPlans
+          .filter(plan => plan.type === workoutType)
+          .map(plan => plan.id);
+        
+        const thisWeekSessions = workoutSessions.filter(session =>
+          planIds.includes(session.planId) && 
+          new Date(session.date) >= oneWeekAgo
+        );
+        
+        const lastWeekSessions = workoutSessions.filter(session =>
+          planIds.includes(session.planId) && 
+          new Date(session.date) >= twoWeeksAgo && 
+          new Date(session.date) < oneWeekAgo
+        );
+        
+        const thisWeekWeight = thisWeekSessions.reduce((sum, session) =>
+          sum + session.exercises.reduce((exerciseSum, exercise) => 
+            exerciseSum + (exercise.weight * exercise.reps * exercise.sets), 0
+          ), 0
+        );
+        
+        const lastWeekWeight = lastWeekSessions.reduce((sum, session) =>
+          sum + session.exercises.reduce((exerciseSum, exercise) => 
+            exerciseSum + (exercise.weight * exercise.reps * exercise.sets), 0
+          ), 0
+        );
+        
+        if (lastWeekWeight === 0 && thisWeekWeight === 0) return 'none';
+        if (lastWeekWeight === 0) return 'increase';
+        
+        const difference = thisWeekWeight - lastWeekWeight;
+        const percentChange = (difference / lastWeekWeight) * 100;
+        
+        if (percentChange > 5) return 'increase';
+        if (percentChange < -5) return 'decrease';
+        return 'same';
       },
 
       updateStreak: () => {
@@ -232,29 +353,33 @@ export const useWorkoutStore = create<WorkoutStore>()(
       },
 
       calculateProgress: () => {
-        const { exercises } = get();
+        const { workoutSessions } = get();
         const now = new Date();
         const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
         
-        const thisWeekExercises = exercises.filter(
-          exercise => new Date(exercise.date) >= oneWeekAgo
+        const thisWeekSessions = workoutSessions.filter(
+          session => new Date(session.date) >= oneWeekAgo
         );
-        const lastWeekExercises = exercises.filter(
-          exercise => new Date(exercise.date) >= twoWeeksAgo && new Date(exercise.date) < oneWeekAgo
+        const lastWeekSessions = workoutSessions.filter(
+          session => new Date(session.date) >= twoWeeksAgo && new Date(session.date) < oneWeekAgo
         );
         
-        const thisWeekTotal = thisWeekExercises.reduce((sum, e) => sum + (e.weight * e.reps), 0);
-        const lastWeekTotal = lastWeekExercises.reduce((sum, e) => sum + (e.weight * e.reps), 0);
+        const thisWeekTotal = thisWeekSessions.reduce((sum, session) =>
+          sum + session.exercises.reduce((exerciseSum, exercise) => 
+            exerciseSum + (exercise.weight * exercise.reps * exercise.sets), 0
+          ), 0
+        );
         
-        let percentage = 0;
-        if (lastWeekTotal > 0) {
-          percentage = Math.round(((thisWeekTotal - lastWeekTotal) / lastWeekTotal) * 100);
-        } else if (thisWeekTotal > 0) {
-          percentage = 100;
-        }
+        const lastWeekTotal = lastWeekSessions.reduce((sum, session) =>
+          sum + session.exercises.reduce((exerciseSum, exercise) => 
+            exerciseSum + (exercise.weight * exercise.reps * exercise.sets), 0
+          ), 0
+        );
         
-        set({ progressPercentage: percentage, lastWeekProgress: lastWeekTotal });
+        const differenceKg = thisWeekTotal - lastWeekTotal;
+        
+        set({ progressKg: differenceKg, lastWeekProgress: lastWeekTotal });
       }
     }),
     {

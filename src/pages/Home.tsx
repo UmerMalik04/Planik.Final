@@ -12,12 +12,14 @@ export default function Home() {
   const navigate = useNavigate();
   const { 
     workoutPlans, 
-    exercises, 
+    workoutSessions, 
     currentStreak, 
     workoutTypes, 
-    progressPercentage,
+    progressKg,
     addWorkoutType, 
     deleteWorkoutType, 
+    getWorkoutFrequency,
+    getWorkoutProgress,
     calculateProgress 
   } = useWorkoutStore();
   
@@ -26,20 +28,22 @@ export default function Home() {
 
   useEffect(() => {
     calculateProgress();
-  }, [exercises]);
+  }, [workoutSessions]);
 
   const getWorkoutSummary = () => {
     const threeMonthsAgo = new Date();
     threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
     
-    const recentExercises = exercises.filter(
-      exercise => new Date(exercise.date) >= threeMonthsAgo
+    const recentSessions = workoutSessions.filter(
+      session => new Date(session.date) >= threeMonthsAgo
     );
 
+    const allRecentExercises = recentSessions.flatMap(session => session.exercises);
+
     return {
-      totalWorkouts: recentExercises.length,
-      uniqueExercises: new Set(recentExercises.map(e => e.name)).size,
-      totalWeight: recentExercises.reduce((sum, e) => sum + (e.weight * e.reps), 0)
+      totalWorkouts: recentSessions.length,
+      uniqueExercises: new Set(allRecentExercises.map(e => e.name)).size,
+      totalWeight: allRecentExercises.reduce((sum, e) => sum + (e.weight * e.reps * e.sets), 0)
     };
   };
 
@@ -57,10 +61,10 @@ export default function Home() {
   const handleAddCustomWorkout = () => {
     if (customWorkoutName.trim()) {
       const colors = [
-        "bg-orange-100 border-orange-300 text-orange-800",
-        "bg-pink-100 border-pink-300 text-pink-800",
-        "bg-teal-100 border-teal-300 text-teal-800",
-        "bg-yellow-100 border-yellow-300 text-yellow-800",
+        "bg-black border-orange-500 text-white",
+        "bg-black border-pink-500 text-white",
+        "bg-black border-teal-500 text-white",
+        "bg-black border-purple-500 text-white",
       ];
       const randomColor = colors[Math.floor(Math.random() * colors.length)];
       
@@ -92,10 +96,10 @@ export default function Home() {
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <div className="flex items-center justify-center gap-2">
-                <div className="text-2xl font-bold text-primary">{progressPercentage}%</div>
-                {progressPercentage > 0 ? (
+                <div className="text-2xl font-bold text-primary">{progressKg > 0 ? '+' : ''}{progressKg}kg</div>
+                {progressKg > 0 ? (
                   <TrendingUp className="w-5 h-5 text-green-500" />
-                ) : progressPercentage < 0 ? (
+                ) : progressKg < 0 ? (
                   <TrendingDown className="w-5 h-5 text-red-500" />
                 ) : null}
               </div>
@@ -184,23 +188,48 @@ export default function Home() {
         <div className="grid grid-cols-2 gap-4">
           {workoutTypes.map((workout) => {
             const hasExistingPlan = workoutPlans.some(plan => plan.type === workout.name);
+            const frequency = getWorkoutFrequency(workout.name);
+            const progress = getWorkoutProgress(workout.name);
+            
+            const getProgressMessage = () => {
+              switch (progress) {
+                case 'increase': return 'Seen an Increase';
+                case 'decrease': return 'Seen a Decrease';
+                case 'same': return 'Same as Last Week';
+                default: return 'No Recent Activity';
+              }
+            };
+
+            const getProgressColor = () => {
+              switch (progress) {
+                case 'increase': return 'text-green-400';
+                case 'decrease': return 'text-red-400';
+                case 'same': return 'text-yellow-400';
+                default: return 'text-gray-400';
+              }
+            };
+
             return (
               <div key={workout.name} className="relative">
-                <Button
-                  variant="outline"
+                <Card 
+                  className={`border-2 transition-all duration-200 hover:scale-105 cursor-pointer ${workout.color}`}
                   onClick={() => handleWorkoutTypeClick(workout.name)}
-                  className={`w-full h-20 text-lg font-semibold border-2 transition-all duration-200 hover:scale-105 ${workout.color}`}
                 >
-                  <div className="flex flex-col items-center">
-                    <span>{workout.name}</span>
-                    {hasExistingPlan && (
-                      <span className="text-xs opacity-75">Tap to continue</span>
-                    )}
-                    {!hasExistingPlan && (
-                      <span className="text-xs opacity-75">Create plan</span>
-                    )}
-                  </div>
-                </Button>
+                  <CardContent className="p-4">
+                    <div className="flex flex-col space-y-2">
+                      <h3 className="text-lg font-bold">{workout.name}</h3>
+                      <p className="text-sm opacity-80">{frequency} Times past 3 months</p>
+                      {progress !== 'none' && (
+                        <div className={`text-xs px-2 py-1 rounded border ${getProgressColor()} border-current`}>
+                          {getProgressMessage()}
+                        </div>
+                      )}
+                      <p className="text-xs opacity-60">
+                        {hasExistingPlan ? "Tap to continue" : "Create plan"}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
                 <Button
                   variant="ghost"
                   size="icon"
