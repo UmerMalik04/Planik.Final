@@ -16,6 +16,13 @@ export default function StartWorkout() {
   const plan = workoutPlans.find(p => p.id === planId);
   const [currentSession, setCurrentSession] = useState<any>(null);
   const [completedExercises, setCompletedExercises] = useState<CompletedExercise[]>([]);
+
+  interface SetData {
+    weight: number;
+    reps: number;
+  }
+  
+  const [exerciseSets, setExerciseSets] = useState<{ [exerciseIndex: number]: SetData[] }>({});
   
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'short',
@@ -38,7 +45,7 @@ export default function StartWorkout() {
           name: exercise.name,
           weight: 0,
           reps: 0,
-          sets: plan.sets,
+          sets: exercise.sets || 3,
           date: session.date,
           previousWeight: lastPerformance?.weight,
           previousReps: lastPerformance?.reps
@@ -46,6 +53,13 @@ export default function StartWorkout() {
       });
       
       setCompletedExercises(initialExercises);
+      
+      // Initialize sets data
+      const initialSetsData: { [key: number]: SetData[] } = {};
+      plan.exercises.forEach((exercise, index) => {
+        initialSetsData[index] = Array(exercise.sets || 3).fill(null).map(() => ({ weight: 0, reps: 0 }));
+      });
+      setExerciseSets(initialSetsData);
     }
   }, [plan]);
 
@@ -60,12 +74,33 @@ export default function StartWorkout() {
     );
   }
 
-  const updateExercise = (index: number, field: 'weight' | 'reps', value: number) => {
-    setCompletedExercises(prev => 
-      prev.map((exercise, i) => 
-        i === index ? { ...exercise, [field]: value } : exercise
-      )
-    );
+  const updateExerciseSet = (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps', value: number) => {
+    setExerciseSets(prev => {
+      const updated = { ...prev };
+      if (!updated[exerciseIndex]) {
+        updated[exerciseIndex] = Array(3).fill(null).map(() => ({ weight: 0, reps: 0 }));
+      }
+      updated[exerciseIndex][setIndex] = {
+        ...updated[exerciseIndex][setIndex],
+        [field]: value
+      };
+      
+      // Update completed exercise with best set values
+      const sets = updated[exerciseIndex];
+      const bestSet = sets.reduce((best, current) => {
+        const bestTotal = best.weight * best.reps;
+        const currentTotal = current.weight * current.reps;
+        return currentTotal > bestTotal ? current : best;
+      }, { weight: 0, reps: 0 });
+      
+      setCompletedExercises(prevExercises =>
+        prevExercises.map((exercise, i) =>
+          i === exerciseIndex ? { ...exercise, weight: bestSet.weight, reps: bestSet.reps } : exercise
+        )
+      );
+      
+      return updated;
+    });
   };
 
   const getPerformanceColor = (current: number, previous: number | undefined, field: 'weight' | 'reps') => {
@@ -125,34 +160,50 @@ export default function StartWorkout() {
                 </p>
               )}
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <Label className="text-gray-300">Weight</Label>
-                  <Input
-                    type="number"
-                    placeholder="kg"
-                    value={exercise.weight || ''}
-                    onChange={(e) => updateExercise(index, 'weight', Number(e.target.value))}
-                    className={`mt-1 ${getPerformanceColor(exercise.weight, exercise.previousWeight, 'weight')}`}
-                  />
-                </div>
-                <div>
-                  <Label className="text-gray-300">Reps</Label>
-                  <Input
-                    type="number"
-                    placeholder="reps"
-                    value={exercise.reps || ''}
-                    onChange={(e) => updateExercise(index, 'reps', Number(e.target.value))}
-                    className={`mt-1 ${getPerformanceColor(exercise.reps, exercise.previousReps, 'reps')}`}
-                  />
-                </div>
-                <div>
-                  <Label className="text-gray-300">Sets</Label>
-                  <div className="mt-1 px-3 py-2 bg-gray-800 rounded border text-white">
-                    {exercise.sets}
+            <CardContent className="space-y-4">
+              <div className="text-center text-sm text-gray-400 mb-4">
+                Sets: {exercise.sets}
+              </div>
+              
+              {/* Individual Sets */}
+              <div className="space-y-3">
+                {Array(exercise.sets).fill(0).map((_, setIndex) => (
+                  <div key={setIndex} className="border border-gray-700 rounded p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-300">Set {setIndex + 1}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-gray-400 text-xs">Weight (kg)</Label>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={exerciseSets[index]?.[setIndex]?.weight || ''}
+                          onChange={(e) => updateExerciseSet(index, setIndex, 'weight', Number(e.target.value))}
+                          className={`mt-1 ${getPerformanceColor(
+                            exerciseSets[index]?.[setIndex]?.weight || 0, 
+                            exercise.previousWeight, 
+                            'weight'
+                          )}`}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-gray-400 text-xs">Reps</Label>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={exerciseSets[index]?.[setIndex]?.reps || ''}
+                          onChange={(e) => updateExerciseSet(index, setIndex, 'reps', Number(e.target.value))}
+                          className={`mt-1 ${getPerformanceColor(
+                            exerciseSets[index]?.[setIndex]?.reps || 0, 
+                            exercise.previousReps, 
+                            'reps'
+                          )}`}
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
               
               {/* Progress indicators */}

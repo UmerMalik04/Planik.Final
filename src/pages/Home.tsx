@@ -117,26 +117,54 @@ export default function Home() {
         </CardContent>
       </Card>
 
-      {/* 3D Mascot */}
+      {/* 3D Mascot with Muscle Highlights */}
       <div className="flex justify-center">
         <div className="relative">
           <div className="w-48 h-48 rounded-full border-4 border-primary overflow-hidden shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
-            <img
-              src={mascotImage}
-              alt="Planik 3D Mascot"
-              className={`w-full h-full object-cover transition-transform duration-300 ${
-                currentStreak > 0 ? 'animate-pulse hover:scale-110' : 'hover:scale-105'
-              }`}
-              style={{
-                filter: 'drop-shadow(0 4px 8px rgba(0, 123, 255, 0.3))'
-              }}
-            />
+            <div className="relative w-full h-full">
+              <img
+                src={mascotImage}
+                alt="Planik 3D Mascot"
+                className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                style={{
+                  filter: 'drop-shadow(0 4px 8px rgba(0, 123, 255, 0.3))'
+                }}
+              />
+              {/* Muscle Highlights */}
+              <div className="absolute inset-0 pointer-events-none">
+                {/* Arms - Green for good progress */}
+                <div className="absolute top-[30%] left-[15%] w-8 h-12 bg-green-400/30 rounded-full animate-pulse" />
+                <div className="absolute top-[30%] right-[15%] w-8 h-12 bg-green-400/30 rounded-full animate-pulse" />
+                
+                {/* Chest - Yellow for moderate progress */}
+                <div className="absolute top-[35%] left-[35%] w-12 h-8 bg-yellow-400/30 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }} />
+                
+                {/* Legs - Red for needs work */}
+                <div className="absolute bottom-[20%] left-[25%] w-10 h-16 bg-red-400/30 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+                <div className="absolute bottom-[20%] right-[25%] w-10 h-16 bg-red-400/30 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+              </div>
+            </div>
           </div>
           {currentStreak > 0 && (
             <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold animate-bounce">
               🔥
             </div>
           )}
+          {/* Muscle Legend */}
+          <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 flex gap-1 text-xs">
+            <div className="flex items-center gap-1 bg-green-400/20 px-2 py-1 rounded">
+              <div className="w-2 h-2 bg-green-400 rounded-full" />
+              <span>Good</span>
+            </div>
+            <div className="flex items-center gap-1 bg-yellow-400/20 px-2 py-1 rounded">
+              <div className="w-2 h-2 bg-yellow-400 rounded-full" />
+              <span>OK</span>
+            </div>
+            <div className="flex items-center gap-1 bg-red-400/20 px-2 py-1 rounded">
+              <div className="w-2 h-2 bg-red-400 rounded-full" />
+              <span>Needs Work</span>
+            </div>
+          </div>
         </div>
       </div>
 
