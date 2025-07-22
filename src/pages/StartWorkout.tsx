@@ -43,47 +43,31 @@ export default function StartWorkout() {
   });
 
   useEffect(() => {
-    if (!plan) return;
-    
-    // Check if user is returning to the app (not from internal navigation)
-    const isReturningUser = !sessionStorage.getItem('workoutInProgress') && 
-                           currentWorkoutSession && 
-                           currentWorkoutSession.planId === planId;
-    
-    if (isReturningUser) {
+    // Check for existing workout session first
+    if (currentWorkoutSession && currentWorkoutSession.planId === planId) {
       setShowResumeDialog(true);
       return;
     }
     
-    // Only start a new workout if we don't have a current session
-    if (!currentSession && !currentWorkoutSession) {
-      // Mark that workout is in progress
-      sessionStorage.setItem('workoutInProgress', 'true');
-      
+    if (plan && !currentSession) {
       const session = startWorkout(plan.id);
       setCurrentSession(session);
       initializeWorkout(session, plan);
     }
-  }, [plan, planId]); // Removed currentWorkoutSession from dependencies
+  }, [plan, currentWorkoutSession, planId]);
 
   const initializeWorkout = (session: any, workoutPlan: any) => {
-    console.log('Initializing workout with plan:', workoutPlan);
-    console.log('Plan exercises:', workoutPlan.exercises);
-    
     // Initialize completed exercises with plan exercises
     const initialExercises: CompletedExercise[] = workoutPlan.exercises.map((exercise: any, index: number) => {
       const history = getExerciseHistory(exercise.name);
       const lastPerformance = history[0]; // Most recent
-      const exerciseSets = exercise.sets || 3; // Ensure default sets
-      
-      console.log(`Exercise ${index}:`, exercise, 'Sets:', exerciseSets);
       
       return {
         id: `${session.id}-${index}`,
         name: exercise.name,
         weight: 0,
         reps: 0,
-        sets: exerciseSets,
+        sets: exercise.sets || 3,
         date: session.date,
         previousWeight: lastPerformance?.weight,
         previousReps: lastPerformance?.reps
@@ -91,36 +75,28 @@ export default function StartWorkout() {
     });
     
     setCompletedExercises(initialExercises);
-    console.log('Initial exercises set:', initialExercises);
     
     // Initialize sets data
     const initialSetsData: { [key: number]: SetData[] } = {};
     const initialSetTypes: { [key: string]: 'normal' | 'dropset' } = {};
     
     workoutPlan.exercises.forEach((exercise: any, index: number) => {
-      const exerciseSets = exercise.sets || 3;
-      initialSetsData[index] = Array(exerciseSets).fill(null).map(() => ({ weight: 0, reps: 0, type: 'normal' as const }));
-      
-      console.log(`Initializing sets for exercise ${index}: ${exerciseSets} sets`);
+      initialSetsData[index] = Array(exercise.sets || 3).fill(null).map(() => ({ weight: 0, reps: 0, type: 'normal' as const }));
       
       // Initialize set types for all sets to 'normal'
-      Array(exerciseSets).fill(0).forEach((_, setIndex) => {
+      Array(exercise.sets || 3).fill(0).forEach((_, setIndex) => {
         initialSetTypes[`${index}-${setIndex}`] = 'normal';
       });
     });
     
     setExerciseSets(initialSetsData);
     setSetTypes(initialSetTypes);
-    console.log('Sets data initialized:', initialSetsData);
-    console.log('Set types initialized:', initialSetTypes);
   };
 
   const handleResumeWorkout = () => {
     if (currentWorkoutSession && plan) {
       setCurrentSession(currentWorkoutSession);
       initializeWorkout(currentWorkoutSession, plan);
-      // Mark that workout is in progress
-      sessionStorage.setItem('workoutInProgress', 'true');
     }
     setShowResumeDialog(false);
   };
@@ -130,8 +106,6 @@ export default function StartWorkout() {
       const session = startWorkout(plan.id);
       setCurrentSession(session);
       initializeWorkout(session, plan);
-      // Mark that workout is in progress
-      sessionStorage.setItem('workoutInProgress', 'true');
     }
     setShowResumeDialog(false);
   };
@@ -299,8 +273,6 @@ export default function StartWorkout() {
     }
     
     completeWorkout(currentSession.id, validExercises);
-    // Clear workout progress marker
-    sessionStorage.removeItem('workoutInProgress');
     navigate("/");
   };
 
@@ -413,12 +385,16 @@ export default function StartWorkout() {
                 )}
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="text-center text-sm text-muted-foreground mb-4">
+                  Sets: {exercise.sets}
+                </div>
+                
                 {/* Individual Sets */}
                 <div className="space-y-3">
                   {Array(exercise.sets + (extraSets[index] || 0)).fill(0).map((_, setIndex) => (
-                    <div key={setIndex} className="border border-border rounded-lg p-4 bg-card">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-medium text-foreground">
+                    <div key={setIndex} className="border border-border rounded p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-muted-foreground">
                           {setIndex < exercise.sets ? `Set ${setIndex + 1}` : `Extra Set ${setIndex - exercise.sets + 1}`}
                         </span>
                         <Select 
@@ -437,31 +413,49 @@ export default function StartWorkout() {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label className="text-muted-foreground text-xs font-medium">Weight (kg)</Label>
-                          <Input
-                            type="number"
-                            placeholder={exercise.previousWeight ? `${exercise.previousWeight}` : "0"}
-                            value={exerciseSets[index]?.[setIndex]?.weight || ''}
-                            onChange={(e) => updateExerciseSet(index, setIndex, 'weight', Number(e.target.value))}
-                            className={`mt-1 ${getPerformanceColor(
-                              exerciseSets[index]?.[setIndex]?.weight || 0, 
-                              exercise.previousWeight, 
-                              'weight'
-                            )}`}
-                          />
+                          <div className="relative">
+                            <Input
+                              type="number"
+                              placeholder={exercise.previousWeight ? `Previous: ${exercise.previousWeight}kg` : "0"}
+                              value={exerciseSets[index]?.[setIndex]?.weight || ''}
+                              onChange={(e) => updateExerciseSet(index, setIndex, 'weight', Number(e.target.value))}
+                              className={`mt-1 ${getPerformanceColor(
+                                exerciseSets[index]?.[setIndex]?.weight || 0, 
+                                exercise.previousWeight, 
+                                'weight'
+                              )}`}
+                            />
+                            {exercise.previousWeight && !exerciseSets[index]?.[setIndex]?.weight && (
+                              <div className="absolute inset-0 flex items-center px-3 mt-1 pointer-events-none">
+                                <span className="text-muted-foreground/60 text-sm">
+                                  Previous: {exercise.previousWeight}kg
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <div>
                           <Label className="text-muted-foreground text-xs font-medium">Reps</Label>
-                          <Input
-                            type="number"
-                            placeholder={exercise.previousReps ? `${exercise.previousReps}` : "0"}
-                            value={exerciseSets[index]?.[setIndex]?.reps || ''}
-                            onChange={(e) => updateExerciseSet(index, setIndex, 'reps', Number(e.target.value))}
-                            className={`mt-1 ${getPerformanceColor(
-                              exerciseSets[index]?.[setIndex]?.reps || 0, 
-                              exercise.previousReps, 
-                              'reps'
-                            )}`}
-                          />
+                          <div className="relative">
+                            <Input
+                              type="number"
+                              placeholder={exercise.previousReps ? `Previous: ${exercise.previousReps}` : "0"}
+                              value={exerciseSets[index]?.[setIndex]?.reps || ''}
+                              onChange={(e) => updateExerciseSet(index, setIndex, 'reps', Number(e.target.value))}
+                              className={`mt-1 ${getPerformanceColor(
+                                exerciseSets[index]?.[setIndex]?.reps || 0, 
+                                exercise.previousReps, 
+                                'reps'
+                              )}`}
+                            />
+                            {exercise.previousReps && !exerciseSets[index]?.[setIndex]?.reps && (
+                              <div className="absolute inset-0 flex items-center px-3 mt-1 pointer-events-none">
+                                <span className="text-muted-foreground/60 text-sm">
+                                  Previous: {exercise.previousReps}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                       

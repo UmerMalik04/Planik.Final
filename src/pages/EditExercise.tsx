@@ -27,10 +27,10 @@ export default function EditExercise() {
 
   useEffect(() => {
     if (exercise) {
-      setExerciseName(exercise.name || "");
-      setWeight(exercise.weight?.toString() || "");
-      setReps(exercise.reps?.toString() || "");
-      setDate(exercise.date ? new Date(exercise.date) : new Date());
+      setExerciseName(exercise.name);
+      setWeight(exercise.weight.toString());
+      setReps(exercise.reps.toString());
+      setDate(new Date(exercise.date));
     }
   }, [exercise]);
 
