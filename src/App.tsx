@@ -12,6 +12,7 @@ import EditExercise from "./pages/EditExercise";
 import StartWorkout from "./pages/StartWorkout";
 import DietTracker from "./pages/DietTracker";
 import Progress from "./pages/Progress";
+import History from "./pages/History";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/edit-exercise/:exerciseId" element={<EditExercise />} />
           <Route path="/start-workout/:planId" element={<StartWorkout />} />
           <Route path="/diet-tracker" element={<DietTracker />} />
+          <Route path="/history" element={<History />} />
             <Route path="/progress" element={<Progress />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

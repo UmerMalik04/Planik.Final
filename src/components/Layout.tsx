@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, BarChart3, RotateCcw } from "lucide-react";
+import { Home, BarChart3, RotateCcw, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   AlertDialog, 
@@ -29,6 +29,7 @@ export default function Layout({ children }: LayoutProps) {
 
   const navItems = [
     { icon: Home, path: "/", label: "Home" },
+    { icon: History, path: "/history", label: "History" },
     { icon: BarChart3, path: "/progress", label: "Progress" }
   ];
 
