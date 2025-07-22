@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, TrendingUp, TrendingDown, Edit3, Plus, Calendar } from "lucide-react";
+import { ArrowLeft, TrendingUp, TrendingDown, Edit3, Plus, Calendar, Trash2, MoreVertical } from "lucide-react";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
 import {
   Dialog,
@@ -28,6 +28,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -41,6 +47,7 @@ export default function Progress() {
   const [editForm, setEditForm] = useState({ weight: "", reps: "", date: "" });
   const [showAddForm, setShowAddForm] = useState(false);
   const [newRecord, setNewRecord] = useState({ exerciseName: "", weight: "", date: new Date() });
+  const [recordToDelete, setRecordToDelete] = useState<any>(null);
 
   const defaultExercises = ["Bench press", "Deadlift", "Squat"];
 
@@ -190,6 +197,25 @@ export default function Progress() {
     }
   };
 
+  const handleDeleteRecord = () => {
+    if (recordToDelete) {
+      // Remove record from store - we'll need to add this method to the store
+      const updatedRecords = personalRecords.filter(
+        record => !(record.exerciseName === recordToDelete.exerciseName && record.reps === recordToDelete.reps)
+      );
+      // For now, we'll use localStorage directly since the store doesn't have a delete method
+      localStorage.setItem('workout-storage', JSON.stringify({
+        ...JSON.parse(localStorage.getItem('workout-storage') || '{}'),
+        state: {
+          ...JSON.parse(localStorage.getItem('workout-storage') || '{}').state,
+          personalRecords: updatedRecords
+        }
+      }));
+      window.location.reload(); // Refresh to see changes
+    }
+    setRecordToDelete(null);
+  };
+
   const getChartData = (exerciseName: string) => {
     const history = getExerciseHistory(exerciseName);
     return history
@@ -247,14 +273,39 @@ export default function Progress() {
                 onClick={() => record ? handleRecordClick(record.exerciseName) : (setNewRecord(prev => ({ ...prev, exerciseName })), setShowAddForm(true))}
               >
                 {record && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-6 w-6"
-                    onClick={(e) => handleEditRecord(record, e)}
-                  >
-                    <Edit3 className="w-3 h-3" />
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-6 w-6"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreVertical className="w-3 h-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditRecord(record, e);
+                        }}
+                      >
+                        <Edit3 className="w-4 h-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setRecordToDelete(record);
+                        }}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-center">
@@ -297,14 +348,39 @@ export default function Progress() {
                 className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105 relative group"
                 onClick={() => handleRecordClick(record.exerciseName)}
               >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-6 w-6"
-                  onClick={(e) => handleEditRecord(record, e)}
-                >
-                  <Edit3 className="w-3 h-3" />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-6 w-6"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MoreVertical className="w-3 h-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditRecord(record, e);
+                      }}
+                    >
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setRecordToDelete(record);
+                      }}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-center">
                     {record.exerciseName}
@@ -605,33 +681,50 @@ export default function Progress() {
         </DialogContent>
       </Dialog>
 
-      {/* Reset Button */}
-      <div className="mt-8 pt-6 border-t border-border">
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-full bg-destructive/10 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!recordToDelete} onOpenChange={() => setRecordToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Personal Record</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete your {recordToDelete?.exerciseName} personal record of {recordToDelete?.weight}kg? 
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteRecord}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Reset All Progress
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Reset All Progress</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will delete all your workout data, plans, and progress. This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleReset} className="bg-destructive text-destructive-foreground">
-                Reset Everything
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
+              Delete Record
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reset Button */}
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="destructive" className="w-full">
+            Reset All Data
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete all your workout data, progress, and records.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleReset} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Yes, delete everything
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
