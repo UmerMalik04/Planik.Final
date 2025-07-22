@@ -27,7 +27,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 export default function Progress() {
   const navigate = useNavigate();
-  const { personalRecords, getExerciseHistory, workoutSessions, updatePersonalRecord } = useWorkoutStore();
+  const { personalRecords, getExerciseHistory, workoutSessions, updatePersonalRecord, workoutTypes, workoutPlans } = useWorkoutStore();
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [editForm, setEditForm] = useState({ weight: "", reps: "", date: "" });
@@ -69,6 +69,71 @@ export default function Progress() {
   };
 
   const exercisesProgress = getAllExercisesWithProgress();
+
+  // Get workout type progress with weekly averages
+  const getWorkoutTypeProgress = () => {
+    const now = new Date();
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+    return workoutTypes.map(workoutType => {
+      // Get sessions from current week and previous week
+      const currentWeekSessions = workoutSessions.filter(session => {
+        const plan = workoutPlans.find(plan => plan.id === session.planId);
+        return plan?.type === workoutType.name && new Date(session.date) >= oneWeekAgo;
+      });
+      
+      const previousWeekSessions = workoutSessions.filter(session => {
+        const plan = workoutPlans.find(plan => plan.id === session.planId);
+        return plan?.type === workoutType.name && 
+               new Date(session.date) >= twoWeeksAgo && 
+               new Date(session.date) < oneWeekAgo;
+      });
+
+      // Calculate average weights
+      const getCurrentWeekAverage = () => {
+        if (currentWeekSessions.length === 0) return 0;
+        const totalWeight = currentWeekSessions.reduce((sum, session) => 
+          sum + session.exercises.reduce((exerciseSum, exercise) => 
+            exerciseSum + exercise.weight, 0), 0);
+        const totalExercises = currentWeekSessions.reduce((sum, session) => 
+          sum + session.exercises.length, 0);
+        return totalExercises > 0 ? totalWeight / totalExercises : 0;
+      };
+
+      const getPreviousWeekAverage = () => {
+        if (previousWeekSessions.length === 0) return 0;
+        const totalWeight = previousWeekSessions.reduce((sum, session) => 
+          sum + session.exercises.reduce((exerciseSum, exercise) => 
+            exerciseSum + exercise.weight, 0), 0);
+        const totalExercises = previousWeekSessions.reduce((sum, session) => 
+          sum + session.exercises.length, 0);
+        return totalExercises > 0 ? totalWeight / totalExercises : 0;
+      };
+
+      const currentAvg = getCurrentWeekAverage();
+      const previousAvg = getPreviousWeekAverage();
+      const difference = currentAvg - previousAvg;
+      
+      let trend = 'none';
+      if (currentAvg > 0 && previousAvg > 0) {
+        if (difference > 0.5) trend = 'increase';
+        else if (difference < -0.5) trend = 'decrease';
+        else trend = 'same';
+      }
+
+      return {
+        name: workoutType.name,
+        currentWeekAverage: currentAvg,
+        previousWeekAverage: previousAvg,
+        difference,
+        trend,
+        hasData: currentWeekSessions.length > 0 || previousWeekSessions.length > 0
+      };
+    }).filter(workoutType => workoutType.hasData);
+  };
+
+  const workoutTypeProgress = getWorkoutTypeProgress();
 
   const handleReset = () => {
     localStorage.clear();
@@ -133,8 +198,8 @@ export default function Progress() {
 
       {/* Personal Records Section */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Personal Records</h2>
-        {personalRecords.length === 0 ? (
+        <h2 className="text-xl font-semibold">Personal Records (1 Rep Max)</h2>
+        {personalRecords.filter(record => record.reps === 1).length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
               <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
@@ -149,7 +214,7 @@ export default function Progress() {
           </Card>
         ) : (
           <div className="grid grid-cols-2 gap-4">
-            {personalRecords.map((record) => (
+            {personalRecords.filter(record => record.reps === 1).map((record) => (
               <Card 
                 key={record.exerciseName} 
                 className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105 relative group"
@@ -228,6 +293,59 @@ export default function Progress() {
                             exercise.trend === 'decrease' ? 'text-red-500' : 'text-yellow-500'
                           }`}>
                             {exercise.weightDiff > 0 ? '+' : ''}{exercise.weightDiff}kg
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Custom Exercise Progress Section */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Custom Exercise Progress</h2>
+        {workoutTypeProgress.length === 0 ? (
+          <Card>
+            <CardContent className="p-6 text-center">
+              <p className="text-muted-foreground">No workout type data yet</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {workoutTypeProgress.map((workoutType) => (
+              <Card key={workoutType.name} className="border-l-4 border-l-secondary">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center">
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{workoutType.name}</h3>
+                      <div className="flex items-center gap-4 mt-1">
+                        <span className="text-sm text-muted-foreground">
+                          Average: {workoutType.currentWeekAverage.toFixed(1)}kg
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          Previous: {workoutType.previousWeekAverage.toFixed(1)}kg
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {workoutType.trend !== 'none' && (
+                        <>
+                          {workoutType.trend === 'increase' ? (
+                            <TrendingUp className="w-4 h-4 text-green-500" />
+                          ) : workoutType.trend === 'decrease' ? (
+                            <TrendingDown className="w-4 h-4 text-red-500" />
+                          ) : (
+                            <div className="w-4 h-4 rounded-full bg-yellow-500" />
+                          )}
+                          <span className={`text-sm font-medium ${
+                            workoutType.trend === 'increase' ? 'text-green-500' : 
+                            workoutType.trend === 'decrease' ? 'text-red-500' : 'text-yellow-500'
+                          }`}>
+                            {workoutType.difference > 0 ? '+' : ''}{workoutType.difference.toFixed(1)}kg
                           </span>
                         </>
                       )}
