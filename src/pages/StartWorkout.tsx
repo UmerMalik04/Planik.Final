@@ -67,11 +67,16 @@ export default function StartWorkout() {
   }, [plan, planId]); // Removed currentWorkoutSession from dependencies
 
   const initializeWorkout = (session: any, workoutPlan: any) => {
+    console.log('Initializing workout with plan:', workoutPlan);
+    console.log('Plan exercises:', workoutPlan.exercises);
+    
     // Initialize completed exercises with plan exercises
     const initialExercises: CompletedExercise[] = workoutPlan.exercises.map((exercise: any, index: number) => {
       const history = getExerciseHistory(exercise.name);
       const lastPerformance = history[0]; // Most recent
       const exerciseSets = exercise.sets || 3; // Ensure default sets
+      
+      console.log(`Exercise ${index}:`, exercise, 'Sets:', exerciseSets);
       
       return {
         id: `${session.id}-${index}`,
@@ -86,6 +91,7 @@ export default function StartWorkout() {
     });
     
     setCompletedExercises(initialExercises);
+    console.log('Initial exercises set:', initialExercises);
     
     // Initialize sets data
     const initialSetsData: { [key: number]: SetData[] } = {};
@@ -95,6 +101,8 @@ export default function StartWorkout() {
       const exerciseSets = exercise.sets || 3;
       initialSetsData[index] = Array(exerciseSets).fill(null).map(() => ({ weight: 0, reps: 0, type: 'normal' as const }));
       
+      console.log(`Initializing sets for exercise ${index}: ${exerciseSets} sets`);
+      
       // Initialize set types for all sets to 'normal'
       Array(exerciseSets).fill(0).forEach((_, setIndex) => {
         initialSetTypes[`${index}-${setIndex}`] = 'normal';
@@ -103,6 +111,8 @@ export default function StartWorkout() {
     
     setExerciseSets(initialSetsData);
     setSetTypes(initialSetTypes);
+    console.log('Sets data initialized:', initialSetsData);
+    console.log('Set types initialized:', initialSetTypes);
   };
 
   const handleResumeWorkout = () => {
