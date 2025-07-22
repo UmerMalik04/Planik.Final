@@ -18,7 +18,6 @@ export default function StartWorkout() {
   const plan = workoutPlans.find(p => p.id === planId);
   const [currentSession, setCurrentSession] = useState<any>(null);
   const [completedExercises, setCompletedExercises] = useState<CompletedExercise[]>([]);
-  const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [showAddExerciseDialog, setShowAddExerciseDialog] = useState(false);
   const [newExerciseName, setNewExerciseName] = useState("");
   const [newExerciseReps, setNewExerciseReps] = useState(10);
@@ -43,18 +42,12 @@ export default function StartWorkout() {
   });
 
   useEffect(() => {
-    // Check for existing workout session first
-    if (currentWorkoutSession && currentWorkoutSession.planId === planId) {
-      setShowResumeDialog(true);
-      return;
-    }
-    
     if (plan && !currentSession) {
       const session = startWorkout(plan.id);
       setCurrentSession(session);
       initializeWorkout(session, plan);
     }
-  }, [plan, currentWorkoutSession, planId]);
+  }, [plan, planId]);
 
   const initializeWorkout = (session: any, workoutPlan: any) => {
     // Initialize completed exercises with plan exercises
@@ -91,23 +84,6 @@ export default function StartWorkout() {
     
     setExerciseSets(initialSetsData);
     setSetTypes(initialSetTypes);
-  };
-
-  const handleResumeWorkout = () => {
-    if (currentWorkoutSession && plan) {
-      setCurrentSession(currentWorkoutSession);
-      initializeWorkout(currentWorkoutSession, plan);
-    }
-    setShowResumeDialog(false);
-  };
-
-  const handleStartNewWorkout = () => {
-    if (plan) {
-      const session = startWorkout(plan.id);
-      setCurrentSession(session);
-      initializeWorkout(session, plan);
-    }
-    setShowResumeDialog(false);
   };
 
   const addNewExercise = () => {
@@ -278,27 +254,6 @@ export default function StartWorkout() {
 
   return (
     <>
-      {/* Resume Workout Dialog */}
-      <Dialog open={showResumeDialog} onOpenChange={setShowResumeDialog}>
-        <DialogContent className="bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">Resume Workout</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-muted-foreground">
-              You have an ongoing workout session. Would you like to resume where you left off or start a new workout?
-            </p>
-            <div className="flex gap-3">
-              <Button onClick={handleResumeWorkout} className="flex-1">
-                Resume Workout
-              </Button>
-              <Button onClick={handleStartNewWorkout} variant="outline" className="flex-1">
-                Start New
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Add Exercise Dialog */}
       <Dialog open={showAddExerciseDialog} onOpenChange={setShowAddExerciseDialog}>

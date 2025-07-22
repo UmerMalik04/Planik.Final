@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { FoodRecognitionService } from '@/services/FoodRecognitionService';
 
 export interface FoodItem {
   id: string;
@@ -126,25 +127,41 @@ export const useDietStore = create<DietStore>()(
       },
 
       scanFood: async (imageData) => {
-        // This would integrate with a food recognition API
-        // For now, return mock data
         try {
-          // Mock food recognition response
-          await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
+          console.log('Starting food recognition...');
+          const recognitionResult = await FoodRecognitionService.recognizeFood(imageData);
           
-          return {
-            id: '',
-            name: 'Scanned Apple',
-            calories: 95,
-            protein: 0.5,
-            carbs: 25,
-            fat: 0.3,
-            fiber: 4,
-            sugar: 19,
-            date: new Date().toISOString().split('T')[0],
-            quantity: 1,
-            unit: 'medium apple'
-          };
+          if (recognitionResult) {
+            console.log('Food recognized:', recognitionResult);
+            return {
+              id: '',
+              name: recognitionResult.name,
+              calories: Math.round(recognitionResult.calories),
+              protein: Math.round(recognitionResult.protein * 10) / 10,
+              carbs: Math.round(recognitionResult.carbs * 10) / 10,
+              fat: Math.round(recognitionResult.fat * 10) / 10,
+              fiber: Math.round(recognitionResult.fiber * 10) / 10,
+              sugar: Math.round(recognitionResult.sugar * 10) / 10,
+              date: new Date().toISOString().split('T')[0],
+              quantity: 1,
+              unit: 'serving (100g)'
+            };
+          } else {
+            console.warn('Food recognition failed, using fallback');
+            return {
+              id: '',
+              name: 'Unknown Food',
+              calories: 100,
+              protein: 2,
+              carbs: 15,
+              fat: 1,
+              fiber: 2,
+              sugar: 5,
+              date: new Date().toISOString().split('T')[0],
+              quantity: 1,
+              unit: 'serving'
+            };
+          }
         } catch (error) {
           console.error('Food scanning failed:', error);
           return null;
