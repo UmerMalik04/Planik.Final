@@ -43,11 +43,18 @@ export default function StartWorkout() {
   });
 
   useEffect(() => {
-    // Check for existing workout session first
-    if (currentWorkoutSession && currentWorkoutSession.planId === planId) {
+    // Check if user is returning to the app (not from internal navigation)
+    const isReturningUser = !sessionStorage.getItem('workoutInProgress') && 
+                           currentWorkoutSession && 
+                           currentWorkoutSession.planId === planId;
+    
+    if (isReturningUser) {
       setShowResumeDialog(true);
       return;
     }
+    
+    // Mark that workout is in progress
+    sessionStorage.setItem('workoutInProgress', 'true');
     
     if (plan && !currentSession) {
       const session = startWorkout(plan.id);
@@ -97,6 +104,8 @@ export default function StartWorkout() {
     if (currentWorkoutSession && plan) {
       setCurrentSession(currentWorkoutSession);
       initializeWorkout(currentWorkoutSession, plan);
+      // Mark that workout is in progress
+      sessionStorage.setItem('workoutInProgress', 'true');
     }
     setShowResumeDialog(false);
   };
@@ -106,6 +115,8 @@ export default function StartWorkout() {
       const session = startWorkout(plan.id);
       setCurrentSession(session);
       initializeWorkout(session, plan);
+      // Mark that workout is in progress
+      sessionStorage.setItem('workoutInProgress', 'true');
     }
     setShowResumeDialog(false);
   };
@@ -273,6 +284,8 @@ export default function StartWorkout() {
     }
     
     completeWorkout(currentSession.id, validExercises);
+    // Clear workout progress marker
+    sessionStorage.removeItem('workoutInProgress');
     navigate("/");
   };
 
@@ -427,7 +440,7 @@ export default function StartWorkout() {
                             />
                             {exercise.previousWeight && !exerciseSets[index]?.[setIndex]?.weight && (
                               <div className="absolute inset-0 flex items-center px-3 mt-1 pointer-events-none">
-                                <span className="text-muted-foreground/60 text-sm">
+                                <span className="text-muted-foreground text-sm">
                                   Previous: {exercise.previousWeight}kg
                                 </span>
                               </div>
@@ -450,7 +463,7 @@ export default function StartWorkout() {
                             />
                             {exercise.previousReps && !exerciseSets[index]?.[setIndex]?.reps && (
                               <div className="absolute inset-0 flex items-center px-3 mt-1 pointer-events-none">
-                                <span className="text-muted-foreground/60 text-sm">
+                                <span className="text-muted-foreground text-sm">
                                   Previous: {exercise.previousReps}
                                 </span>
                               </div>
