@@ -413,31 +413,49 @@ export default function StartWorkout() {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label className="text-muted-foreground text-xs font-medium">Weight (kg)</Label>
-                          <Input
-                            type="number"
-                            placeholder="0"
-                            value={exerciseSets[index]?.[setIndex]?.weight || ''}
-                            onChange={(e) => updateExerciseSet(index, setIndex, 'weight', Number(e.target.value))}
-                            className={`mt-1 ${getPerformanceColor(
-                              exerciseSets[index]?.[setIndex]?.weight || 0, 
-                              exercise.previousWeight, 
-                              'weight'
-                            )}`}
-                          />
+                          <div className="relative">
+                            <Input
+                              type="number"
+                              placeholder={exercise.previousWeight ? `Previous: ${exercise.previousWeight}kg` : "0"}
+                              value={exerciseSets[index]?.[setIndex]?.weight || ''}
+                              onChange={(e) => updateExerciseSet(index, setIndex, 'weight', Number(e.target.value))}
+                              className={`mt-1 ${getPerformanceColor(
+                                exerciseSets[index]?.[setIndex]?.weight || 0, 
+                                exercise.previousWeight, 
+                                'weight'
+                              )}`}
+                            />
+                            {exercise.previousWeight && !exerciseSets[index]?.[setIndex]?.weight && (
+                              <div className="absolute inset-0 flex items-center px-3 mt-1 pointer-events-none">
+                                <span className="text-muted-foreground/40 text-sm">
+                                  Previous: {exercise.previousWeight}kg
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <div>
                           <Label className="text-muted-foreground text-xs font-medium">Reps</Label>
-                          <Input
-                            type="number"
-                            placeholder="0"
-                            value={exerciseSets[index]?.[setIndex]?.reps || ''}
-                            onChange={(e) => updateExerciseSet(index, setIndex, 'reps', Number(e.target.value))}
-                            className={`mt-1 ${getPerformanceColor(
-                              exerciseSets[index]?.[setIndex]?.reps || 0, 
-                              exercise.previousReps, 
-                              'reps'
-                            )}`}
-                          />
+                          <div className="relative">
+                            <Input
+                              type="number"
+                              placeholder={exercise.previousReps ? `Previous: ${exercise.previousReps}` : "0"}
+                              value={exerciseSets[index]?.[setIndex]?.reps || ''}
+                              onChange={(e) => updateExerciseSet(index, setIndex, 'reps', Number(e.target.value))}
+                              className={`mt-1 ${getPerformanceColor(
+                                exerciseSets[index]?.[setIndex]?.reps || 0, 
+                                exercise.previousReps, 
+                                'reps'
+                              )}`}
+                            />
+                            {exercise.previousReps && !exerciseSets[index]?.[setIndex]?.reps && (
+                              <div className="absolute inset-0 flex items-center px-3 mt-1 pointer-events-none">
+                                <span className="text-muted-foreground/40 text-sm">
+                                  Previous: {exercise.previousReps}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                       
