@@ -96,10 +96,10 @@ export const useWorkoutStore = create<WorkoutStore>()(
       lastWorkoutDate: null,
       currentWorkoutSession: null,
       workoutTypes: [
-        { name: "Push Day", color: "bg-black border-red-500 text-white" },
-        { name: "Pull Day", color: "bg-black border-blue-500 text-white" },
-        { name: "Leg Day", color: "bg-black border-yellow-500 text-white" },
-        { name: "Arm Day", color: "bg-black border-green-500 text-white" }
+        { name: "Push Day", color: "bg-white border-red-500 text-red-600" },
+        { name: "Pull Day", color: "bg-white border-blue-500 text-blue-600" },
+        { name: "Leg Day", color: "bg-white border-yellow-500 text-yellow-600" },
+        { name: "Arm Day", color: "bg-white border-green-500 text-green-600" }
       ],
       progressKg: 0,
       lastWeekProgress: 0,

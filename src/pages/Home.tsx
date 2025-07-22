@@ -61,10 +61,10 @@ export default function Home() {
   const handleAddCustomWorkout = () => {
     if (customWorkoutName.trim()) {
       const colors = [
-        "bg-black border-orange-500 text-white",
-        "bg-black border-pink-500 text-white",
-        "bg-black border-teal-500 text-white",
-        "bg-black border-purple-500 text-white",
+        "bg-white border-orange-500 text-orange-600",
+        "bg-white border-pink-500 text-pink-600",
+        "bg-white border-teal-500 text-teal-600",
+        "bg-white border-purple-500 text-purple-600",
       ];
       const randomColor = colors[Math.floor(Math.random() * colors.length)];
       
