@@ -127,7 +127,7 @@ export default function Home() {
                 alt="Muscular Body Diagram"
                 className="w-full h-full object-contain transition-transform duration-300 hover:scale-105"
                 style={{
-                  filter: 'drop-shadow(0 4px 8px rgba(0, 123, 255, 0.3))'
+                  filter: 'grayscale(100%) contrast(1.1) brightness(0.9)',
                 }}
               />
               {/* Individual Muscle Highlights - Fitted precisely to muscle anatomy */}
