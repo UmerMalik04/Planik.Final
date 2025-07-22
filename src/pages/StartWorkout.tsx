@@ -403,51 +403,106 @@ export default function StartWorkout() {
                 )}
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Weight (kg)</Label>
-                    <Input
-                      type="number"
-                      placeholder={exercise.previousWeight ? exercise.previousWeight.toString() : "0"}
-                      value={exercise.weight || ''}
-                      onChange={(e) => {
-                        const weight = Number(e.target.value);
-                        setCompletedExercises(prev =>
-                          prev.map((ex, i) => i === index ? { ...ex, weight } : ex)
-                        );
-                      }}
-                      className={`text-center ${getPerformanceColor(
-                        exercise.weight || 0, 
-                        exercise.previousWeight, 
-                        'weight'
-                      )}`}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Reps</Label>
-                    <Input
-                      type="number"
-                      placeholder={exercise.previousReps ? exercise.previousReps.toString() : "0"}
-                      value={exercise.reps || ''}
-                      onChange={(e) => {
-                        const reps = Number(e.target.value);
-                        setCompletedExercises(prev =>
-                          prev.map((ex, i) => i === index ? { ...ex, reps } : ex)
-                        );
-                      }}
-                      className={`text-center ${getPerformanceColor(
-                        exercise.reps || 0, 
-                        exercise.previousReps, 
-                        'reps'
-                      )}`}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Sets</Label>
-                    <div className="flex items-center justify-center h-10 bg-muted rounded-md">
-                      <span className="text-sm font-medium">{exercise.sets}</span>
+                {/* Individual Sets */}
+                <div className="space-y-3">
+                  {Array(exercise.sets + (extraSets[index] || 0)).fill(0).map((_, setIndex) => (
+                    <div key={setIndex} className="border border-border rounded-lg p-4 bg-card">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-foreground">
+                          {setIndex < exercise.sets ? `Set ${setIndex + 1}` : `Extra Set ${setIndex - exercise.sets + 1}`}
+                        </span>
+                        <Select 
+                          defaultValue="normal"
+                          onValueChange={(value: 'normal' | 'dropset') => updateSetType(index, setIndex, value)}
+                        >
+                          <SelectTrigger className="w-24 h-6 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="normal">Normal</SelectItem>
+                            <SelectItem value="dropset">Drop Set</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-muted-foreground text-xs font-medium">Weight (kg)</Label>
+                          <Input
+                            type="number"
+                            placeholder={exercise.previousWeight ? `${exercise.previousWeight}` : "0"}
+                            value={exerciseSets[index]?.[setIndex]?.weight || ''}
+                            onChange={(e) => updateExerciseSet(index, setIndex, 'weight', Number(e.target.value))}
+                            className={`mt-1 ${getPerformanceColor(
+                              exerciseSets[index]?.[setIndex]?.weight || 0, 
+                              exercise.previousWeight, 
+                              'weight'
+                            )}`}
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-muted-foreground text-xs font-medium">Reps</Label>
+                          <Input
+                            type="number"
+                            placeholder={exercise.previousReps ? `${exercise.previousReps}` : "0"}
+                            value={exerciseSets[index]?.[setIndex]?.reps || ''}
+                            onChange={(e) => updateExerciseSet(index, setIndex, 'reps', Number(e.target.value))}
+                            className={`mt-1 ${getPerformanceColor(
+                              exerciseSets[index]?.[setIndex]?.reps || 0, 
+                              exercise.previousReps, 
+                              'reps'
+                            )}`}
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Drop Set Fields - Only show when dropset is selected */}
+                      {getSetType(index, setIndex) === 'dropset' && (
+                        <div className="mt-3 p-2 bg-muted rounded border">
+                          <Label className="text-muted-foreground text-xs">Drop Set</Label>
+                          <div className="grid grid-cols-2 gap-2 mt-1">
+                            <Input
+                              type="number"
+                              placeholder="Drop weight"
+                              value={exerciseSets[index]?.[setIndex]?.dropSetWeight || ''}
+                              onChange={(e) => updateExerciseSet(index, setIndex, 'dropSetWeight', Number(e.target.value))}
+                              className="h-8 text-xs"
+                            />
+                            <Input
+                              type="number"
+                              placeholder="Drop reps"
+                              value={exerciseSets[index]?.[setIndex]?.dropSetReps || ''}
+                              onChange={(e) => updateExerciseSet(index, setIndex, 'dropSetReps', Number(e.target.value))}
+                              className="h-8 text-xs"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  ))}
+                </div>
+                
+                {/* Add/Remove Set Buttons */}
+                <div className="flex gap-2 justify-center mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addExtraSet(index)}
+                    className="border-border"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Set
+                  </Button>
+                  {(extraSets[index] || 0) > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeExtraSet(index)}
+                      className="border-border"
+                    >
+                      <Minus className="w-4 h-4 mr-1" />
+                      Remove Set
+                    </Button>
+                  )}
                 </div>
                 
                 {/* Progress indicators */}
