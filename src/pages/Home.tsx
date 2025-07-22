@@ -61,10 +61,10 @@ export default function Home() {
   const handleAddCustomWorkout = () => {
     if (customWorkoutName.trim()) {
       const colors = [
-        "border-orange-500 text-orange-600",
-        "border-pink-500 text-pink-600", 
-        "border-teal-500 text-teal-600",
-        "border-purple-500 text-purple-600",
+        "bg-white border-orange-500 text-orange-600",
+        "bg-white border-pink-500 text-pink-600", 
+        "bg-white border-teal-500 text-teal-600",
+        "bg-white border-purple-500 text-purple-600",
       ];
       const randomColor = colors[Math.floor(Math.random() * colors.length)];
       
@@ -240,7 +240,7 @@ export default function Home() {
             return (
               <div key={workout.name} className="relative">
                 <Card 
-                  className={`bg-background border-2 transition-all duration-200 hover:scale-105 cursor-pointer ${workout.color}`}
+                  className={`bg-white border-2 transition-all duration-200 hover:scale-105 cursor-pointer ${workout.color}`}
                   onClick={() => handleWorkoutTypeClick(workout.name)}
                 >
                   <CardContent className="p-4">
