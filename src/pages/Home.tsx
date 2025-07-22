@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
 import { Plus, Minus, TrendingUp, TrendingDown, Utensils } from "lucide-react";
 import { useState, useEffect } from "react";
-import bodyDiagram from "@/assets/body-diagram.png";
+import muscularBodyDiagram from "@/assets/muscular-body-diagram.png";
 
 
 export default function Home() {
@@ -117,35 +117,51 @@ export default function Home() {
         </CardContent>
       </Card>
 
-      {/* Body Diagram with Muscle Highlights */}
+      {/* Muscular Body Diagram with Individual Muscle Highlights */}
       <div className="flex justify-center">
         <div className="relative">
-          <div className="w-48 h-64 rounded-lg border-4 border-primary overflow-hidden shadow-lg bg-white">
+          <div className="w-64 h-80 rounded-lg border-4 border-primary overflow-hidden shadow-lg bg-white">
             <div className="relative w-full h-full">
               <img
-                src={bodyDiagram}
-                alt="Body Muscle Diagram"
+                src={muscularBodyDiagram}
+                alt="Muscular Body Diagram"
                 className="w-full h-full object-contain transition-transform duration-300 hover:scale-105"
                 style={{
                   filter: 'drop-shadow(0 4px 8px rgba(0, 123, 255, 0.3))'
                 }}
               />
-              {/* Muscle Highlights */}
+              {/* Individual Muscle Highlights */}
               <div className="absolute inset-0 pointer-events-none">
-                {/* Arms - Green for good progress */}
-                <div className="absolute top-[25%] left-[8%] w-6 h-12 bg-green-400/40 rounded-full animate-pulse" />
-                <div className="absolute top-[25%] right-[8%] w-6 h-12 bg-green-400/40 rounded-full animate-pulse" />
+                {/* Shoulders/Deltoids - Green */}
+                <div className="absolute top-[18%] left-[15%] w-8 h-8 bg-green-400/50 rounded-full animate-pulse" />
+                <div className="absolute top-[18%] right-[15%] w-8 h-8 bg-green-400/50 rounded-full animate-pulse" />
                 
-                {/* Chest/Core - Yellow for moderate progress */}
-                <div className="absolute top-[30%] left-[30%] w-16 h-12 bg-yellow-400/40 rounded-lg animate-pulse" style={{ animationDelay: '0.5s' }} />
+                {/* Biceps - Yellow */}
+                <div className="absolute top-[25%] left-[8%] w-6 h-10 bg-yellow-400/50 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+                <div className="absolute top-[25%] right-[8%] w-6 h-10 bg-yellow-400/50 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
                 
-                {/* Legs - Red for needs work */}
-                <div className="absolute bottom-[15%] left-[25%] w-8 h-20 bg-red-400/40 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
-                <div className="absolute bottom-[15%] right-[25%] w-8 h-20 bg-red-400/40 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+                {/* Triceps - Red */}
+                <div className="absolute top-[28%] left-[5%] w-4 h-8 bg-red-400/50 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+                <div className="absolute top-[28%] right-[5%] w-4 h-8 bg-red-400/50 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
                 
-                {/* Shoulders - Green for good progress */}
-                <div className="absolute top-[20%] left-[20%] w-8 h-6 bg-green-400/40 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
-                <div className="absolute top-[20%] right-[20%] w-8 h-6 bg-green-400/40 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+                {/* Chest/Pectorals - Green */}
+                <div className="absolute top-[28%] left-[25%] w-7 h-10 bg-green-400/50 rounded-lg animate-pulse" style={{ animationDelay: '0.6s' }} />
+                <div className="absolute top-[28%] right-[25%] w-7 h-10 bg-green-400/50 rounded-lg animate-pulse" style={{ animationDelay: '0.6s' }} />
+                
+                {/* Abs - Yellow */}
+                <div className="absolute top-[40%] left-[35%] w-12 h-16 bg-yellow-400/50 rounded-lg animate-pulse" style={{ animationDelay: '0.8s' }} />
+                
+                {/* Forearms - Red */}
+                <div className="absolute top-[35%] left-[12%] w-4 h-12 bg-red-400/50 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+                <div className="absolute top-[35%] right-[12%] w-4 h-12 bg-red-400/50 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+                
+                {/* Quadriceps - Yellow */}
+                <div className="absolute bottom-[25%] left-[22%] w-8 h-18 bg-yellow-400/50 rounded-lg animate-pulse" style={{ animationDelay: '1.2s' }} />
+                <div className="absolute bottom-[25%] right-[22%] w-8 h-18 bg-yellow-400/50 rounded-lg animate-pulse" style={{ animationDelay: '1.2s' }} />
+                
+                {/* Calves - Green */}
+                <div className="absolute bottom-[8%] left-[25%] w-6 h-12 bg-green-400/50 rounded-full animate-pulse" style={{ animationDelay: '1.4s' }} />
+                <div className="absolute bottom-[8%] right-[25%] w-6 h-12 bg-green-400/50 rounded-full animate-pulse" style={{ animationDelay: '1.4s' }} />
               </div>
             </div>
           </div>
