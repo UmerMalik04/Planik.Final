@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, TrendingUp, TrendingDown, Edit3 } from "lucide-react";
+import { ArrowLeft, TrendingUp, TrendingDown, Edit3, Plus, Calendar } from "lucide-react";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
 import {
   Dialog,
@@ -23,6 +23,14 @@ import {
   AlertDialogTitle, 
   AlertDialogTrigger 
 } from "@/components/ui/alert-dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export default function Progress() {
@@ -31,6 +39,10 @@ export default function Progress() {
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [editForm, setEditForm] = useState({ weight: "", reps: "", date: "" });
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newRecord, setNewRecord] = useState({ exerciseName: "", weight: "", date: new Date() });
+
+  const defaultExercises = ["Bench press", "Deadlift", "Squat"];
 
   // Get all unique exercises with their progress
   const getAllExercisesWithProgress = () => {
@@ -166,6 +178,18 @@ export default function Progress() {
     }
   };
 
+  const handleAddRecord = () => {
+    if (newRecord.exerciseName && newRecord.weight) {
+      updatePersonalRecord(
+        newRecord.exerciseName,
+        Number(newRecord.weight),
+        1
+      );
+      setNewRecord({ exerciseName: "", weight: "", date: new Date() });
+      setShowAddForm(false);
+    }
+  };
+
   const getChartData = (exerciseName: string) => {
     const history = getExerciseHistory(exerciseName);
     return history
@@ -198,23 +222,76 @@ export default function Progress() {
 
       {/* Personal Records Section */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Personal Records (1 Rep Max)</h2>
-        {personalRecords.filter(record => record.reps === 1).length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No records yet</h3>
-              <p className="text-muted-foreground mb-4">
-                Start working out to see your personal records here!
-              </p>
-              <Button onClick={() => navigate("/")}>
-                Start Your First Workout
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-2 gap-4">
-            {personalRecords.filter(record => record.reps === 1).map((record) => (
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Personal Records (1 Rep Max)</h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAddForm(true)}
+            className="flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Exercise
+          </Button>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          {defaultExercises.map((exerciseName) => {
+            const record = personalRecords.find(r => r.exerciseName === exerciseName && r.reps === 1);
+            return (
+              <Card 
+                key={exerciseName} 
+                className={`cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105 relative group ${
+                  !record ? 'border-dashed border-2 border-muted-foreground/20' : ''
+                }`}
+                onClick={() => record ? handleRecordClick(record.exerciseName) : (setNewRecord(prev => ({ ...prev, exerciseName })), setShowAddForm(true))}
+              >
+                {record && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-6 w-6"
+                    onClick={(e) => handleEditRecord(record, e)}
+                  >
+                    <Edit3 className="w-3 h-3" />
+                  </Button>
+                )}
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-center">
+                    {exerciseName}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="text-center">
+                    {record ? (
+                      <>
+                        <div className="text-2xl font-bold text-primary">
+                          {record.weight}kg
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          × {record.reps} reps
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {new Date(record.date).toLocaleDateString()}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="py-4">
+                        <Plus className="w-6 h-6 text-muted-foreground/50 mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">Add record</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+          
+          {/* Show additional user-added exercises */}
+          {personalRecords
+            .filter(record => record.reps === 1 && !defaultExercises.includes(record.exerciseName))
+            .map((record) => (
               <Card 
                 key={record.exerciseName} 
                 className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105 relative group"
@@ -241,15 +318,15 @@ export default function Progress() {
                     <div className="text-sm text-muted-foreground">
                       × {record.reps} reps
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
+                    <div className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
+                      <Calendar className="w-3 h-3" />
                       {new Date(record.date).toLocaleDateString()}
                     </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Exercise Progress Strips */}
@@ -451,6 +528,80 @@ export default function Progress() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Record Dialog */}
+      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add 1 Rep Max Record</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="exercise-name">Exercise Name</Label>
+              <Input
+                id="exercise-name"
+                value={newRecord.exerciseName}
+                onChange={(e) => setNewRecord(prev => ({ ...prev, exerciseName: e.target.value }))}
+                placeholder="Enter exercise name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="weight">Weight (kg)</Label>
+              <Input
+                id="weight"
+                type="number"
+                value={newRecord.weight}
+                onChange={(e) => setNewRecord(prev => ({ ...prev, weight: e.target.value }))}
+                placeholder="Weight"
+                min="0"
+                step="0.5"
+              />
+            </div>
+            <div>
+              <Label>Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !newRecord.date && "text-muted-foreground"
+                    )}
+                  >
+                    <Calendar className="mr-2 h-4 w-4" />
+                    {newRecord.date ? format(newRecord.date, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={newRecord.date}
+                    onSelect={(date) => date && setNewRecord(prev => ({ ...prev, date }))}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="flex gap-2 pt-4">
+              <Button
+                onClick={handleAddRecord}
+                disabled={!newRecord.exerciseName || !newRecord.weight}
+                className="flex-1"
+              >
+                Add Record
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowAddForm(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
