@@ -130,34 +130,37 @@ export default function Home() {
                   filter: 'drop-shadow(0 4px 8px rgba(0, 123, 255, 0.3))'
                 }}
               />
-              {/* Individual Muscle Highlights - Positioned precisely on muscles */}
+              {/* Individual Muscle Highlights - Fitted precisely to muscle anatomy */}
               <div className="absolute inset-0 pointer-events-none">
-                {/* Shoulders/Deltoids - Green */}
-                <div className="absolute top-[18%] left-[15%] w-8 h-8 bg-green-400/60 rounded-full animate-pulse" />
-                <div className="absolute top-[18%] right-[15%] w-8 h-8 bg-green-400/60 rounded-full animate-pulse" />
+                {/* Shoulders/Deltoids - Green - Fitted to shoulder caps */}
+                <div className="absolute top-[16%] left-[12%] w-10 h-10 bg-green-400/70 rounded-full animate-pulse transform -rotate-12" />
+                <div className="absolute top-[16%] right-[12%] w-10 h-10 bg-green-400/70 rounded-full animate-pulse transform rotate-12" />
                 
-                {/* Biceps - Yellow */}
-                <div className="absolute top-[26%] left-[8%] w-6 h-10 bg-yellow-400/60 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
-                <div className="absolute top-[26%] right-[8%] w-6 h-10 bg-yellow-400/60 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+                {/* Biceps - Yellow - Fitted to upper arm muscles */}
+                <div className="absolute top-[24%] left-[6%] w-7 h-12 bg-yellow-400/70 rounded-full animate-pulse transform rotate-15" style={{ animationDelay: '0.2s' }} />
+                <div className="absolute top-[24%] right-[6%] w-7 h-12 bg-yellow-400/70 rounded-full animate-pulse transform -rotate-15" style={{ animationDelay: '0.2s' }} />
                 
-                {/* Chest/Pectorals - Green */}
-                <div className="absolute top-[26%] left-[25%] w-8 h-10 bg-green-400/60 rounded-lg animate-pulse" style={{ animationDelay: '0.4s' }} />
-                <div className="absolute top-[26%] right-[25%] w-8 h-10 bg-green-400/60 rounded-lg animate-pulse" style={{ animationDelay: '0.4s' }} />
+                {/* Chest/Pectorals - Green - Fitted to chest muscles */}
+                <div className="absolute top-[22%] left-[22%] w-10 h-12 bg-green-400/70 rounded-lg animate-pulse transform rotate-12" style={{ animationDelay: '0.4s' }} />
+                <div className="absolute top-[22%] right-[22%] w-10 h-12 bg-green-400/70 rounded-lg animate-pulse transform -rotate-12" style={{ animationDelay: '0.4s' }} />
                 
-                {/* Abs - Yellow */}
-                <div className="absolute top-[40%] left-[35%] w-12 h-16 bg-yellow-400/60 rounded-lg animate-pulse" style={{ animationDelay: '0.6s' }} />
+                {/* Abs - Yellow - Fitted to abdominal muscles */}
+                <div className="absolute top-[36%] left-[32%] w-14 h-18 bg-yellow-400/70 animate-pulse" style={{ 
+                  animationDelay: '0.6s',
+                  clipPath: 'polygon(20% 0%, 80% 0%, 100% 25%, 100% 75%, 80% 100%, 20% 100%, 0% 75%, 0% 25%)'
+                }} />
                 
-                {/* Forearms - Red */}
-                <div className="absolute top-[38%] left-[12%] w-4 h-12 bg-red-400/60 rounded-full animate-pulse" style={{ animationDelay: '0.8s' }} />
-                <div className="absolute top-[38%] right-[12%] w-4 h-12 bg-red-400/60 rounded-full animate-pulse" style={{ animationDelay: '0.8s' }} />
+                {/* Forearms - Red - Fitted to forearm muscles */}
+                <div className="absolute top-[36%] left-[10%] w-5 h-14 bg-red-400/70 rounded-full animate-pulse transform rotate-12" style={{ animationDelay: '0.8s' }} />
+                <div className="absolute top-[36%] right-[10%] w-5 h-14 bg-red-400/70 rounded-full animate-pulse transform -rotate-12" style={{ animationDelay: '0.8s' }} />
                 
-                {/* Quadriceps - Yellow */}
-                <div className="absolute bottom-[28%] left-[25%] w-8 h-16 bg-yellow-400/60 rounded-lg animate-pulse" style={{ animationDelay: '1s' }} />
-                <div className="absolute bottom-[28%] right-[25%] w-8 h-16 bg-yellow-400/60 rounded-lg animate-pulse" style={{ animationDelay: '1s' }} />
+                {/* Quadriceps - Yellow - Fitted to thigh muscles */}
+                <div className="absolute bottom-[25%] left-[23%] w-9 h-18 bg-yellow-400/70 rounded-lg animate-pulse transform rotate-3" style={{ animationDelay: '1s' }} />
+                <div className="absolute bottom-[25%] right-[23%] w-9 h-18 bg-yellow-400/70 rounded-lg animate-pulse transform -rotate-3" style={{ animationDelay: '1s' }} />
                 
-                {/* Calves - Green */}
-                <div className="absolute bottom-[8%] left-[28%] w-6 h-12 bg-green-400/60 rounded-full animate-pulse" style={{ animationDelay: '1.2s' }} />
-                <div className="absolute bottom-[8%] right-[28%] w-6 h-12 bg-green-400/60 rounded-full animate-pulse" style={{ animationDelay: '1.2s' }} />
+                {/* Calves - Green - Fitted to calf muscles */}
+                <div className="absolute bottom-[6%] left-[26%] w-7 h-14 bg-green-400/70 rounded-full animate-pulse" style={{ animationDelay: '1.2s' }} />
+                <div className="absolute bottom-[6%] right-[26%] w-7 h-14 bg-green-400/70 rounded-full animate-pulse" style={{ animationDelay: '1.2s' }} />
               </div>
             </div>
           </div>
