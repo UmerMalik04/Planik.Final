@@ -61,10 +61,10 @@ export default function Home() {
   const handleAddCustomWorkout = () => {
     if (customWorkoutName.trim()) {
       const colors = [
-        "bg-white border-orange-500 text-orange-600",
-        "bg-white border-pink-500 text-pink-600",
-        "bg-white border-teal-500 text-teal-600",
-        "bg-white border-purple-500 text-purple-600",
+        "border-orange-500 text-orange-600",
+        "border-pink-500 text-pink-600", 
+        "border-teal-500 text-teal-600",
+        "border-purple-500 text-purple-600",
       ];
       const randomColor = colors[Math.floor(Math.random() * colors.length)];
       
@@ -240,19 +240,19 @@ export default function Home() {
             return (
               <div key={workout.name} className="relative">
                 <Card 
-                  className={`border-2 border-[hsl(var(--widget-border))] transition-all duration-200 hover:scale-105 cursor-pointer ${workout.color}`}
+                  className={`bg-card border-2 transition-all duration-200 hover:scale-105 cursor-pointer ${workout.color}`}
                   onClick={() => handleWorkoutTypeClick(workout.name)}
                 >
                   <CardContent className="p-4">
                     <div className="flex flex-col space-y-2">
-                      <h3 className="text-lg font-bold">{workout.name}</h3>
-                      <p className="text-sm opacity-80">{frequency} Times past 3 months</p>
+                      <h3 className="text-lg font-bold text-foreground">{workout.name}</h3>
+                      <p className="text-sm text-muted-foreground">{frequency} Times past 3 months</p>
                       {progress !== 'none' && (
                         <div className={`text-xs px-2 py-1 rounded border ${getProgressColor()} border-current`}>
                           {getProgressMessage()}
                         </div>
                       )}
-                      <p className="text-xs opacity-60">
+                      <p className="text-xs text-muted-foreground">
                         {hasExistingPlan ? "Tap to continue" : "Create plan"}
                       </p>
                     </div>
@@ -274,7 +274,7 @@ export default function Home() {
 
       {/* Diet Tracker */}
       <Card 
-        className="p-4 cursor-pointer hover:shadow-md transition-all border-2 border-[hsl(var(--widget-border))] bg-black" 
+        className="p-4 cursor-pointer hover:shadow-md transition-all border-2 border-orange-500 bg-card" 
         onClick={() => navigate("/diet-tracker")}
       >
         <div className="flex items-center space-x-3">
@@ -282,8 +282,8 @@ export default function Home() {
             <Utensils className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold text-white">Diet Tracker</h3>
-            <p className="text-sm text-gray-400">Track nutrition & calories</p>
+            <h3 className="font-semibold text-foreground">Diet Tracker</h3>
+            <p className="text-sm text-muted-foreground">Track nutrition & calories</p>
           </div>
         </div>
       </Card>
