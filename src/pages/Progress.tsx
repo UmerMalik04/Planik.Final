@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, TrendingUp, TrendingDown } from "lucide-react";
+import { ArrowLeft, TrendingUp, TrendingDown, Edit3 } from "lucide-react";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
 import {
   Dialog,
@@ -10,6 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   AlertDialog, 
   AlertDialogAction, 
@@ -25,8 +27,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 export default function Progress() {
   const navigate = useNavigate();
-  const { personalRecords, getExerciseHistory, workoutSessions } = useWorkoutStore();
+  const { personalRecords, getExerciseHistory, workoutSessions, updatePersonalRecord } = useWorkoutStore();
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
+  const [editingRecord, setEditingRecord] = useState<any>(null);
+  const [editForm, setEditForm] = useState({ weight: "", reps: "", date: "" });
 
   // Get all unique exercises with their progress
   const getAllExercisesWithProgress = () => {
@@ -73,6 +77,28 @@ export default function Progress() {
 
   const handleRecordClick = (exerciseName: string) => {
     setSelectedExercise(exerciseName);
+  };
+
+  const handleEditRecord = (record: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingRecord(record);
+    setEditForm({
+      weight: record.weight.toString(),
+      reps: record.reps.toString(),
+      date: new Date(record.date).toISOString().split('T')[0]
+    });
+  };
+
+  const handleSaveEdit = () => {
+    if (editingRecord && editForm.weight && editForm.reps) {
+      updatePersonalRecord(
+        editingRecord.exerciseName,
+        Number(editForm.weight),
+        Number(editForm.reps)
+      );
+      setEditingRecord(null);
+      setEditForm({ weight: "", reps: "", date: "" });
+    }
   };
 
   const getChartData = (exerciseName: string) => {
@@ -126,9 +152,17 @@ export default function Progress() {
             {personalRecords.map((record) => (
               <Card 
                 key={record.exerciseName} 
-                className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
+                className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105 relative group"
                 onClick={() => handleRecordClick(record.exerciseName)}
               >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-6 w-6"
+                  onClick={(e) => handleEditRecord(record, e)}
+                >
+                  <Edit3 className="w-3 h-3" />
+                </Button>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-center">
                     {record.exerciseName}
@@ -144,9 +178,6 @@ export default function Progress() {
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
                       {new Date(record.date).toLocaleDateString()}
-                    </div>
-                    <div className="text-xs text-primary font-medium mt-1">
-                      Total: {record.weight * record.reps}kg
                     </div>
                   </div>
                 </CardContent>
@@ -247,6 +278,58 @@ export default function Progress() {
               </div>
               <div className="text-sm text-muted-foreground text-center">
                 Tap outside to close
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Record Dialog */}
+      <Dialog open={!!editingRecord} onOpenChange={() => setEditingRecord(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Personal Record</DialogTitle>
+          </DialogHeader>
+          {editingRecord && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-weight">Weight (kg)</Label>
+                <Input
+                  id="edit-weight"
+                  type="number"
+                  value={editForm.weight}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, weight: e.target.value }))}
+                  placeholder="Weight"
+                  min="0"
+                  step="0.5"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-reps">Reps</Label>
+                <Input
+                  id="edit-reps"
+                  type="number"
+                  value={editForm.reps}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, reps: e.target.value }))}
+                  placeholder="Reps"
+                  min="1"
+                />
+              </div>
+              <div className="flex gap-2 pt-4">
+                <Button
+                  onClick={handleSaveEdit}
+                  disabled={!editForm.weight || !editForm.reps}
+                  className="flex-1"
+                >
+                  Save Changes
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setEditingRecord(null)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
               </div>
             </div>
           )}
