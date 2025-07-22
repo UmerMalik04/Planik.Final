@@ -71,13 +71,14 @@ export default function StartWorkout() {
     const initialExercises: CompletedExercise[] = workoutPlan.exercises.map((exercise: any, index: number) => {
       const history = getExerciseHistory(exercise.name);
       const lastPerformance = history[0]; // Most recent
+      const exerciseSets = exercise.sets || 3; // Ensure default sets
       
       return {
         id: `${session.id}-${index}`,
         name: exercise.name,
         weight: 0,
         reps: 0,
-        sets: exercise.sets || 3,
+        sets: exerciseSets,
         date: session.date,
         previousWeight: lastPerformance?.weight,
         previousReps: lastPerformance?.reps
@@ -91,10 +92,11 @@ export default function StartWorkout() {
     const initialSetTypes: { [key: string]: 'normal' | 'dropset' } = {};
     
     workoutPlan.exercises.forEach((exercise: any, index: number) => {
-      initialSetsData[index] = Array(exercise.sets || 3).fill(null).map(() => ({ weight: 0, reps: 0, type: 'normal' as const }));
+      const exerciseSets = exercise.sets || 3;
+      initialSetsData[index] = Array(exerciseSets).fill(null).map(() => ({ weight: 0, reps: 0, type: 'normal' as const }));
       
       // Initialize set types for all sets to 'normal'
-      Array(exercise.sets || 3).fill(0).forEach((_, setIndex) => {
+      Array(exerciseSets).fill(0).forEach((_, setIndex) => {
         initialSetTypes[`${index}-${setIndex}`] = 'normal';
       });
     });
