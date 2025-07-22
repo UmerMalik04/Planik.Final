@@ -43,6 +43,8 @@ export default function StartWorkout() {
   });
 
   useEffect(() => {
+    if (!plan) return;
+    
     // Check if user is returning to the app (not from internal navigation)
     const isReturningUser = !sessionStorage.getItem('workoutInProgress') && 
                            currentWorkoutSession && 
@@ -53,15 +55,16 @@ export default function StartWorkout() {
       return;
     }
     
-    // Mark that workout is in progress
-    sessionStorage.setItem('workoutInProgress', 'true');
-    
-    if (plan && !currentSession) {
+    // Only start a new workout if we don't have a current session
+    if (!currentSession && !currentWorkoutSession) {
+      // Mark that workout is in progress
+      sessionStorage.setItem('workoutInProgress', 'true');
+      
       const session = startWorkout(plan.id);
       setCurrentSession(session);
       initializeWorkout(session, plan);
     }
-  }, [plan, currentWorkoutSession, planId]);
+  }, [plan, planId]); // Removed currentWorkoutSession from dependencies
 
   const initializeWorkout = (session: any, workoutPlan: any) => {
     // Initialize completed exercises with plan exercises
