@@ -130,38 +130,34 @@ export default function Home() {
                   filter: 'drop-shadow(0 4px 8px rgba(0, 123, 255, 0.3))'
                 }}
               />
-              {/* Individual Muscle Highlights */}
+              {/* Individual Muscle Highlights - Positioned on actual muscles */}
               <div className="absolute inset-0 pointer-events-none">
                 {/* Shoulders/Deltoids - Green */}
-                <div className="absolute top-[18%] left-[15%] w-8 h-8 bg-green-400/50 rounded-full animate-pulse" />
-                <div className="absolute top-[18%] right-[15%] w-8 h-8 bg-green-400/50 rounded-full animate-pulse" />
+                <div className="absolute top-[20%] left-[20%] w-6 h-6 bg-green-400/50 rounded-full animate-pulse" />
+                <div className="absolute top-[20%] right-[20%] w-6 h-6 bg-green-400/50 rounded-full animate-pulse" />
                 
                 {/* Biceps - Yellow */}
-                <div className="absolute top-[25%] left-[8%] w-6 h-10 bg-yellow-400/50 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
-                <div className="absolute top-[25%] right-[8%] w-6 h-10 bg-yellow-400/50 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
-                
-                {/* Triceps - Red */}
-                <div className="absolute top-[28%] left-[5%] w-4 h-8 bg-red-400/50 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
-                <div className="absolute top-[28%] right-[5%] w-4 h-8 bg-red-400/50 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+                <div className="absolute top-[28%] left-[12%] w-5 h-8 bg-yellow-400/50 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+                <div className="absolute top-[28%] right-[12%] w-5 h-8 bg-yellow-400/50 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
                 
                 {/* Chest/Pectorals - Green */}
-                <div className="absolute top-[28%] left-[25%] w-7 h-10 bg-green-400/50 rounded-lg animate-pulse" style={{ animationDelay: '0.6s' }} />
-                <div className="absolute top-[28%] right-[25%] w-7 h-10 bg-green-400/50 rounded-lg animate-pulse" style={{ animationDelay: '0.6s' }} />
+                <div className="absolute top-[30%] left-[28%] w-6 h-8 bg-green-400/50 rounded-lg animate-pulse" style={{ animationDelay: '0.4s' }} />
+                <div className="absolute top-[30%] right-[28%] w-6 h-8 bg-green-400/50 rounded-lg animate-pulse" style={{ animationDelay: '0.4s' }} />
                 
                 {/* Abs - Yellow */}
-                <div className="absolute top-[40%] left-[35%] w-12 h-16 bg-yellow-400/50 rounded-lg animate-pulse" style={{ animationDelay: '0.8s' }} />
+                <div className="absolute top-[42%] left-[38%] w-10 h-12 bg-yellow-400/50 rounded-lg animate-pulse" style={{ animationDelay: '0.6s' }} />
                 
                 {/* Forearms - Red */}
-                <div className="absolute top-[35%] left-[12%] w-4 h-12 bg-red-400/50 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
-                <div className="absolute top-[35%] right-[12%] w-4 h-12 bg-red-400/50 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+                <div className="absolute top-[40%] left-[15%] w-3 h-10 bg-red-400/50 rounded-full animate-pulse" style={{ animationDelay: '0.8s' }} />
+                <div className="absolute top-[40%] right-[15%] w-3 h-10 bg-red-400/50 rounded-full animate-pulse" style={{ animationDelay: '0.8s' }} />
                 
                 {/* Quadriceps - Yellow */}
-                <div className="absolute bottom-[25%] left-[22%] w-8 h-18 bg-yellow-400/50 rounded-lg animate-pulse" style={{ animationDelay: '1.2s' }} />
-                <div className="absolute bottom-[25%] right-[22%] w-8 h-18 bg-yellow-400/50 rounded-lg animate-pulse" style={{ animationDelay: '1.2s' }} />
+                <div className="absolute bottom-[35%] left-[28%] w-6 h-14 bg-yellow-400/50 rounded-lg animate-pulse" style={{ animationDelay: '1s' }} />
+                <div className="absolute bottom-[35%] right-[28%] w-6 h-14 bg-yellow-400/50 rounded-lg animate-pulse" style={{ animationDelay: '1s' }} />
                 
                 {/* Calves - Green */}
-                <div className="absolute bottom-[8%] left-[25%] w-6 h-12 bg-green-400/50 rounded-full animate-pulse" style={{ animationDelay: '1.4s' }} />
-                <div className="absolute bottom-[8%] right-[25%] w-6 h-12 bg-green-400/50 rounded-full animate-pulse" style={{ animationDelay: '1.4s' }} />
+                <div className="absolute bottom-[12%] left-[30%] w-5 h-10 bg-green-400/50 rounded-full animate-pulse" style={{ animationDelay: '1.2s' }} />
+                <div className="absolute bottom-[12%] right-[30%] w-5 h-10 bg-green-400/50 rounded-full animate-pulse" style={{ animationDelay: '1.2s' }} />
               </div>
             </div>
           </div>
