@@ -93,38 +93,38 @@ export default function DietTracker() {
           variant="ghost"
           size="icon"
           onClick={() => navigate('/')}
-          className="text-gray-700 hover:bg-gray-200"
+          className="hover:bg-accent"
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Diet Tracker</h1>
-          <p className="text-gray-600">{new Date().toLocaleDateString()}</p>
+          <h1 className="text-2xl font-bold text-foreground">Diet Tracker</h1>
+          <p className="text-muted-foreground">{new Date().toLocaleDateString()}</p>
         </div>
       </div>
 
       {/* Daily Summary */}
-      <Card className="border-2 border-[hsl(var(--widget-border))]">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-gray-900">Today's Nutrition</CardTitle>
+          <CardTitle className="text-foreground">Today's Nutrition</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
-              <p className="text-2xl font-bold text-blue-600">{todayNutrition.totalCalories}</p>
-              <p className="text-sm text-gray-600">Calories</p>
+              <p className="text-2xl font-bold text-primary">{todayNutrition.totalCalories}</p>
+              <p className="text-sm text-muted-foreground">Calories</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-green-600">{todayNutrition.totalProtein}g</p>
-              <p className="text-sm text-gray-600">Protein</p>
+              <p className="text-2xl font-bold text-emerald-600">{todayNutrition.totalProtein}g</p>
+              <p className="text-sm text-muted-foreground">Protein</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-orange-600">{todayNutrition.totalCarbs}g</p>
-              <p className="text-sm text-gray-600">Carbs</p>
+              <p className="text-2xl font-bold text-amber-600">{todayNutrition.totalCarbs}g</p>
+              <p className="text-sm text-muted-foreground">Carbs</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-red-600">{todayNutrition.totalFat}g</p>
-              <p className="text-sm text-gray-600">Fat</p>
+              <p className="text-2xl font-bold text-rose-600">{todayNutrition.totalFat}g</p>
+              <p className="text-sm text-muted-foreground">Fat</p>
             </div>
           </div>
         </CardContent>
@@ -134,7 +134,7 @@ export default function DietTracker() {
       <div className="flex gap-3">
         <Button
           onClick={() => fileInputRef.current?.click()}
-          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+          className="flex-1"
           disabled={isScanning}
         >
           <Camera className="w-4 h-4 mr-2" />
@@ -143,59 +143,84 @@ export default function DietTracker() {
         
         <Dialog open={showAddFood} onOpenChange={setShowAddFood}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="flex-1 border-gray-300 text-gray-700">
+            <Button variant="outline" className="flex-1">
               <Plus className="w-4 h-4 mr-2" />
               Add Manually
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="bg-card border-border">
             <DialogHeader>
-              <DialogTitle>Add Food Item</DialogTitle>
+              <DialogTitle className="text-foreground">Add Food Item</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>Food Name</Label>
+                <Label className="text-foreground">Food Name</Label>
                 <Input
                   value={newFood.name}
                   onChange={(e) => setNewFood({ ...newFood, name: e.target.value })}
                   placeholder="e.g., Apple, Chicken Breast"
+                  className="mt-1"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>Calories</Label>
+                  <Label className="text-foreground">Calories</Label>
                   <Input
                     type="number"
-                    value={newFood.calories}
-                    onChange={(e) => setNewFood({ ...newFood, calories: Number(e.target.value) })}
+                    value={newFood.calories || ''}
+                    onChange={(e) => setNewFood({ ...newFood, calories: Number(e.target.value) || 0 })}
+                    className="mt-1"
                   />
                 </div>
                 <div>
-                  <Label>Protein (g)</Label>
+                  <Label className="text-foreground">Protein (g)</Label>
                   <Input
                     type="number"
-                    value={newFood.protein}
-                    onChange={(e) => setNewFood({ ...newFood, protein: Number(e.target.value) })}
+                    value={newFood.protein || ''}
+                    onChange={(e) => setNewFood({ ...newFood, protein: Number(e.target.value) || 0 })}
+                    className="mt-1"
                   />
                 </div>
                 <div>
-                  <Label>Carbs (g)</Label>
+                  <Label className="text-foreground">Carbs (g)</Label>
                   <Input
                     type="number"
-                    value={newFood.carbs}
-                    onChange={(e) => setNewFood({ ...newFood, carbs: Number(e.target.value) })}
+                    value={newFood.carbs || ''}
+                    onChange={(e) => setNewFood({ ...newFood, carbs: Number(e.target.value) || 0 })}
+                    className="mt-1"
                   />
                 </div>
                 <div>
-                  <Label>Fat (g)</Label>
+                  <Label className="text-foreground">Fat (g)</Label>
                   <Input
                     type="number"
-                    value={newFood.fat}
-                    onChange={(e) => setNewFood({ ...newFood, fat: Number(e.target.value) })}
+                    value={newFood.fat || ''}
+                    onChange={(e) => setNewFood({ ...newFood, fat: Number(e.target.value) || 0 })}
+                    className="mt-1"
                   />
                 </div>
               </div>
-              <Button onClick={handleAddFood} className="w-full">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-foreground">Quantity</Label>
+                  <Input
+                    type="number"
+                    value={newFood.quantity || ''}
+                    onChange={(e) => setNewFood({ ...newFood, quantity: Number(e.target.value) || 1 })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-foreground">Unit</Label>
+                  <Input
+                    value={newFood.unit}
+                    onChange={(e) => setNewFood({ ...newFood, unit: e.target.value })}
+                    placeholder="e.g., serving, cup, piece"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <Button onClick={handleAddFood} className="w-full" disabled={!newFood.name.trim()}>
                 Add Food
               </Button>
             </div>
@@ -215,20 +240,20 @@ export default function DietTracker() {
       {/* Scanned Food Dialog */}
       {scannedFood && (
         <Dialog open={!!scannedFood} onOpenChange={() => setScannedFood(null)}>
-          <DialogContent>
+          <DialogContent className="bg-card border-border">
             <DialogHeader>
-              <DialogTitle>Scanned Food</DialogTitle>
+              <DialogTitle className="text-foreground">Scanned Food</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="text-center">
-                <h3 className="text-lg font-semibold">{scannedFood.name}</h3>
-                <p className="text-gray-600">{scannedFood.quantity} {scannedFood.unit}</p>
+                <h3 className="text-lg font-semibold text-foreground">{scannedFood.name}</h3>
+                <p className="text-muted-foreground">{scannedFood.quantity} {scannedFood.unit}</p>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>Calories: {scannedFood.calories}</div>
-                <div>Protein: {scannedFood.protein}g</div>
-                <div>Carbs: {scannedFood.carbs}g</div>
-                <div>Fat: {scannedFood.fat}g</div>
+                <div className="text-foreground">Calories: {scannedFood.calories}</div>
+                <div className="text-foreground">Protein: {scannedFood.protein}g</div>
+                <div className="text-foreground">Carbs: {scannedFood.carbs}g</div>
+                <div className="text-foreground">Fat: {scannedFood.fat}g</div>
               </div>
               <div className="flex gap-2">
                 <Button onClick={handleAddScannedFood} className="flex-1">
@@ -245,15 +270,15 @@ export default function DietTracker() {
 
       {/* Food List */}
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-gray-900">Today's Foods</h2>
+        <h2 className="text-lg font-semibold text-foreground">Today's Foods</h2>
         {todayNutrition.foods.map((food) => (
-          <Card key={food.id} className="border-2 border-[hsl(var(--widget-border))]">
+          <Card key={food.id} className="bg-card border-border">
             <CardContent className="p-4">
               <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-medium text-gray-900">{food.name}</h3>
-                  <p className="text-sm text-gray-600">{food.quantity} {food.unit}</p>
-                  <div className="text-xs text-gray-500 mt-1">
+                <div className="flex-1">
+                  <h3 className="font-medium text-foreground">{food.name}</h3>
+                  <p className="text-sm text-muted-foreground">{food.quantity} {food.unit}</p>
+                  <div className="text-xs text-muted-foreground mt-1">
                     {food.calories} cal • {food.protein}g protein • {food.carbs}g carbs • {food.fat}g fat
                   </div>
                 </div>
@@ -261,7 +286,7 @@ export default function DietTracker() {
                   variant="ghost"
                   size="sm"
                   onClick={() => removeFood(food.id, currentDate)}
-                  className="text-red-600 hover:text-red-700"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -270,7 +295,7 @@ export default function DietTracker() {
           </Card>
         ))}
         {todayNutrition.foods.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-muted-foreground">
             No foods logged today. Start by scanning or adding food!
           </div>
         )}
