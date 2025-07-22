@@ -253,22 +253,22 @@ export default function Progress() {
                   <LineChart data={getChartData(selectedExercise)}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
-                      dataKey="session" 
-                      label={{ value: 'Session', position: 'insideBottom', offset: -5 }}
+                      dataKey="date" 
+                      label={{ value: 'Date', position: 'insideBottom', offset: -5 }}
                     />
                     <YAxis 
-                      label={{ value: 'Total Weight (kg)', angle: -90, position: 'insideLeft' }}
+                      label={{ value: 'Weight (kg)', angle: -90, position: 'insideLeft' }}
                     />
                     <Tooltip 
                       formatter={(value, name) => [
-                        name === 'total' ? `${value}kg` : value,
-                        name === 'total' ? 'Total Weight' : name
+                        name === 'weight' ? `${value}kg` : value,
+                        name === 'weight' ? 'Weight' : name
                       ]}
-                      labelFormatter={(label) => `Session ${label}`}
+                      labelFormatter={(label) => label}
                     />
                     <Line 
                       type="monotone" 
-                      dataKey="total" 
+                      dataKey="weight" 
                       stroke="hsl(var(--primary))" 
                       strokeWidth={2}
                       dot={{ fill: "hsl(var(--primary))" }}
