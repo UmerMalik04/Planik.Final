@@ -91,7 +91,7 @@ export default function Home() {
       </div>
 
       {/* User Stats */}
-      <Card>
+      <Card className="border-2 border-[hsl(var(--widget-border))]">
         <CardContent className="p-4">
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
@@ -196,7 +196,7 @@ export default function Home() {
         </div>
         
         {showCustomInput && (
-          <Card>
+          <Card className="border-2 border-[hsl(var(--widget-border))]">
             <CardContent className="p-4">
               <div className="flex gap-2">
                 <Input
@@ -240,7 +240,7 @@ export default function Home() {
             return (
               <div key={workout.name} className="relative">
                 <Card 
-                  className={`border-2 transition-all duration-200 hover:scale-105 cursor-pointer ${workout.color}`}
+                  className={`border-2 border-[hsl(var(--widget-border))] transition-all duration-200 hover:scale-105 cursor-pointer ${workout.color}`}
                   onClick={() => handleWorkoutTypeClick(workout.name)}
                 >
                   <CardContent className="p-4">
@@ -274,7 +274,7 @@ export default function Home() {
 
       {/* Diet Tracker */}
       <Card 
-        className="p-4 cursor-pointer hover:shadow-md transition-all border-2 border-gray-700 bg-black" 
+        className="p-4 cursor-pointer hover:shadow-md transition-all border-2 border-[hsl(var(--widget-border))] bg-black" 
         onClick={() => navigate("/diet-tracker")}
       >
         <div className="flex items-center space-x-3">

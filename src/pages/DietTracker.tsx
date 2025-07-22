@@ -86,7 +86,7 @@ export default function DietTracker() {
   };
 
   return (
-    <div className="min-h-screen p-6 space-y-6 bg-gray-50">
+    <div className="min-h-screen p-6 space-y-6 bg-background">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button
@@ -104,7 +104,7 @@ export default function DietTracker() {
       </div>
 
       {/* Daily Summary */}
-      <Card className="border border-gray-200">
+      <Card className="border-2 border-[hsl(var(--widget-border))]">
         <CardHeader>
           <CardTitle className="text-gray-900">Today's Nutrition</CardTitle>
         </CardHeader>
@@ -247,7 +247,7 @@ export default function DietTracker() {
       <div className="space-y-3">
         <h2 className="text-lg font-semibold text-gray-900">Today's Foods</h2>
         {todayNutrition.foods.map((food) => (
-          <Card key={food.id} className="border border-gray-200">
+          <Card key={food.id} className="border-2 border-[hsl(var(--widget-border))]">
             <CardContent className="p-4">
               <div className="flex justify-between items-start">
                 <div>
