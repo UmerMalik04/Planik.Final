@@ -115,23 +115,32 @@ class MockSupabaseAuth {
   async signInWithOAuth({ provider }: any) {
     console.log('Mock OAuth login with:', provider);
     
-    // Simulate OAuth flow
+    // Simulate OAuth flow with realistic user data
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    const user: User = {
-      id: 'oauth-' + Date.now(),
-      email: `user@${provider}.com`,
+    // Simulate retrieving user data from Google OAuth
+    const userData = {
+      id: 'google-' + Date.now(),
+      email: 'john.doe@gmail.com',
       user_metadata: {
-        name: `${provider} User`,
-        avatar_url: `https://ui-avatars.com/api/?name=${provider}+User`
+        name: 'John Doe',
+        avatar_url: 'https://lh3.googleusercontent.com/a/ACg8ocJ8K9F7kL8mN2P4Q5R6S7T8U9V0W1X2Y3Z4-example=s96-c',
+        provider: 'google',
+        email_verified: true,
+        phone_verified: false
       }
     };
 
+    console.log('Retrieved user data from Google OAuth:', userData);
+
     this.session = {
-      user,
+      user: userData,
       access_token: 'mock-oauth-token-' + Date.now()
     };
 
+    // Store user data in mock database
+    this.users.set(userData.email, userData);
+    localStorage.setItem('mock-users', JSON.stringify(Array.from(this.users.entries())));
     localStorage.setItem('mock-auth-session', JSON.stringify(this.session));
     
     // Notify callbacks
@@ -139,7 +148,7 @@ class MockSupabaseAuth {
 
     return { 
       data: { 
-        user, 
+        user: userData, 
         session: this.session 
       }, 
       error: null 
