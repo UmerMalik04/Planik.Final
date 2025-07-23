@@ -19,6 +19,14 @@ export interface WorkoutSession {
   exercises: CompletedExercise[];
 }
 
+export interface SetData {
+  weight: number;
+  reps: number;
+  dropSetWeight?: number;
+  dropSetReps?: number;
+  type: 'normal' | 'dropset';
+}
+
 export interface CompletedExercise {
   id: string;
   name: string;
@@ -28,6 +36,8 @@ export interface CompletedExercise {
   date: string;
   previousWeight?: number;
   previousReps?: number;
+  setData?: SetData[];
+  previousSetData?: SetData[];
 }
 
 export interface WorkoutPlan {

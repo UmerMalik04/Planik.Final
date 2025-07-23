@@ -63,7 +63,8 @@ export default function StartWorkout() {
         sets: exercise.sets || 3,
         date: session.date,
         previousWeight: lastPerformance?.weight,
-        previousReps: lastPerformance?.reps
+        previousReps: lastPerformance?.reps,
+        previousSetData: lastPerformance?.setData
       };
     });
     
@@ -109,7 +110,8 @@ export default function StartWorkout() {
       sets: newExerciseSets,
       date: currentSession.date,
       previousWeight: lastPerformance?.weight,
-      previousReps: lastPerformance?.reps
+      previousReps: lastPerformance?.reps,
+      previousSetData: lastPerformance?.setData
     };
     
     setCompletedExercises(prev => [...prev, newCompletedExercise]);
@@ -241,7 +243,10 @@ export default function StartWorkout() {
     
     const validExercises = completedExercises.filter(exercise => 
       exercise.weight > 0 && exercise.reps > 0
-    );
+    ).map((exercise, index) => ({
+      ...exercise,
+      setData: exerciseSets[index] || []
+    }));
     
     if (validExercises.length === 0) {
       alert("Please complete at least one exercise before finishing the workout.");
@@ -370,12 +375,18 @@ export default function StartWorkout() {
                           <Label className="text-muted-foreground text-xs font-medium">Weight (kg)</Label>
                           <Input
                             type="number"
-                            placeholder={exercise.previousWeight ? `Previous: ${exercise.previousWeight}kg` : "0"}
+                            placeholder={
+                              exercise.previousSetData?.[setIndex]?.weight 
+                                ? `Previous: ${exercise.previousSetData[setIndex].weight}kg` 
+                                : exercise.previousWeight 
+                                ? `Previous: ${exercise.previousWeight}kg` 
+                                : "0"
+                            }
                             value={exerciseSets[index]?.[setIndex]?.weight || ''}
                             onChange={(e) => updateExerciseSet(index, setIndex, 'weight', Number(e.target.value))}
                             className={`mt-1 antialiased ${getPerformanceColor(
                               exerciseSets[index]?.[setIndex]?.weight || 0, 
-                              exercise.previousWeight, 
+                              exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight, 
                               'weight'
                             )}`}
                           />
@@ -384,12 +395,18 @@ export default function StartWorkout() {
                           <Label className="text-muted-foreground text-xs font-medium">Reps</Label>
                           <Input
                             type="number"
-                            placeholder={exercise.previousReps ? `Previous: ${exercise.previousReps}` : "0"}
+                            placeholder={
+                              exercise.previousSetData?.[setIndex]?.reps 
+                                ? `Previous: ${exercise.previousSetData[setIndex].reps}` 
+                                : exercise.previousReps 
+                                ? `Previous: ${exercise.previousReps}` 
+                                : "0"
+                            }
                             value={exerciseSets[index]?.[setIndex]?.reps || ''}
                             onChange={(e) => updateExerciseSet(index, setIndex, 'reps', Number(e.target.value))}
                             className={`mt-1 antialiased ${getPerformanceColor(
                               exerciseSets[index]?.[setIndex]?.reps || 0, 
-                              exercise.previousReps, 
+                              exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps, 
                               'reps'
                             )}`}
                           />
