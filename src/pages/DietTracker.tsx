@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeft, Camera, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Camera, Plus, Trash2, Calendar } from 'lucide-react';
 import { useDietStore, FoodItem } from '@/stores/useDietStore';
 import { useToast } from '@/hooks/use-toast';
 
@@ -104,6 +104,26 @@ export default function DietTracker() {
     }
   };
 
+  // Get daily calorie data for the past 7 days
+  const getDailyCalorieData = () => {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateString = date.toISOString().split('T')[0];
+      const dayData = getDailyNutrition(dateString);
+      days.push({
+        date: dateString,
+        displayDate: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+        calories: dayData.totalCalories,
+        isToday: dateString === currentDate
+      });
+    }
+    return days;
+  };
+
+  const dailyCalorieData = getDailyCalorieData();
+
   return (
     <div className="min-h-screen p-6 space-y-6 bg-background">
       {/* Header */}
@@ -134,20 +154,64 @@ export default function DietTracker() {
               <p className="text-sm text-muted-foreground">Calories</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-emerald-600">{todayNutrition.totalProtein}g</p>
+              <p className="text-2xl font-bold text-emerald-500">{todayNutrition.totalProtein}g</p>
               <p className="text-sm text-muted-foreground">Protein</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-amber-600">{todayNutrition.totalCarbs}g</p>
+              <p className="text-2xl font-bold text-orange-500">{todayNutrition.totalCarbs}g</p>
               <p className="text-sm text-muted-foreground">Carbs</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-rose-600">{todayNutrition.totalFat}g</p>
+              <p className="text-2xl font-bold text-red-500">{todayNutrition.totalFat}g</p>
               <p className="text-sm text-muted-foreground">Fat</p>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Daily Calorie History */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold text-foreground">Weekly Overview</h2>
+        <div className="grid grid-cols-2 gap-4">
+          {dailyCalorieData.map((day) => (
+            <Card 
+              key={day.date} 
+              className={`border-2 transition-all duration-200 hover:scale-105 ${
+                day.isToday 
+                  ? 'border-primary bg-primary/5' 
+                  : day.calories > 0 
+                    ? 'border-green-500/30 bg-green-500/5' 
+                    : 'border-muted bg-card'
+              }`}
+            >
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-center text-foreground">
+                  {day.displayDate}
+                  {day.isToday && (
+                    <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full">
+                      Today
+                    </span>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-foreground">
+                    {day.calories}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    calories
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {day.calories > 0 ? 'Logged' : 'No data'}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
 
       {/* Action Buttons */}
       <div className="flex gap-3">
