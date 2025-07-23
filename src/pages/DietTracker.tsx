@@ -7,9 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ArrowLeft, Camera, Plus, Trash2 } from 'lucide-react';
 import { useDietStore, FoodItem } from '@/stores/useDietStore';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function DietTracker() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { dailyNutrition, addFood, removeFood, getDailyNutrition, scanFood } = useDietStore();
   const [isScanning, setIsScanning] = useState(false);
   const [showAddFood, setShowAddFood] = useState(false);
@@ -45,6 +47,18 @@ export default function DietTracker() {
         
         if (scannedResult) {
           setScannedFood(scannedResult);
+          toast({
+            title: "Food Recognized!",
+            description: `Detected: ${scannedResult.name} with ${scannedResult.calories} calories`,
+            duration: 3000,
+          });
+        } else {
+          toast({
+            title: "Recognition Failed",
+            description: "Couldn't identify the food. You can add it manually.",
+            variant: "destructive",
+            duration: 3000,
+          });
         }
         setIsScanning(false);
       };
@@ -80,6 +94,11 @@ export default function DietTracker() {
       addFood({
         ...scannedFood,
         date: currentDate
+      });
+      toast({
+        title: "Food Added!",
+        description: `${scannedFood.name} has been added to your diary`,
+        duration: 2000,
       });
       setScannedFood(null);
     }
