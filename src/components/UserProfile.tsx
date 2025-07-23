@@ -11,10 +11,20 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { User, Settings, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+
+interface AuthUser {
+  id: string;
+  email: string;
+  user_metadata: {
+    name?: string;
+    gender?: string;
+    date_of_birth?: string;
+    avatar_url?: string;
+  };
+}
 
 export default function UserProfile() {
-  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {

@@ -96,6 +96,7 @@ export default function Auth() {
     setLoading(true);
 
     try {
+      console.log('Starting signup process...');
       const { data, error } = await supabase.auth.signUp({
         email: signupForm.email,
         password: signupForm.password,
@@ -104,12 +105,12 @@ export default function Auth() {
             name: signupForm.name,
             gender: signupForm.gender,
             date_of_birth: signupForm.dateOfBirth,
-          },
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          }
         }
       });
 
       if (error) {
+        console.error('Signup error:', error);
         toast({
           title: "Signup Failed",
           description: error.message,
@@ -118,18 +119,21 @@ export default function Auth() {
         return;
       }
 
-      setEmail(signupForm.email);
-      setVerificationStep(true);
+      console.log('Signup successful:', data);
       
       toast({
-        title: "Verification Email Sent",
-        description: "Please check your email and enter the verification code.",
+        title: "Account Created!",
+        description: "Welcome to Planik! You can now start your fitness journey.",
       });
 
+      // For the mock system, redirect immediately since no email verification is needed
+      navigate('/');
+
     } catch (error) {
+      console.error('Signup error:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred.",
+        description: "An unexpected error occurred during signup.",
         variant: "destructive",
       });
     } finally {
@@ -141,61 +145,34 @@ export default function Auth() {
     setLoading(true);
     
     try {
+      console.log('Starting Google OAuth...');
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
+        provider: 'google'
       });
 
       if (error) {
+        console.error('Google login error:', error);
         toast({
-          title: "Google Login Failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerification = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        email: email,
-        token: verificationCode,
-        type: 'signup'
-      });
-
-      if (error) {
-        toast({
-          title: "Verification Failed",
+          title: "Google Login Failed",  
           description: error.message,
           variant: "destructive",
         });
         return;
       }
 
+      console.log('Google login successful:', data);
+      
       toast({
-        title: "Account Verified!",
-        description: "Your account has been created successfully.",
+        title: "Welcome!",
+        description: "Successfully logged in with Google.",
       });
 
       navigate('/');
     } catch (error) {
+      console.error('Google login error:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred.",
+        description: "An unexpected error occurred during Google login.",
         variant: "destructive",
       });
     } finally {
@@ -203,101 +180,7 @@ export default function Auth() {
     }
   };
 
-  const resendVerification = async () => {
-    setLoading(true);
-    
-    try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email
-      });
-
-      if (error) {
-        toast({
-          title: "Resend Failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      toast({
-        title: "Verification Email Sent",
-        description: "A new verification code has been sent to your email.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (verificationStep) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-gray-900">
-              Verify Your Email
-            </CardTitle>
-            <p className="text-gray-600 mt-2">
-              We've sent a verification code to<br />
-              <span className="font-semibold">{email}</span>
-            </p>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleVerification} className="space-y-4">
-              <div>
-                <Label htmlFor="verification-code">Verification Code</Label>
-                <Input
-                  id="verification-code"
-                  type="text"
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  placeholder="Enter 6-digit code"
-                  className="mt-1"
-                  maxLength={6}
-                  required
-                />
-              </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={loading || verificationCode.length !== 6}
-              >
-                {loading ? 'Verifying...' : 'Verify Account'}
-              </Button>
-              
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={resendVerification}
-                  className="text-sm text-blue-600 hover:text-blue-800 underline"
-                  disabled={loading}
-                >
-                  Didn't receive the code? Resend
-                </button>
-              </div>
-              
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setVerificationStep(false)}
-                className="w-full"
-              >
-                Back to Signup
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Verification step UI removed since mock system doesn't need email verification
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-6">

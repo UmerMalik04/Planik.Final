@@ -1,14 +1,208 @@
-import { createClient } from '@supabase/supabase-js';
+// Mock authentication service for demo purposes
+// Replace this with real Supabase configuration when ready
 
-// Note: In a real Supabase integration, these values would come from your Supabase project
-// For now, using placeholder values - update these with your actual Supabase project details
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key';
+interface User {
+  id: string;
+  email: string;
+  user_metadata: {
+    name?: string;
+    gender?: string;
+    date_of_birth?: string;
+    avatar_url?: string;
+  };
+}
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-  },
-});
+interface Session {
+  user: User;
+  access_token: string;
+}
+
+class MockSupabaseAuth {
+  private session: Session | null = null;
+  private users: Map<string, User> = new Map();
+  private callbacks: ((event: string, session: Session | null) => void)[] = [];
+
+  constructor() {
+    // Check for existing session in localStorage
+    const savedSession = localStorage.getItem('mock-auth-session');
+    if (savedSession) {
+      this.session = JSON.parse(savedSession);
+    }
+  }
+
+  async signUp({ email, password, options }: any) {
+    console.log('Mock signup for:', email);
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    if (this.users.has(email)) {
+      return { 
+        data: null, 
+        error: { message: 'User already registered' } 
+      };
+    }
+
+    const user: User = {
+      id: Date.now().toString(),
+      email,
+      user_metadata: options?.data || {}
+    };
+
+    this.users.set(email, user);
+    localStorage.setItem('mock-users', JSON.stringify(Array.from(this.users.entries())));
+
+    // For demo purposes, auto-verify the user
+    this.session = {
+      user,
+      access_token: 'mock-token-' + Date.now()
+    };
+
+    localStorage.setItem('mock-auth-session', JSON.stringify(this.session));
+    
+    // Notify callbacks
+    this.callbacks.forEach(callback => callback('SIGNED_IN', this.session));
+
+    return { 
+      data: { 
+        user, 
+        session: this.session 
+      }, 
+      error: null 
+    };
+  }
+
+  async signInWithPassword({ email, password }: any) {
+    console.log('Mock login for:', email);
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Load users from localStorage
+    const savedUsers = localStorage.getItem('mock-users');
+    if (savedUsers) {
+      const usersArray = JSON.parse(savedUsers);
+      this.users = new Map(usersArray);
+    }
+
+    const user = this.users.get(email);
+    if (!user) {
+      return { 
+        data: null, 
+        error: { message: 'Invalid login credentials' } 
+      };
+    }
+
+    this.session = {
+      user,
+      access_token: 'mock-token-' + Date.now()
+    };
+
+    localStorage.setItem('mock-auth-session', JSON.stringify(this.session));
+    
+    // Notify callbacks
+    this.callbacks.forEach(callback => callback('SIGNED_IN', this.session));
+
+    return { 
+      data: { 
+        user, 
+        session: this.session 
+      }, 
+      error: null 
+    };
+  }
+
+  async signInWithOAuth({ provider }: any) {
+    console.log('Mock OAuth login with:', provider);
+    
+    // Simulate OAuth flow
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const user: User = {
+      id: 'oauth-' + Date.now(),
+      email: `user@${provider}.com`,
+      user_metadata: {
+        name: `${provider} User`,
+        avatar_url: `https://ui-avatars.com/api/?name=${provider}+User`
+      }
+    };
+
+    this.session = {
+      user,
+      access_token: 'mock-oauth-token-' + Date.now()
+    };
+
+    localStorage.setItem('mock-auth-session', JSON.stringify(this.session));
+    
+    // Notify callbacks
+    this.callbacks.forEach(callback => callback('SIGNED_IN', this.session));
+
+    return { 
+      data: { 
+        user, 
+        session: this.session 
+      }, 
+      error: null 
+    };
+  }
+
+  async signOut() {
+    console.log('Mock signout');
+    this.session = null;
+    localStorage.removeItem('mock-auth-session');
+    
+    // Notify callbacks
+    this.callbacks.forEach(callback => callback('SIGNED_OUT', null));
+
+    return { error: null };
+  }
+
+  async getSession() {
+    return { 
+      data: { 
+        session: this.session 
+      }, 
+      error: null 
+    };
+  }
+
+  async getUser() {
+    return { 
+      data: { 
+        user: this.session?.user || null 
+      }, 
+      error: null 
+    };
+  }
+
+  onAuthStateChange(callback: (event: string, session: Session | null) => void) {
+    this.callbacks.push(callback);
+    
+    return {
+      data: {
+        subscription: {
+          unsubscribe: () => {
+            const index = this.callbacks.indexOf(callback);
+            if (index > -1) {
+              this.callbacks.splice(index, 1);
+            }
+          }
+        }
+      }
+    };
+  }
+
+  // Mock methods that aren't used but might be called
+  async verifyOtp() {
+    return { data: { user: this.session?.user }, error: null };
+  }
+
+  async resend() {
+    return { error: null };
+  }
+}
+
+// Create mock Supabase client
+export const supabase = {
+  auth: new MockSupabaseAuth()
+};
