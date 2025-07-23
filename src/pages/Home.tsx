@@ -32,11 +32,11 @@ export default function Home() {
   }, [workoutSessions]);
 
   const getWorkoutSummary = () => {
-    const threeMonthsAgo = new Date();
-    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
     
     const recentSessions = workoutSessions.filter(
-      session => new Date(session.date) >= threeMonthsAgo
+      session => new Date(session.date) >= oneMonthAgo
     );
 
     const allRecentExercises = recentSessions.flatMap(session => session.exercises);
@@ -141,7 +141,7 @@ export default function Home() {
             </div>
             <div>
               <div className="text-2xl font-bold text-primary">{summary.totalWorkouts}</div>
-              <div className="text-sm text-muted-foreground">Workouts (3mo)</div>
+              <div className="text-sm text-muted-foreground">Workouts (1mo)</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-primary">{summary.uniqueExercises}</div>
