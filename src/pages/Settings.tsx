@@ -54,7 +54,7 @@ const languages = [
 export default function Settings() {
   const navigate = useNavigate();
   const { theme, toggleTheme, themeColor, setThemeColor, availableColors } = useTheme();
-  const { settings, updateSetting } = useSettings();
+  const { settings, updateSetting, getText } = useSettings();
   const [feedback, setFeedback] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -167,13 +167,13 @@ export default function Settings() {
           className="flex items-center gap-2 mb-4"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Home
+          {getText('back_to_home')}
         </Button>
 
         {/* Header */}
         <div className="flex items-center gap-2">
           <SettingsIcon className="h-6 w-6" />
-          <h1 className="text-2xl font-bold">Settings</h1>
+          <h1 className="text-2xl font-bold">{getText('settings')}</h1>
         </div>
 
         {/* Appearance */}
@@ -181,9 +181,9 @@ export default function Settings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Palette className="h-5 w-5" />
-              Appearance
+              {getText('appearance')}
             </CardTitle>
-            <CardDescription>Customize how the app looks and feels</CardDescription>
+            <CardDescription>{getText('customize_app_looks')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Dark Mode */}
@@ -191,10 +191,10 @@ export default function Settings() {
               <div className="space-y-0.5">
                 <Label className="flex items-center gap-2">
                   {theme === 'dark' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-                  Dark Mode
+                  {getText('dark_mode')}
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Switch between light and dark themes
+                  {getText('switch_light_dark')}
                 </p>
               </div>
               <Switch
@@ -205,7 +205,7 @@ export default function Settings() {
 
             {/* Theme Color */}
             <div className="space-y-3">
-              <Label>Theme Color</Label>
+              <Label>{getText('theme_color')}</Label>
               <div className="flex gap-2 flex-wrap">
                 {availableColors.map((color) => (
                   <button
@@ -230,13 +230,13 @@ export default function Settings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Globe className="h-5 w-5" />
-              Language & Region
+              {getText('language_region')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Language */}
             <div className="space-y-2">
-              <Label>Language</Label>
+              <Label>{getText('language')}</Label>
               <Select 
                 value={settings.language} 
                 onValueChange={(value) => updateSetting('language', value)}
@@ -258,7 +258,7 @@ export default function Settings() {
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <Scale className="h-4 w-4" />
-                Weight Units
+                {getText('weight_units')}
               </Label>
               <Select 
                 value={settings.units} 
@@ -268,8 +268,8 @@ export default function Settings() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="kg">Kilograms (kg)</SelectItem>
-                  <SelectItem value="lbs">Pounds (lbs)</SelectItem>
+                  <SelectItem value="kg">{getText('kilograms')}</SelectItem>
+                  <SelectItem value="lbs">{getText('pounds')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -278,7 +278,7 @@ export default function Settings() {
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                Date Format
+                {getText('date_format')}
               </Label>
               <Select 
                 value={settings.dateFormat} 
@@ -302,16 +302,16 @@ export default function Settings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
-              Notifications & Privacy
+              {getText('notifications_privacy')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Notifications */}
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>Push Notifications</Label>
+                <Label>{getText('push_notifications')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Receive workout reminders and updates
+                  {getText('receive_workout_reminders')}
                 </p>
               </div>
               <Switch
@@ -325,10 +325,10 @@ export default function Settings() {
               <div className="space-y-0.5">
                 <Label className="flex items-center gap-2">
                   <Fingerprint className="h-4 w-4" />
-                  Biometric Login
+                  {getText('biometric_login')}
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Use Face ID or Fingerprint to sign in
+                  {getText('use_face_id_fingerprint')}
                 </p>
               </div>
               <Switch
@@ -344,29 +344,29 @@ export default function Settings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Lock className="h-5 w-5" />
-              Security
+              {getText('security')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Change Password */}
             <div className="space-y-3">
-              <Label>Change Password</Label>
+              <Label>{getText('change_password')}</Label>
               <div className="space-y-2">
                 <Input
                   type="password"
-                  placeholder="New Password"
+                  placeholder={getText('new_password')}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                 />
                 <Input
                   type="password"
-                  placeholder="Confirm New Password"
+                  placeholder={getText('confirm_new_password')}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                 />
                 <Button onClick={handleChangePassword} className="w-full">
                   <Lock className="h-4 w-4 mr-2" />
-                  Update Password
+                  {getText('update_password')}
                 </Button>
               </div>
             </div>
@@ -379,7 +379,7 @@ export default function Settings() {
               onClick={handleDeleteAccount}
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Delete Account Data
+              {getText('delete_account_data')}
             </Button>
           </CardContent>
         </Card>
@@ -389,16 +389,16 @@ export default function Settings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Cloud className="h-5 w-5" />
-              Backup & Sync
+              {getText('backup_sync')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Auto Sync */}
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>Auto Sync</Label>
+                <Label>{getText('auto_sync')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Automatically sync data with cloud
+                  {getText('automatically_sync_data')}
                 </p>
               </div>
               <Switch
@@ -416,12 +416,12 @@ export default function Settings() {
               onClick={() => toast({ title: "Sync Complete", description: "Your data has been synced successfully." })}
             >
               <Cloud className="h-4 w-4 mr-2" />
-              Manual Sync Now
+              {getText('manual_sync_now')}
             </Button>
 
             {/* Export Data */}
             <div className="space-y-2">
-              <Label>Export Data</Label>
+              <Label>{getText('export_data')}</Label>
               <div className="flex gap-2">
                 <Button 
                   variant="outline" 
@@ -449,22 +449,22 @@ export default function Settings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Mail className="h-5 w-5" />
-              Send Feedback
+              {getText('send_feedback')}
             </CardTitle>
             <CardDescription>
-              Help us improve the app by sharing your thoughts
+              {getText('help_improve_app')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea
-              placeholder="Tell us what you think about the app, report bugs, or suggest new features..."
+              placeholder={getText('feedback_placeholder')}
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
               rows={4}
             />
             <Button onClick={handleFeedback} className="w-full">
               <Mail className="h-4 w-4 mr-2" />
-              Send Feedback
+              {getText('send_feedback')}
             </Button>
           </CardContent>
         </Card>
@@ -474,12 +474,12 @@ export default function Settings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Info className="h-5 w-5" />
-              App Info & Support
+              {getText('app_info_support')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <span>App Version</span>
+              <span>{getText('app_version')}</span>
               <Badge variant="secondary">1.0.0</Badge>
             </div>
 
@@ -499,7 +499,7 @@ export default function Settings() {
                 }}
               >
                 <Shield className="h-4 w-4 mr-2" />
-                Terms of Service
+                {getText('terms_service')}
               </Button>
               <Button 
                 variant="ghost" 
@@ -514,7 +514,7 @@ export default function Settings() {
                 }}
               >
                 <Shield className="h-4 w-4 mr-2" />
-                Privacy Policy
+                {getText('privacy_policy')}
               </Button>
               <Button 
                 variant="ghost" 
@@ -531,7 +531,7 @@ export default function Settings() {
                 }}
               >
                 <HelpCircle className="h-4 w-4 mr-2" />
-                Contact Support
+                {getText('contact_support')}
               </Button>
               <Button 
                 variant="ghost" 
@@ -548,7 +548,7 @@ export default function Settings() {
                 }}
               >
                 <Bug className="h-4 w-4 mr-2" />
-                Report a Bug
+                {getText('report_bug')}
               </Button>
             </div>
           </CardContent>
