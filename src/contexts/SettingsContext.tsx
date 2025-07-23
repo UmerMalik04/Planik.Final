@@ -124,6 +124,15 @@ const translations: Record<Language, Record<string, string>> = {
     'kg': 'kg',
     'lbs': 'lbs',
     
+    // Navigation
+    'home': 'Home',
+    'history': 'History',
+    'log_out': 'Log out',
+    
+    // Progress Terms
+    'average': 'Average',
+    'previous': 'Previous',
+    
     // Dates
     'monday': 'Monday',
     'tuesday': 'Tuesday', 
@@ -223,6 +232,15 @@ const translations: Record<Language, Record<string, string>> = {
     // Units
     'kg': 'kg',
     'lbs': 'lbs',
+    
+    // Navigation
+    'home': 'Inicio',
+    'history': 'Historial',
+    'log_out': 'Cerrar sesión',
+    
+    // Progress Terms
+    'average': 'Promedio',
+    'previous': 'Anterior',
     
     // Dates
     'monday': 'Lunes',
@@ -324,6 +342,15 @@ const translations: Record<Language, Record<string, string>> = {
     'kg': 'kg',
     'lbs': 'lbs',
     
+    // Navigation
+    'home': 'Accueil',
+    'history': 'Historique',
+    'log_out': 'Se déconnecter',
+    
+    // Progress Terms
+    'average': 'Moyenne',
+    'previous': 'Précédent',
+    
     // Dates
     'monday': 'Lundi',
     'tuesday': 'Mardi',
@@ -423,6 +450,15 @@ const translations: Record<Language, Record<string, string>> = {
     // Units
     'kg': 'kg',
     'lbs': 'lbs',
+    
+    // Navigation
+    'home': 'Startseite',
+    'history': 'Verlauf',
+    'log_out': 'Abmelden',
+    
+    // Progress Terms
+    'average': 'Durchschnitt',
+    'previous': 'Vorherige',
     
     // Dates
     'monday': 'Montag',

@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { User, Settings, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface AuthUser {
   id: string;
@@ -28,6 +29,7 @@ export default function UserProfile() {
   const navigate = useNavigate();
   const [user, setUser] = useState<AuthUser | null>(null);
   const { toast } = useToast();
+  const { getText } = useSettings();
 
   useEffect(() => {
     const getUser = async () => {
@@ -101,16 +103,16 @@ export default function UserProfile() {
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate('/profile')}>
           <User className="mr-2 h-4 w-4" />
-          <span>Profile</span>
+          <span>{getText('profile')}</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate('/settings')}>
           <Settings className="mr-2 h-4 w-4" />
-          <span>Settings</span>
+          <span>{getText('settings')}</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+          <span>{getText('log_out')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

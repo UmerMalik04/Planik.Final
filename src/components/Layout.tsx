@@ -14,6 +14,7 @@ import {
   AlertDialogTrigger 
 } from "@/components/ui/alert-dialog";
 import UserProfile from './UserProfile';
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface LayoutProps {
   children: ReactNode;
@@ -28,10 +29,12 @@ export default function Layout({ children }: LayoutProps) {
     window.location.reload();
   };
 
+  const { getText } = useSettings();
+  
   const navItems = [
-    { icon: Home, path: "/", label: "Home" },
-    { icon: History, path: "/history", label: "History" },
-    { icon: BarChart3, path: "/progress", label: "Progress" }
+    { icon: Home, path: "/", label: getText('home') },
+    { icon: History, path: "/history", label: getText('history') },
+    { icon: BarChart3, path: "/progress", label: getText('progress') }
   ];
 
   // Don't show navigation on auth pages

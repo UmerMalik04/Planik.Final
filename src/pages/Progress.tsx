@@ -470,17 +470,17 @@ export default function Progress() {
                   <div className="flex justify-between items-center">
                     <div className="flex-1">
                       <h3 className="font-semibold">{workoutType.name}</h3>
-                       <div className="flex items-center gap-4 mt-1">
-                         <span className="text-sm text-muted-foreground">
-                           Average: {workoutType.previousWeekAverage > 0 
-                             ? `${((workoutType.currentWeekAverage / workoutType.previousWeekAverage - 1) * 100).toFixed(1)}%`
-                             : workoutType.currentWeekAverage > 0 ? '+100%' : '0%'
-                           }
-                         </span>
-                         <span className="text-xs text-muted-foreground">
-                           Previous: {formatWeight(workoutType.previousWeekAverage)}
-                         </span>
-                       </div>
+                        <div className="flex items-center gap-4 mt-1">
+                          <span className="text-sm text-muted-foreground">
+                            {getText('average')}: {workoutType.previousWeekAverage > 0 
+                              ? `${((workoutType.currentWeekAverage / workoutType.previousWeekAverage - 1) * 100).toFixed(1)}%`
+                              : workoutType.currentWeekAverage > 0 ? '+100%' : '0%'
+                            }
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {getText('previous')}: {formatWeight(workoutType.previousWeekAverage)}
+                          </span>
+                        </div>
                     </div>
                     <div className="flex items-center gap-2">
                       {workoutType.trend !== 'none' && (
