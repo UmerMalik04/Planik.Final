@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ArrowLeft, Camera, Plus, Trash2 } from 'lucide-react';
 import { useDietStore, FoodItem } from '@/stores/useDietStore';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 export default function DietTracker() {
   const navigate = useNavigate();
