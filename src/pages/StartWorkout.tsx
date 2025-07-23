@@ -243,10 +243,14 @@ export default function StartWorkout() {
     
     const validExercises = completedExercises.filter(exercise => 
       exercise.weight > 0 && exercise.reps > 0
-    ).map((exercise, index) => ({
-      ...exercise,
-      setData: exerciseSets[index] || []
-    }));
+    ).map((exercise) => {
+      // Find the correct set data for this exercise by finding its index in completedExercises
+      const originalIndex = completedExercises.findIndex(e => e.id === exercise.id);
+      return {
+        ...exercise,
+        setData: exerciseSets[originalIndex] || []
+      };
+    });
     
     if (validExercises.length === 0) {
       alert("Please complete at least one exercise before finishing the workout.");

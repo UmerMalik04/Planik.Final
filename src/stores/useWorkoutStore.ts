@@ -296,7 +296,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
             .forEach(exercise => allExercises.push(exercise));
         });
 
-        return allExercises.sort((a, b) => new Date(b.id).getTime() - new Date(a.id).getTime());
+        return allExercises.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       },
 
       getWorkoutFrequency: (workoutType) => {
