@@ -17,6 +17,8 @@ import DietTracker from "./pages/DietTracker";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
 import Demo from "./pages/Demo";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -91,6 +93,20 @@ function App() {
             <AuthGuard>
               <Layout>
                 <DietTracker />
+              </Layout>
+            </AuthGuard>
+          } />
+          <Route path="/profile" element={
+            <AuthGuard>
+              <Layout>
+                <Profile />
+              </Layout>
+            </AuthGuard>
+          } />
+          <Route path="/settings" element={
+            <AuthGuard>
+              <Layout>
+                <Settings />
               </Layout>
             </AuthGuard>
           } />
