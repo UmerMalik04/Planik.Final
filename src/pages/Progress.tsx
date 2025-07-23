@@ -38,9 +38,11 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useSettings } from "@/contexts/SettingsContext";
 
 export default function Progress() {
   const navigate = useNavigate();
+  const { formatWeight, formatDate, getText } = useSettings();
   const { personalRecords, getExerciseHistory, workoutSessions, updatePersonalRecord, deletePersonalRecord, workoutTypes, workoutPlans } = useWorkoutStore();
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
   const [editingRecord, setEditingRecord] = useState<any>(null);
@@ -214,7 +216,7 @@ export default function Progress() {
         weight: exercise.weight,
         reps: exercise.reps,
         total: exercise.weight * exercise.reps,
-        date: new Date(exercise.date).toLocaleDateString()
+        date: formatDate(exercise.date)
       }));
   };
 
@@ -306,14 +308,14 @@ export default function Progress() {
                     {record ? (
                       <>
                         <div className="text-2xl font-bold text-primary">
-                          {record.weight}kg
+                          {formatWeight(record.weight)}
                         </div>
                         <div className="text-sm text-muted-foreground">
                           × {record.reps} reps
                         </div>
                         <div className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
                           <Calendar className="w-3 h-3" />
-                          {new Date(record.date).toLocaleDateString()}
+                          {formatDate(record.date)}
                         </div>
                       </>
                     ) : (
@@ -378,14 +380,14 @@ export default function Progress() {
                 <CardContent className="pt-0">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-primary">
-                      {record.weight}kg
+                      {formatWeight(record.weight)}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       × {record.reps} reps
                     </div>
                     <div className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      {new Date(record.date).toLocaleDateString()}
+                      {formatDate(record.date)}
                     </div>
                   </div>
                 </CardContent>
@@ -417,10 +419,10 @@ export default function Progress() {
                       <h3 className="font-semibold">{exercise.name}</h3>
                       <div className="flex items-center gap-4 mt-1">
                         <span className="text-sm text-muted-foreground">
-                          Latest: {exercise.latest?.weight}kg × {exercise.latest?.reps} reps
+                          Latest: {formatWeight(exercise.latest?.weight || 0)} × {exercise.latest?.reps} reps
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          {new Date(exercise.latest?.date || '').toLocaleDateString()}
+                          {formatDate(exercise.latest?.date || '')}
                         </span>
                       </div>
                     </div>
@@ -476,7 +478,7 @@ export default function Progress() {
                            }
                          </span>
                          <span className="text-xs text-muted-foreground">
-                           Previous: {workoutType.previousWeekAverage.toFixed(1)}kg
+                           Previous: {formatWeight(workoutType.previousWeekAverage)}
                          </span>
                        </div>
                     </div>
@@ -494,7 +496,7 @@ export default function Progress() {
                             workoutType.trend === 'increase' ? 'text-green-500' : 
                             workoutType.trend === 'decrease' ? 'text-red-500' : 'text-yellow-500'
                           }`}>
-                            {workoutType.difference > 0 ? '+' : ''}{workoutType.difference.toFixed(1)}kg
+                            {workoutType.difference > 0 ? '+' : ''}{formatWeight(workoutType.difference)}
                           </span>
                         </>
                       )}
@@ -524,11 +526,11 @@ export default function Progress() {
                       label={{ value: 'Date', position: 'insideBottom', offset: -5 }}
                     />
                     <YAxis 
-                      label={{ value: 'Weight (kg)', angle: -90, position: 'insideLeft' }}
+                      label={{ value: 'Weight', angle: -90, position: 'insideLeft' }}
                     />
                     <Tooltip 
                       formatter={(value, name) => [
-                        name === 'weight' ? `${value}kg` : value,
+                        name === 'weight' ? formatWeight(value as number) : value,
                         name === 'weight' ? 'Weight' : name
                       ]}
                       labelFormatter={(label) => label}
@@ -560,7 +562,7 @@ export default function Progress() {
           {editingRecord && (
             <div className="space-y-4">
               <div>
-                <Label htmlFor="edit-weight">Weight (kg)</Label>
+                <Label htmlFor="edit-weight">Weight</Label>
                 <Input
                   id="edit-weight"
                   type="number"
@@ -620,7 +622,7 @@ export default function Progress() {
               />
             </div>
             <div>
-              <Label htmlFor="weight">Weight (kg)</Label>
+              <Label htmlFor="weight">Weight</Label>
               <Input
                 id="weight"
                 type="number"
@@ -683,7 +685,7 @@ export default function Progress() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Personal Record</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete your {recordToDelete?.exerciseName} personal record of {recordToDelete?.weight}kg? 
+              Are you sure you want to delete your {recordToDelete?.exerciseName} personal record of {recordToDelete ? formatWeight(recordToDelete.weight) : ''}? 
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

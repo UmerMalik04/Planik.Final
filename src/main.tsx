@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { SettingsProvider } from "./contexts/SettingsContext";
 import App from "./App.tsx";
 import "./index.css";
 
@@ -11,9 +12,11 @@ if (!rootElement) throw new Error("Failed to find the root element");
 createRoot(rootElement).render(
   <StrictMode>
     <BrowserRouter>
-      <ThemeProvider>
+    <ThemeProvider>
+      <SettingsProvider>
         <App />
-      </ThemeProvider>
+      </SettingsProvider>
+    </ThemeProvider>
     </BrowserRouter>
   </StrictMode>
 );

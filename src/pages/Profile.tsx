@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Camera, Trophy, Flame, Target, Zap, Calendar, Star, ArrowLeft, Dumbbell, Users, Weight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface Achievement {
   id: string;
@@ -28,6 +29,7 @@ export default function Profile() {
   const [editedName, setEditedName] = useState('');
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const { toast } = useToast();
+  const { formatDateWithOptions, getText, formatWeight } = useSettings();
 
   useEffect(() => {
     const getUser = async () => {
@@ -127,11 +129,54 @@ export default function Profile() {
   };
 
   const handleProfilePictureChange = () => {
-    // Mock profile picture change
-    toast({
-      title: "Profile Picture",
-      description: "Profile picture upload would open here.",
-    });
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment'; // This enables camera on mobile devices
+    
+    input.onchange = (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const imageUrl = e.target?.result as string;
+          
+          // Save to localStorage and update user
+          try {
+            const savedUsers = JSON.parse(localStorage.getItem('mock-users') || '[]');
+            const userIndex = savedUsers.findIndex((u: any) => u.email === user.email);
+            if (userIndex !== -1) {
+              savedUsers[userIndex].user_metadata.avatar_url = imageUrl;
+              localStorage.setItem('mock-users', JSON.stringify(savedUsers));
+              localStorage.setItem('current-user', JSON.stringify(savedUsers[userIndex]));
+              
+              // Update current user state
+              setUser({
+                ...user,
+                user_metadata: {
+                  ...user.user_metadata,
+                  avatar_url: imageUrl
+                }
+              });
+              
+              toast({
+                title: "Profile Picture Updated",
+                description: "Your profile picture has been changed successfully.",
+              });
+            }
+          } catch (error) {
+            toast({
+              title: "Error",
+              description: "Failed to update profile picture. Please try again.",
+              variant: "destructive",
+            });
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    
+    input.click();
   };
 
   const triggerAchievementAnimation = (achievementId: string) => {
@@ -169,7 +214,7 @@ export default function Profile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5" />
-              Profile
+              {getText('profile')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -237,10 +282,10 @@ export default function Profile() {
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    Member Since
+                    {getText('member_since')}
                   </Label>
                   <p className="text-muted-foreground">
-                    {joinDate.toLocaleDateString('en-US', { 
+                    {formatDateWithOptions(joinDate, { 
                       year: 'numeric', 
                       month: 'long', 
                       day: 'numeric' 
@@ -257,7 +302,7 @@ export default function Profile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5" />
-              Achievements
+              {getText('achievements')}
             </CardTitle>
             <CardDescription>
               Your fitness milestones and accomplishments
@@ -286,7 +331,7 @@ export default function Profile() {
                         <h3 className="font-medium">{achievement.title}</h3>
                         {achievement.completed && (
                           <div className="flex items-center gap-1">
-                            <Badge variant="default" className="text-xs">Completed</Badge>
+                            <Badge variant="default" className="text-xs">{getText('completed')}</Badge>
                             <span 
                               className="text-lg cursor-pointer hover:animate-bounce"
                               onClick={() => triggerAchievementAnimation(achievement.id)}

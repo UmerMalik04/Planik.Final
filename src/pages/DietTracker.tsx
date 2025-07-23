@@ -8,11 +8,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ArrowLeft, Camera, Plus, Trash2, Calendar } from 'lucide-react';
 import { useDietStore, FoodItem } from '@/stores/useDietStore';
 import { useToast } from '@/hooks/use-toast';
+import { useSettings } from '@/contexts/SettingsContext';
 
 export default function DietTracker() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { dailyNutrition, addFood, removeFood, getDailyNutrition, scanFood } = useDietStore();
+  const { formatDateWithOptions, getText } = useSettings();
+  const { addFood, removeFood, getDailyNutrition, scanFood } = useDietStore();
   const [isScanning, setIsScanning] = useState(false);
   const [showAddFood, setShowAddFood] = useState(false);
   const [scannedFood, setScannedFood] = useState<FoodItem | null>(null);
@@ -114,7 +116,7 @@ export default function DietTracker() {
       const dayData = getDailyNutrition(dateString);
       days.push({
         date: dateString,
-        displayDate: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+        displayDate: formatDateWithOptions(date, { weekday: 'short', month: 'short', day: 'numeric' }),
         calories: dayData.totalCalories,
         isToday: dateString === currentDate
       });
@@ -137,8 +139,8 @@ export default function DietTracker() {
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Diet Tracker</h1>
-          <p className="text-muted-foreground">{new Date().toLocaleDateString()}</p>
+          <h1 className="text-2xl font-bold text-foreground">{getText('diet_tracker')}</h1>
+          <p className="text-muted-foreground">{formatDateWithOptions(new Date())}</p>
         </div>
       </div>
 
@@ -151,19 +153,19 @@ export default function DietTracker() {
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
               <p className="text-2xl font-bold text-primary">{todayNutrition.totalCalories}</p>
-              <p className="text-sm text-muted-foreground">Calories</p>
+              <p className="text-sm text-muted-foreground">{getText('calories')}</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-emerald-500">{todayNutrition.totalProtein}g</p>
-              <p className="text-sm text-muted-foreground">Protein</p>
+              <p className="text-sm text-muted-foreground">{getText('protein')}</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-orange-500">{todayNutrition.totalCarbs}g</p>
-              <p className="text-sm text-muted-foreground">Carbs</p>
+              <p className="text-sm text-muted-foreground">{getText('carbs')}</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-red-500">{todayNutrition.totalFat}g</p>
-              <p className="text-sm text-muted-foreground">Fat</p>
+              <p className="text-sm text-muted-foreground">{getText('fat')}</p>
             </div>
           </div>
         </CardContent>
@@ -201,7 +203,7 @@ export default function DietTracker() {
                         {day.calories}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        calories
+                        {getText('calories')}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
                         <Calendar className="w-3 h-3" />
@@ -256,7 +258,7 @@ export default function DietTracker() {
                           </div>
                           <div className="text-center">
                             <div className="text-lg font-bold text-emerald-500">{dayNutrition.totalProtein}g</div>
-                            <div className="text-xs text-muted-foreground">Protein</div>
+                            <div className="text-xs text-muted-foreground">{getText('protein')}</div>
                           </div>
                         </div>
                         

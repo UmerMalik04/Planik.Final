@@ -5,11 +5,13 @@ import { Input } from "@/components/ui/input";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
 import { Plus, Minus, TrendingUp, TrendingDown, Utensils, Activity } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useSettings } from "@/contexts/SettingsContext";
 import muscularBodyDiagram from "@/assets/muscular-body-diagram.png";
 
 
 export default function Home() {
   const navigate = useNavigate();
+  const { getText } = useSettings();
   const { 
     workoutPlans, 
     workoutSessions, 
@@ -120,8 +122,8 @@ export default function Home() {
     <div className="min-h-screen p-6 space-y-6">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-foreground">Welcome to Planik!</h1>
-        <p className="text-muted-foreground mt-1">Your gym companion</p>
+        <h1 className="text-3xl font-bold text-foreground">{getText('welcome_message')}</h1>
+        <p className="text-muted-foreground mt-1">{getText('gym_companion')}</p>
       </div>
 
       {/* User Stats */}
@@ -170,15 +172,15 @@ export default function Home() {
                   );
                 })()}
               </div>
-              <div className="text-sm text-muted-foreground">Progress</div>
+              <div className="text-sm text-muted-foreground">{getText('progress')}</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-primary">{summary.totalWorkouts}</div>
-              <div className="text-sm text-muted-foreground">Workouts (1mo)</div>
+              <div className="text-sm text-muted-foreground">{getText('workouts')} (1mo)</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-primary">{summary.uniqueExercises}</div>
-              <div className="text-sm text-muted-foreground">Exercises</div>
+              <div className="text-sm text-muted-foreground">{getText('exercises')}</div>
             </div>
           </div>
         </CardContent>
@@ -193,13 +195,13 @@ export default function Home() {
                 <Activity className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground">Daily Steps</h3>
+                <h3 className="font-semibold text-foreground">{getText('daily_steps')}</h3>
                 <p className="text-sm text-muted-foreground">{steps.toLocaleString()} / {stepGoal.toLocaleString()}</p>
               </div>
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold text-primary">{Math.round((steps / stepGoal) * 100)}%</div>
-              <div className="text-sm text-muted-foreground">Goal Progress</div>
+              <div className="text-sm text-muted-foreground">{getText('goal_progress')}</div>
             </div>
           </div>
           <div className="mt-3">
@@ -316,8 +318,8 @@ export default function Home() {
             <Utensils className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold text-foreground">Diet Tracker</h3>
-            <p className="text-sm text-muted-foreground">Track nutrition & calories</p>
+            <h3 className="font-semibold text-foreground">{getText('diet_tracker')}</h3>
+            <p className="text-sm text-muted-foreground">{getText('track_nutrition')}</p>
           </div>
         </div>
       </Card>

@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useSettings } from '@/contexts/SettingsContext';
 import { 
   Settings as SettingsIcon, 
   Moon, 
@@ -53,37 +54,11 @@ const languages = [
 export default function Settings() {
   const navigate = useNavigate();
   const { theme, toggleTheme, themeColor, setThemeColor, availableColors } = useTheme();
-  const [settings, setSettings] = useState({
-    language: 'en',
-    units: 'kg',
-    notifications: true,
-    dateFormat: 'MM/DD/YYYY',
-    biometricLogin: false,
-    autoSync: true,
-  });
+  const { settings, updateSetting } = useSettings();
   const [feedback, setFeedback] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const { toast } = useToast();
-
-  useEffect(() => {
-    // Load settings from localStorage
-    const savedSettings = localStorage.getItem('app-settings');
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
-    }
-  }, []);
-
-  const updateSetting = (key: string, value: any) => {
-    const newSettings = { ...settings, [key]: value };
-    setSettings(newSettings);
-    localStorage.setItem('app-settings', JSON.stringify(newSettings));
-    
-    toast({
-      title: "Settings Updated",
-      description: "Your preferences have been saved.",
-    });
-  };
 
   const handleChangePassword = () => {
     if (!newPassword || !confirmPassword) {
