@@ -232,15 +232,15 @@ export default function Progress() {
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Personal Records</h1>
-          <p className="text-muted-foreground">Your best performances</p>
+          <h1 className="text-xl sm:text-2xl font-bold">{getText('personal_records')}</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">{getText('your_best_performances')}</p>
         </div>
       </div>
 
       {/* Personal Records Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Personal Records (1 Rep Max)</h2>
+          <h2 className="text-lg sm:text-xl font-semibold">{getText('one_rep_max')}</h2>
           <Button
             variant="outline"
             size="sm"
@@ -248,7 +248,7 @@ export default function Progress() {
             className="flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            Add Exercise
+            {getText('add_exercise')}
           </Button>
         </div>
         
@@ -321,7 +321,7 @@ export default function Progress() {
                     ) : (
                       <div className="py-4">
                         <Plus className="w-6 h-6 text-muted-foreground/50 mx-auto mb-2" />
-                        <p className="text-sm text-muted-foreground">Add record</p>
+                        <p className="text-sm text-muted-foreground">{getText('add_record')}</p>
                       </div>
                     )}
                   </div>
@@ -398,11 +398,11 @@ export default function Progress() {
 
       {/* Exercise Progress Strips */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Exercise Progress</h2>
+        <h2 className="text-lg sm:text-xl font-semibold">{getText('exercise_progress')}</h2>
         {exercisesProgress.length === 0 ? (
           <Card>
             <CardContent className="p-6 text-center">
-              <p className="text-muted-foreground">No exercise data yet</p>
+              <p className="text-muted-foreground">{getText('no_exercise_data')}</p>
             </CardContent>
           </Card>
         ) : (
@@ -418,8 +418,8 @@ export default function Progress() {
                     <div className="flex-1">
                       <h3 className="font-semibold">{exercise.name}</h3>
                       <div className="flex items-center gap-4 mt-1">
-                        <span className="text-sm text-muted-foreground">
-                          Latest: {formatWeight(exercise.latest?.weight || 0)} × {exercise.latest?.reps} reps
+                        <span className="text-xs sm:text-sm text-muted-foreground">
+                          {getText('latest')}: {formatWeight(exercise.latest?.weight || 0)} × {exercise.latest?.reps} reps
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {formatDate(exercise.latest?.date || '')}

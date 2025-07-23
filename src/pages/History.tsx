@@ -28,9 +28,9 @@ export default function History() {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Workout History</h1>
-        <p className="text-muted-foreground">
-          View all your completed workouts
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">{getText('workout_history')}</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
+          {getText('view_completed_workouts')}
         </p>
       </div>
 
@@ -38,11 +38,11 @@ export default function History() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                No workouts completed yet
+              <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
+                {getText('no_workouts_completed')}
               </h3>
-              <p className="text-muted-foreground">
-                Complete your first workout to see it here!
+              <p className="text-sm sm:text-base text-muted-foreground">
+                {getText('complete_first_workout')}
               </p>
             </div>
           </CardContent>
@@ -69,16 +69,16 @@ export default function History() {
                             <div className="text-xs opacity-90">{year}</div>
                           </div>
                           <div>
-                            <CardTitle className="text-xl">{planName}</CardTitle>
-                            <p className="text-muted-foreground text-sm">
-                              {session.exercises.length} exercises completed
+                            <CardTitle className="text-lg sm:text-xl">{planName}</CardTitle>
+                            <p className="text-muted-foreground text-xs sm:text-sm">
+                              {session.exercises.length} {getText('exercises_completed')}
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              Click to view details
+                              {getText('click_view_details')}
                             </p>
                           </div>
                         </div>
-                        <Badge variant="default">Completed</Badge>
+                        <Badge variant="default">{getText('completed')}</Badge>
                       </div>
                     </CardHeader>
                     <CardContent className="pt-0">
@@ -87,8 +87,8 @@ export default function History() {
                           <div key={index} className="flex justify-between items-center p-3 bg-muted rounded-lg">
                             <div>
                               <h4 className="font-medium text-foreground">{exercise.name}</h4>
-                              <p className="text-sm text-muted-foreground">
-                                {exercise.sets} sets completed
+                              <p className="text-xs sm:text-sm text-muted-foreground">
+                                {exercise.sets} {getText('sets_completed')}
                               </p>
                             </div>
                              <div className="text-right">
@@ -99,8 +99,8 @@ export default function History() {
                           </div>
                         ))}
                         {session.exercises.length > 2 && (
-                          <div className="text-center text-sm text-muted-foreground">
-                            +{session.exercises.length - 2} more exercises...
+                          <div className="text-center text-xs sm:text-sm text-muted-foreground">
+                            +{session.exercises.length - 2} {getText('more_exercises')}
                           </div>
                         )}
                       </div>
@@ -118,8 +118,8 @@ export default function History() {
                       </div>
                       <div>
                         <h2 className="text-2xl font-bold">{planName}</h2>
-                        <p className="text-muted-foreground text-sm font-normal">
-                          {session.exercises.length} exercises completed
+                        <p className="text-muted-foreground text-xs sm:text-sm font-normal">
+                          {session.exercises.length} {getText('exercises_completed')}
                         </p>
                       </div>
                     </DialogTitle>
@@ -145,11 +145,11 @@ export default function History() {
                                  <div>{exercise.reps}</div>
                                </div>
                              ))}
-                             <div className="mt-2 pt-2 border-t border-border">
-                               <div className="text-sm text-muted-foreground">
-                                 <strong>Total Volume:</strong> {formatWeight(exercise.weight * exercise.reps * exercise.sets)}
-                               </div>
-                             </div>
+                              <div className="mt-2 pt-2 border-t border-border">
+                                <div className="text-xs sm:text-sm text-muted-foreground">
+                                  <strong>{getText('total_volume')}:</strong> {formatWeight(exercise.weight * exercise.reps * exercise.sets)}
+                                </div>
+                              </div>
                           </div>
                         </CardContent>
                       </Card>

@@ -122,8 +122,8 @@ export default function Home() {
     <div className="min-h-screen p-6 space-y-6">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-foreground">{getText('welcome_message')}</h1>
-        <p className="text-muted-foreground mt-1">{getText('gym_companion')}</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{getText('welcome_message')}</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-1">{getText('gym_companion')}</p>
       </div>
 
       {/* User Stats */}
@@ -219,7 +219,7 @@ export default function Home() {
       {/* Workout Type Buttons */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Choose Your Workout</h2>
+          <h2 className="text-lg sm:text-xl font-semibold">{getText('choose_workout')}</h2>
           <Button
             variant="outline"
             size="sm"
@@ -227,7 +227,7 @@ export default function Home() {
             className="flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            Custom
+            {getText('custom')}
           </Button>
         </div>
         
@@ -257,10 +257,10 @@ export default function Home() {
             
             const getProgressMessage = () => {
               switch (progress) {
-                case 'increase': return 'Seen an Increase';
-                case 'decrease': return 'Seen a Decrease';
-                case 'same': return 'Same as Last Week';
-                default: return 'No Recent Activity';
+                case 'increase': return getText('seen_increase');
+                case 'decrease': return getText('seen_decrease');
+                case 'same': return getText('same_as_last_week');
+                default: return getText('no_recent_activity');
               }
             };
 
@@ -276,20 +276,20 @@ export default function Home() {
             return (
               <div key={workout.name} className="relative">
                 <Card 
-                  className={`bg-card border-2 transition-all duration-200 hover:scale-105 cursor-pointer ${workout.color}`}
+                  className={`border-2 transition-all duration-200 hover:scale-105 cursor-pointer ${workout.color} dark:bg-card dark:border-border`}
                   onClick={() => handleWorkoutTypeClick(workout.name)}
                 >
-                  <CardContent className="p-4">
-                    <div className="flex flex-col space-y-2">
-                      <h3 className="text-lg font-bold text-foreground">{workout.name}</h3>
-                      <p className="text-sm text-muted-foreground">{frequency} Times past 1 month</p>
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex flex-col space-y-1 sm:space-y-2">
+                      <h3 className="text-sm sm:text-lg font-bold text-foreground">{workout.name}</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground">{frequency} {getText('times_past_month')}</p>
                       {progress !== 'none' && (
                         <div className={`text-xs px-2 py-1 rounded border ${getProgressColor()} border-current`}>
                           {getProgressMessage()}
                         </div>
                       )}
                       <p className="text-xs text-muted-foreground">
-                        {hasExistingPlan ? "Tap to continue" : "Create plan"}
+                        {hasExistingPlan ? getText('tap_to_continue') : getText('create_plan')}
                       </p>
                     </div>
                   </CardContent>
