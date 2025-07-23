@@ -85,6 +85,7 @@ interface WorkoutStore {
   resumeWorkout: () => WorkoutSession | null;
   addExerciseToCurrentWorkout: (exercise: Omit<Exercise, "id" | "planId">) => void;
   updatePersonalRecord: (exerciseName: string, weight: number, reps: number) => void;
+  deletePersonalRecord: (exerciseName: string, reps: number) => void;
   getPersonalRecord: (exerciseName: string) => PersonalRecord | undefined;
   getExerciseHistory: (exerciseName: string) => CompletedExercise[];
   getWorkoutFrequency: (workoutType: string) => number;
@@ -280,6 +281,14 @@ export const useWorkoutStore = create<WorkoutStore>()(
             };
           }
         });
+      },
+
+      deletePersonalRecord: (exerciseName, reps) => {
+        set((state) => ({
+          personalRecords: state.personalRecords.filter(
+            record => !(record.exerciseName === exerciseName && record.reps === reps)
+          )
+        }));
       },
 
       getPersonalRecord: (exerciseName) => {

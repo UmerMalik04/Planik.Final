@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
-import { Plus, Minus, TrendingUp, TrendingDown, Utensils } from "lucide-react";
+import { Plus, Minus, TrendingUp, TrendingDown, Utensils, Activity } from "lucide-react";
 import { useState, useEffect } from "react";
 import muscularBodyDiagram from "@/assets/muscular-body-diagram.png";
 
@@ -26,9 +26,42 @@ export default function Home() {
   
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customWorkoutName, setCustomWorkoutName] = useState("");
+  const [steps, setSteps] = useState(0);
+  const [stepGoal] = useState(10000);
 
   useEffect(() => {
     calculateProgress();
+    
+    // Load steps from localStorage
+    const savedSteps = localStorage.getItem('daily-steps');
+    const today = new Date().toDateString();
+    const savedStepsData = savedSteps ? JSON.parse(savedSteps) : {};
+    
+    if (savedStepsData.date === today) {
+      setSteps(savedStepsData.steps || 0);
+    } else {
+      // New day, reset steps
+      setSteps(0);
+      localStorage.setItem('daily-steps', JSON.stringify({
+        date: today,
+        steps: 0
+      }));
+    }
+    
+    // Simulate step counting (in a real app, this would come from device sensors)
+    const stepInterval = setInterval(() => {
+      setSteps(prev => {
+        const newSteps = prev + Math.floor(Math.random() * 3); // Random steps simulation
+        const today = new Date().toDateString();
+        localStorage.setItem('daily-steps', JSON.stringify({
+          date: today,
+          steps: newSteps
+        }));
+        return newSteps;
+      });
+    }, 30000); // Update every 30 seconds
+    
+    return () => clearInterval(stepInterval);
   }, [workoutSessions]);
 
   const getWorkoutSummary = () => {
@@ -146,6 +179,35 @@ export default function Home() {
             <div>
               <div className="text-2xl font-bold text-primary">{summary.uniqueExercises}</div>
               <div className="text-sm text-muted-foreground">Exercises</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Step Counter */}
+      <Card className="border-2 border-[hsl(var(--widget-border))]">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
+                <Activity className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">Daily Steps</h3>
+                <p className="text-sm text-muted-foreground">{steps.toLocaleString()} / {stepGoal.toLocaleString()}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-primary">{Math.round((steps / stepGoal) * 100)}%</div>
+              <div className="text-sm text-muted-foreground">Goal Progress</div>
+            </div>
+          </div>
+          <div className="mt-3">
+            <div className="w-full bg-muted rounded-full h-2">
+              <div 
+                className="bg-gradient-to-r from-green-500 to-emerald-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${Math.min((steps / stepGoal) * 100, 100)}%` }}
+              ></div>
             </div>
           </div>
         </CardContent>

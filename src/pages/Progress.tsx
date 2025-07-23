@@ -41,7 +41,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 export default function Progress() {
   const navigate = useNavigate();
-  const { personalRecords, getExerciseHistory, workoutSessions, updatePersonalRecord, workoutTypes, workoutPlans } = useWorkoutStore();
+  const { personalRecords, getExerciseHistory, workoutSessions, updatePersonalRecord, deletePersonalRecord, workoutTypes, workoutPlans } = useWorkoutStore();
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [editForm, setEditForm] = useState({ weight: "", reps: "", date: "" });
@@ -199,19 +199,8 @@ export default function Progress() {
 
   const handleDeleteRecord = () => {
     if (recordToDelete) {
-      // Remove record from store - we'll need to add this method to the store
-      const updatedRecords = personalRecords.filter(
-        record => !(record.exerciseName === recordToDelete.exerciseName && record.reps === recordToDelete.reps)
-      );
-      // For now, we'll use localStorage directly since the store doesn't have a delete method
-      localStorage.setItem('workout-storage', JSON.stringify({
-        ...JSON.parse(localStorage.getItem('workout-storage') || '{}'),
-        state: {
-          ...JSON.parse(localStorage.getItem('workout-storage') || '{}').state,
-          personalRecords: updatedRecords
-        }
-      }));
-      window.location.reload(); // Refresh to see changes
+      const { deletePersonalRecord } = useWorkoutStore.getState();
+      deletePersonalRecord(recordToDelete.exerciseName, recordToDelete.reps);
     }
     setRecordToDelete(null);
   };
