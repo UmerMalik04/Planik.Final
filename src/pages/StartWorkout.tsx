@@ -384,7 +384,7 @@ export default function StartWorkout() {
                             }
                             value={exerciseSets[index]?.[setIndex]?.weight || ''}
                             onChange={(e) => updateExerciseSet(index, setIndex, 'weight', Number(e.target.value))}
-                            className={`mt-1 antialiased ${getPerformanceColor(
+                            className={`mt-1 antialiased placeholder:text-xs sm:placeholder:text-sm ${getPerformanceColor(
                               exerciseSets[index]?.[setIndex]?.weight || 0, 
                               exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight, 
                               'weight'
@@ -404,7 +404,7 @@ export default function StartWorkout() {
                             }
                             value={exerciseSets[index]?.[setIndex]?.reps || ''}
                             onChange={(e) => updateExerciseSet(index, setIndex, 'reps', Number(e.target.value))}
-                            className={`mt-1 antialiased ${getPerformanceColor(
+                            className={`mt-1 antialiased placeholder:text-xs sm:placeholder:text-sm ${getPerformanceColor(
                               exerciseSets[index]?.[setIndex]?.reps || 0, 
                               exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps, 
                               'reps'

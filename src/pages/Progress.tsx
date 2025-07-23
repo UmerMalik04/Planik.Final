@@ -417,7 +417,11 @@ export default function Progress() {
         ) : (
           <div className="space-y-3">
             {exercisesProgress.map((exercise) => (
-              <Card key={exercise.name} className="border-l-4 border-l-primary">
+              <Card 
+                key={exercise.name} 
+                className="border-l-4 border-l-primary cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
+                onClick={() => handleRecordClick(exercise.name)}
+              >
                 <CardContent className="p-4">
                   <div className="flex justify-between items-center">
                     <div className="flex-1">
@@ -475,14 +479,17 @@ export default function Progress() {
                   <div className="flex justify-between items-center">
                     <div className="flex-1">
                       <h3 className="font-semibold">{workoutType.name}</h3>
-                      <div className="flex items-center gap-4 mt-1">
-                        <span className="text-sm text-muted-foreground">
-                          Average: {workoutType.currentWeekAverage.toFixed(1)}kg
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          Previous: {workoutType.previousWeekAverage.toFixed(1)}kg
-                        </span>
-                      </div>
+                       <div className="flex items-center gap-4 mt-1">
+                         <span className="text-sm text-muted-foreground">
+                           Average: {workoutType.previousWeekAverage > 0 
+                             ? `${((workoutType.currentWeekAverage / workoutType.previousWeekAverage - 1) * 100).toFixed(1)}%`
+                             : workoutType.currentWeekAverage > 0 ? '+100%' : '0%'
+                           }
+                         </span>
+                         <span className="text-xs text-muted-foreground">
+                           Previous: {workoutType.previousWeekAverage.toFixed(1)}kg
+                         </span>
+                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       {workoutType.trend !== 'none' && (

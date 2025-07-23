@@ -16,6 +16,7 @@ export default function Home() {
     currentStreak, 
     workoutTypes, 
     progressKg,
+    lastWeekProgress,
     addWorkoutType, 
     deleteWorkoutType, 
     getWorkoutFrequency,
@@ -96,7 +97,12 @@ export default function Home() {
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <div className="flex items-center justify-center gap-2">
-                <div className="text-2xl font-bold text-primary">{progressKg > 0 ? '+' : ''}{progressKg}kg</div>
+                <div className="text-2xl font-bold text-primary">
+                  {progressKg !== 0 && lastWeekProgress > 0 
+                    ? `${progressKg > 0 ? '+' : ''}${((progressKg / lastWeekProgress) * 100).toFixed(1)}%`
+                    : progressKg > 0 ? '+∞%' : progressKg < 0 ? '-100%' : '0%'
+                  }
+                </div>
                 {progressKg > 0 ? (
                   <TrendingUp className="w-5 h-5 text-green-500" />
                 ) : progressKg < 0 ? (
