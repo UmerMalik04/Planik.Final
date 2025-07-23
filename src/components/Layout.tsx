@@ -13,6 +13,7 @@ import {
   AlertDialogTitle, 
   AlertDialogTrigger 
 } from "@/components/ui/alert-dialog";
+import UserProfile from './UserProfile';
 
 interface LayoutProps {
   children: ReactNode;
@@ -33,8 +34,22 @@ export default function Layout({ children }: LayoutProps) {
     { icon: BarChart3, path: "/progress", label: "Progress" }
   ];
 
+  // Don't show navigation on auth pages
+  if (location.pathname === '/auth' || location.pathname === '/auth/callback') {
+    return <>{children}</>;
+  }
+
   return (
     <div className="min-h-screen bg-background">
+      {/* Header with user profile */}
+      <header className="bg-white border-b border-gray-200 px-4 py-3">
+        <div className="flex justify-between items-center">
+          <h1 className="text-xl font-bold text-gray-900">Planik</h1>
+          <UserProfile />
+        </div>
+      </header>
+      
+      {/* Main content */}
       <main className="pb-20">
         {children}
       </main>

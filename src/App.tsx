@@ -1,8 +1,9 @@
+import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import AuthGuard from "@/components/AuthGuard";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import CreatePlan from "./pages/CreatePlan";
@@ -10,36 +11,94 @@ import WorkoutPlan from "./pages/WorkoutPlan";
 import AddExercise from "./pages/AddExercise";
 import EditExercise from "./pages/EditExercise";
 import StartWorkout from "./pages/StartWorkout";
-import DietTracker from "./pages/DietTracker";
-import Progress from "./pages/Progress";
 import History from "./pages/History";
+import Progress from "./pages/Progress";
+import DietTracker from "./pages/DietTracker";
+import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
+import Demo from "./pages/Demo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/create-plan" element={<CreatePlan />} />
-            <Route path="/workout-plan/:planId" element={<WorkoutPlan />} />
-            <Route path="/add-exercise/:planId" element={<AddExercise />} />
-            <Route path="/edit-exercise/:exerciseId" element={<EditExercise />} />
-          <Route path="/start-workout/:planId" element={<StartWorkout />} />
-          <Route path="/diet-tracker" element={<DietTracker />} />
-          <Route path="/history" element={<History />} />
-            <Route path="/progress" element={<Progress />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Layout>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <Routes>
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/demo" element={<Demo />} />
+          <Route path="/" element={
+            <AuthGuard>
+              <Layout>
+                <Home />
+              </Layout>
+            </AuthGuard>
+          } />
+          <Route path="/create-plan" element={
+            <AuthGuard>
+              <Layout>
+                <CreatePlan />
+              </Layout>
+            </AuthGuard>
+          } />
+          <Route path="/workout-plan/:planId" element={
+            <AuthGuard>
+              <Layout>
+                <WorkoutPlan />
+              </Layout>
+            </AuthGuard>
+          } />
+          <Route path="/add-exercise/:planId" element={
+            <AuthGuard>
+              <Layout>
+                <AddExercise />
+              </Layout>
+            </AuthGuard>
+          } />
+          <Route path="/edit-exercise/:exerciseId" element={
+            <AuthGuard>
+              <Layout>
+                <EditExercise />
+              </Layout>
+            </AuthGuard>
+          } />
+          <Route path="/start-workout/:planId" element={
+            <AuthGuard>
+              <Layout>
+                <StartWorkout />
+              </Layout>
+            </AuthGuard>
+          } />
+          <Route path="/history" element={
+            <AuthGuard>
+              <Layout>
+                <History />
+              </Layout>
+            </AuthGuard>
+          } />
+          <Route path="/progress" element={
+            <AuthGuard>
+              <Layout>
+                <Progress />
+              </Layout>
+            </AuthGuard>
+          } />
+          <Route path="/diet-tracker" element={
+            <AuthGuard>
+              <Layout>
+                <DietTracker />
+              </Layout>
+            </AuthGuard>
+          } />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
