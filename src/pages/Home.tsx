@@ -274,7 +274,7 @@ export default function Home() {
             return (
               <div key={workout.name} className="relative">
                 <Card 
-                  className={`bg-white border-2 transition-all duration-200 hover:scale-105 cursor-pointer ${workout.color}`}
+                  className={`bg-card border-2 transition-all duration-200 hover:scale-105 cursor-pointer ${workout.color}`}
                   onClick={() => handleWorkoutTypeClick(workout.name)}
                 >
                   <CardContent className="p-4">

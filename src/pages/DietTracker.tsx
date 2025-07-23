@@ -174,41 +174,118 @@ export default function DietTracker() {
         <h2 className="text-xl font-semibold text-foreground">Weekly Overview</h2>
         <div className="grid grid-cols-2 gap-4">
           {dailyCalorieData.map((day) => (
-            <Card 
-              key={day.date} 
-              className={`border-2 transition-all duration-200 hover:scale-105 ${
-                day.isToday 
-                  ? 'border-primary bg-primary/5' 
-                  : day.calories > 0 
-                    ? 'border-green-500/30 bg-green-500/5' 
-                    : 'border-muted bg-card'
-              }`}
-            >
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-center text-foreground">
-                  {day.displayDate}
-                  {day.isToday && (
-                    <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full">
-                      Today
-                    </span>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-foreground">
-                    {day.calories}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    calories
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {day.calories > 0 ? 'Logged' : 'No data'}
-                  </div>
+            <Dialog key={day.date}>
+              <DialogTrigger asChild>
+                <Card 
+                  className={`border-2 transition-all duration-200 hover:scale-105 cursor-pointer ${
+                    day.isToday 
+                      ? 'border-primary bg-primary/5' 
+                      : day.calories > 0 
+                        ? 'border-green-500/30 bg-green-500/5' 
+                        : 'border-muted bg-card'
+                  }`}
+                >
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-center text-foreground">
+                      {day.displayDate}
+                      {day.isToday && (
+                        <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full">
+                          Today
+                        </span>
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-foreground">
+                        {day.calories}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        calories
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {day.calories > 0 ? 'Logged' : 'No data'}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-foreground">Food Groups - {day.displayDate}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {(() => {
+                    const dayNutrition = getDailyNutrition(day.date);
+                    const dayFoods = dayNutrition.foods;
+                    
+                    if (dayFoods.length === 0) {
+                      return (
+                        <div className="text-center py-8">
+                          <p className="text-muted-foreground">No food logged for this day</p>
+                        </div>
+                      );
+                    }
+
+                    // Group foods by food type (based on name patterns)
+                    const getFoodCategory = (foodName: string) => {
+                      const name = foodName.toLowerCase();
+                      if (name.includes('chicken') || name.includes('beef') || name.includes('fish') || name.includes('meat') || name.includes('protein')) return 'Protein';
+                      if (name.includes('rice') || name.includes('bread') || name.includes('pasta') || name.includes('carb') || name.includes('grain')) return 'Carbohydrates';
+                      if (name.includes('apple') || name.includes('banana') || name.includes('fruit') || name.includes('berry') || name.includes('orange')) return 'Fruits';
+                      if (name.includes('broccoli') || name.includes('spinach') || name.includes('vegetable') || name.includes('lettuce') || name.includes('carrot')) return 'Vegetables';
+                      if (name.includes('milk') || name.includes('cheese') || name.includes('yogurt') || name.includes('dairy')) return 'Dairy';
+                      if (name.includes('oil') || name.includes('butter') || name.includes('nuts') || name.includes('avocado')) return 'Fats';
+                      return 'Other';
+                    };
+
+                    const foodGroups = dayFoods.reduce((groups: {[key: string]: FoodItem[]}, food) => {
+                      const category = getFoodCategory(food.name);
+                      if (!groups[category]) groups[category] = [];
+                      groups[category].push(food);
+                      return groups;
+                    }, {});
+
+                    return (
+                      <>
+                        <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-primary">{dayNutrition.totalCalories}</div>
+                            <div className="text-xs text-muted-foreground">Total Calories</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-emerald-500">{dayNutrition.totalProtein}g</div>
+                            <div className="text-xs text-muted-foreground">Protein</div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          {Object.entries(foodGroups).map(([category, categoryFoods]) => (
+                            <div key={category} className="p-3 bg-card border border-border rounded-lg">
+                              <h4 className="font-semibold text-foreground mb-2">{category}</h4>
+                              <div className="space-y-1">
+                                {categoryFoods.map((food, index) => (
+                                  <div key={index} className="flex justify-between text-sm">
+                                    <span className="text-foreground">{food.name}</span>
+                                    <span className="text-muted-foreground">{food.calories} cal</span>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="mt-2 pt-2 border-t border-border">
+                                <div className="text-sm font-medium text-foreground">
+                                  Total: {categoryFoods.reduce((sum, food) => sum + food.calories, 0)} calories
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
-              </CardContent>
-            </Card>
+              </DialogContent>
+            </Dialog>
           ))}
         </div>
       </div>

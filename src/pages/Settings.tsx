@@ -513,32 +513,64 @@ export default function Settings() {
             <div className="space-y-2">
               <Button 
                 variant="ghost" 
-                className="w-full justify-start"
-                onClick={() => window.open('https://planik.com/terms', '_blank')}
+                className="w-full justify-start text-foreground hover:bg-accent"
+                onClick={() => {
+                  const url = 'https://planik.com/terms';
+                  window.open(url, '_blank');
+                  toast({
+                    title: "Opening Terms of Service",
+                    description: "Redirecting to our terms page...",
+                  });
+                }}
               >
                 <Shield className="h-4 w-4 mr-2" />
                 Terms of Service
               </Button>
               <Button 
                 variant="ghost" 
-                className="w-full justify-start"
-                onClick={() => window.open('https://planik.com/privacy', '_blank')}
+                className="w-full justify-start text-foreground hover:bg-accent"
+                onClick={() => {
+                  const url = 'https://planik.com/privacy';
+                  window.open(url, '_blank');
+                  toast({
+                    title: "Opening Privacy Policy",
+                    description: "Redirecting to our privacy page...",
+                  });
+                }}
               >
                 <Shield className="h-4 w-4 mr-2" />
                 Privacy Policy
               </Button>
               <Button 
                 variant="ghost" 
-                className="w-full justify-start"
-                onClick={() => window.open('mailto:support@planik.com', '_blank')}
+                className="w-full justify-start text-foreground hover:bg-accent"
+                onClick={() => {
+                  const email = 'support@planik.com';
+                  const subject = 'Support Request';
+                  const body = 'Hello, I need help with...';
+                  window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+                  toast({
+                    title: "Opening Email Client",
+                    description: "Creating support email...",
+                  });
+                }}
               >
                 <HelpCircle className="h-4 w-4 mr-2" />
                 Contact Support
               </Button>
               <Button 
                 variant="ghost" 
-                className="w-full justify-start"
-                onClick={() => window.open('mailto:bugs@planik.com?subject=Bug Report', '_blank')}
+                className="w-full justify-start text-foreground hover:bg-accent"
+                onClick={() => {
+                  const email = 'bugs@planik.com';
+                  const subject = 'Bug Report';
+                  const body = 'Bug Description:\n\nSteps to Reproduce:\n1. \n2. \n3. \n\nExpected Result:\n\nActual Result:\n\nDevice/Browser Info:\n';
+                  window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+                  toast({
+                    title: "Opening Email Client",
+                    description: "Creating bug report email...",
+                  });
+                }}
               >
                 <Bug className="h-4 w-4 mr-2" />
                 Report a Bug
