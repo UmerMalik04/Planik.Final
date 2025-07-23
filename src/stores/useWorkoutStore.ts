@@ -336,15 +336,25 @@ export const useWorkoutStore = create<WorkoutStore>()(
         );
         
         const thisWeekWeight = thisWeekSessions.reduce((sum, session) =>
-          sum + session.exercises.reduce((exerciseSum, exercise) => 
-            exerciseSum + (exercise.weight * exercise.reps * exercise.sets), 0
-          ), 0
+          sum + session.exercises.reduce((exerciseSum, exercise) => {
+            // Use setData if available for more accurate calculation
+            if (exercise.setData && exercise.setData.length > 0) {
+              return exerciseSum + exercise.setData.reduce((setSum, set) => 
+                setSum + (set.weight * set.reps), 0);
+            }
+            return exerciseSum + (exercise.weight * exercise.reps * exercise.sets);
+          }, 0), 0
         );
         
         const lastWeekWeight = lastWeekSessions.reduce((sum, session) =>
-          sum + session.exercises.reduce((exerciseSum, exercise) => 
-            exerciseSum + (exercise.weight * exercise.reps * exercise.sets), 0
-          ), 0
+          sum + session.exercises.reduce((exerciseSum, exercise) => {
+            // Use setData if available for more accurate calculation
+            if (exercise.setData && exercise.setData.length > 0) {
+              return exerciseSum + exercise.setData.reduce((setSum, set) => 
+                setSum + (set.weight * set.reps), 0);
+            }
+            return exerciseSum + (exercise.weight * exercise.reps * exercise.sets);
+          }, 0), 0
         );
         
         if (lastWeekWeight === 0 && thisWeekWeight === 0) return 'none';
@@ -353,8 +363,8 @@ export const useWorkoutStore = create<WorkoutStore>()(
         const difference = thisWeekWeight - lastWeekWeight;
         const percentChange = (difference / lastWeekWeight) * 100;
         
-        if (percentChange > 5) return 'increase';
-        if (percentChange < -5) return 'decrease';
+        if (percentChange > 2) return 'increase';
+        if (percentChange < -2) return 'decrease';
         return 'same';
       },
 
