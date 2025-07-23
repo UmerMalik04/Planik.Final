@@ -42,9 +42,9 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header with user profile */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3">
+      <header className="bg-card border-b border-border px-4 py-3">
         <div className="flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-900">Planik</h1>
+          <h1 className="text-xl font-bold text-foreground">Planik</h1>
           <UserProfile />
         </div>
       </header>

@@ -11,11 +11,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useSettings } from "@/contexts/SettingsContext";
 
 export default function EditExercise() {
   const navigate = useNavigate();
   const { exerciseId } = useParams();
   const { exercises, workoutPlans, updateExercise } = useWorkoutStore();
+  const { settings, getText } = useSettings();
 
   const exercise = exercises.find(e => e.id === exerciseId);
   const plan = workoutPlans.find(p => p.exercises.some(e => e.id === exerciseId));
@@ -97,7 +99,7 @@ export default function EditExercise() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="weight">Weight (kg)</Label>
+              <Label htmlFor="weight">Weight ({settings.units})</Label>
               <Input
                 id="weight"
                 type="number"

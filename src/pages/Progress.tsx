@@ -436,11 +436,11 @@ export default function Progress() {
                           ) : (
                             <div className="w-4 h-4 rounded-full bg-yellow-500" />
                           )}
-                          <span className={`text-sm font-medium ${
+                           <span className={`text-sm font-medium ${
                             exercise.trend === 'increase' ? 'text-green-500' : 
                             exercise.trend === 'decrease' ? 'text-red-500' : 'text-yellow-500'
                           }`}>
-                            {exercise.weightDiff > 0 ? '+' : ''}{exercise.weightDiff}kg
+                            {exercise.weightDiff > 0 ? '+' : ''}{formatWeight(Math.abs(exercise.weightDiff))}
                           </span>
                         </>
                       )}

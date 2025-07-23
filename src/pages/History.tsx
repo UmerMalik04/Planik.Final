@@ -4,9 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { useState } from "react";
+import { useSettings } from "@/contexts/SettingsContext";
 
 export default function History() {
   const { workoutSessions, workoutPlans } = useWorkoutStore();
+  const { formatWeight, formatDate: formatAppDate, getText } = useSettings();
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
 
   const formatDate = (date: Date) => {
@@ -89,11 +91,11 @@ export default function History() {
                                 {exercise.sets} sets completed
                               </p>
                             </div>
-                            <div className="text-right">
-                              <div className="text-sm font-medium text-muted-foreground">
-                                {exercise.reps} reps × {exercise.weight}kg
-                              </div>
-                            </div>
+                             <div className="text-right">
+                               <div className="text-sm font-medium text-muted-foreground">
+                                 {exercise.reps} reps × {formatWeight(exercise.weight)}
+                               </div>
+                             </div>
                           </div>
                         ))}
                         {session.exercises.length > 2 && (
@@ -136,18 +138,18 @@ export default function History() {
                               <div>Weight</div>
                               <div>Reps</div>
                             </div>
-                            {Array.from({ length: exercise.sets }, (_, setIndex) => (
-                              <div key={setIndex} className="grid grid-cols-3 gap-2 p-2 bg-muted rounded">
-                                <div className="font-medium">{setIndex + 1}</div>
-                                <div>{exercise.weight}kg</div>
-                                <div>{exercise.reps}</div>
-                              </div>
-                            ))}
-                            <div className="mt-2 pt-2 border-t border-border">
-                              <div className="text-sm text-muted-foreground">
-                                <strong>Total Volume:</strong> {exercise.weight * exercise.reps * exercise.sets}kg
-                              </div>
-                            </div>
+                             {Array.from({ length: exercise.sets }, (_, setIndex) => (
+                               <div key={setIndex} className="grid grid-cols-3 gap-2 p-2 bg-muted rounded">
+                                 <div className="font-medium">{setIndex + 1}</div>
+                                 <div>{formatWeight(exercise.weight)}</div>
+                                 <div>{exercise.reps}</div>
+                               </div>
+                             ))}
+                             <div className="mt-2 pt-2 border-t border-border">
+                               <div className="text-sm text-muted-foreground">
+                                 <strong>Total Volume:</strong> {formatWeight(exercise.weight * exercise.reps * exercise.sets)}
+                               </div>
+                             </div>
                           </div>
                         </CardContent>
                       </Card>
