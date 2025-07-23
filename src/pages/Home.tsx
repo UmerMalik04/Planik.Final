@@ -97,17 +97,45 @@ export default function Home() {
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <div className="flex items-center justify-center gap-2">
-                <div className="text-2xl font-bold text-primary">
-                  {progressKg !== 0 && lastWeekProgress > 0 
-                    ? `${progressKg > 0 ? '+' : ''}${((progressKg / lastWeekProgress) * 100).toFixed(1)}%`
-                    : progressKg > 0 ? '+∞%' : progressKg < 0 ? '-100%' : '0%'
-                  }
-                </div>
-                {progressKg > 0 ? (
-                  <TrendingUp className="w-5 h-5 text-green-500" />
-                ) : progressKg < 0 ? (
-                  <TrendingDown className="w-5 h-5 text-red-500" />
-                ) : null}
+                {(() => {
+                  const getProgressDisplay = () => {
+                    if (progressKg === 0) return { text: '0%', color: 'text-muted-foreground', arrow: null };
+                    
+                    if (lastWeekProgress > 0) {
+                      const percentChange = ((progressKg / lastWeekProgress) * 100);
+                      const isImproving = progressKg > 0;
+                      return {
+                        text: `${isImproving ? '+' : ''}${percentChange.toFixed(1)}%`,
+                        color: isImproving ? 'text-green-600' : 'text-red-600',
+                        arrow: isImproving ? 'up' : 'down'
+                      };
+                    } else {
+                      // First week or no previous data
+                      const isImproving = progressKg > 0;
+                      return {
+                        text: isImproving ? '+100%' : '0%',
+                        color: isImproving ? 'text-green-600' : 'text-muted-foreground',
+                        arrow: isImproving ? 'up' : null
+                      };
+                    }
+                  };
+                  
+                  const progress = getProgressDisplay();
+                  
+                  return (
+                    <>
+                      <div className={`text-2xl font-bold ${progress.color}`}>
+                        {progress.text}
+                      </div>
+                      {progress.arrow === 'up' && (
+                        <TrendingUp className="w-5 h-5 text-green-500" />
+                      )}
+                      {progress.arrow === 'down' && (
+                        <TrendingDown className="w-5 h-5 text-red-500" />
+                      )}
+                    </>
+                  );
+                })()}
               </div>
               <div className="text-sm text-muted-foreground">Progress</div>
             </div>
