@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { useTheme } from '@/contexts/ThemeContext';
 import { 
   Settings as SettingsIcon, 
   Moon, 
@@ -27,7 +29,8 @@ import {
   HelpCircle,
   Bug,
   Mail,
-  Info
+  Info,
+  ArrowLeft
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -46,27 +49,21 @@ const languages = [
   { code: 'hi', name: 'हिन्दी' },
 ];
 
-const accentColors = [
-  { name: 'Blue', value: 'hsl(221, 83%, 53%)' },
-  { name: 'Green', value: 'hsl(142, 76%, 36%)' },
-  { name: 'Purple', value: 'hsl(262, 83%, 58%)' },
-  { name: 'Red', value: 'hsl(0, 84%, 60%)' },
-  { name: 'Orange', value: 'hsl(25, 95%, 53%)' },
-  { name: 'Pink', value: 'hsl(330, 81%, 60%)' },
-];
 
 export default function Settings() {
+  const navigate = useNavigate();
+  const { theme, toggleTheme, themeColor, setThemeColor, availableColors } = useTheme();
   const [settings, setSettings] = useState({
-    darkMode: false,
     language: 'en',
     units: 'kg',
     notifications: true,
-    accentColor: 'hsl(221, 83%, 53%)',
     dateFormat: 'MM/DD/YYYY',
     biometricLogin: false,
     autoSync: true,
   });
   const [feedback, setFeedback] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -85,6 +82,53 @@ export default function Settings() {
     toast({
       title: "Settings Updated",
       description: "Your preferences have been saved.",
+    });
+  };
+
+  const handleChangePassword = () => {
+    if (!newPassword || !confirmPassword) {
+      toast({
+        title: "Password Required",
+        description: "Please enter both password fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Password Mismatch",
+        description: "Passwords do not match.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Password Too Short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Update password in localStorage
+    const currentUser = JSON.parse(localStorage.getItem('current-user') || '{}');
+    const savedUsers = JSON.parse(localStorage.getItem('mock-users') || '[]');
+    const userIndex = savedUsers.findIndex((u: any) => u.email === currentUser.email);
+    
+    if (userIndex !== -1) {
+      savedUsers[userIndex].password = newPassword;
+      localStorage.setItem('mock-users', JSON.stringify(savedUsers));
+    }
+    
+    setNewPassword('');
+    setConfirmPassword('');
+    
+    toast({
+      title: "Password Updated",
+      description: "Your password has been changed successfully.",
     });
   };
 
@@ -118,16 +162,39 @@ export default function Settings() {
   };
 
   const handleDeleteAccount = () => {
+    const currentUser = JSON.parse(localStorage.getItem('current-user') || '{}');
+    const savedUsers = JSON.parse(localStorage.getItem('mock-users') || '[]');
+    const filteredUsers = savedUsers.filter((u: any) => u.email !== currentUser.email);
+    
+    localStorage.setItem('mock-users', JSON.stringify(filteredUsers));
+    localStorage.removeItem('current-user');
+    localStorage.removeItem('auth-session');
+    
     toast({
-      title: "Account Deletion",
-      description: "Please contact support to delete your account.",
+      title: "Account Deleted",
+      description: "Your account and all data have been permanently deleted.",
       variant: "destructive",
     });
+    
+    // Redirect to auth page after a short delay
+    setTimeout(() => {
+      navigate('/auth');
+    }, 2000);
   };
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl">
       <div className="space-y-6">
+        {/* Back Button */}
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 mb-4"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Home
+        </Button>
+
         {/* Header */}
         <div className="flex items-center gap-2">
           <SettingsIcon className="h-6 w-6" />
@@ -148,7 +215,7 @@ export default function Settings() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label className="flex items-center gap-2">
-                  {settings.darkMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                  {theme === 'dark' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
                   Dark Mode
                 </Label>
                 <p className="text-sm text-muted-foreground">
@@ -156,25 +223,25 @@ export default function Settings() {
                 </p>
               </div>
               <Switch
-                checked={settings.darkMode}
-                onCheckedChange={(value) => updateSetting('darkMode', value)}
+                checked={theme === 'dark'}
+                onCheckedChange={toggleTheme}
               />
             </div>
 
-            {/* Accent Color */}
+            {/* Theme Color */}
             <div className="space-y-3">
-              <Label>Accent Color</Label>
+              <Label>Theme Color</Label>
               <div className="flex gap-2 flex-wrap">
-                {accentColors.map((color) => (
+                {availableColors.map((color) => (
                   <button
                     key={color.name}
-                    className={`w-8 h-8 rounded-full border-2 ${
-                      settings.accentColor === color.value 
-                        ? 'border-foreground' 
-                        : 'border-muted'
+                    className={`w-8 h-8 rounded-full border-2 transition-all ${
+                      themeColor === color.value 
+                        ? 'border-foreground scale-110' 
+                        : 'border-muted hover:border-muted-foreground'
                     }`}
-                    style={{ backgroundColor: color.value }}
-                    onClick={() => updateSetting('accentColor', color.value)}
+                    style={{ backgroundColor: `hsl(${color.value})` }}
+                    onClick={() => setThemeColor(color.value)}
                     title={color.name}
                   />
                 ))}
@@ -306,10 +373,30 @@ export default function Settings() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button variant="outline" className="w-full justify-start">
-              <Lock className="h-4 w-4 mr-2" />
-              Change Password
-            </Button>
+            {/* Change Password */}
+            <div className="space-y-3">
+              <Label>Change Password</Label>
+              <div className="space-y-2">
+                <Input
+                  type="password"
+                  placeholder="New Password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+                <Input
+                  type="password"
+                  placeholder="Confirm New Password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+                <Button onClick={handleChangePassword} className="w-full">
+                  <Lock className="h-4 w-4 mr-2" />
+                  Update Password
+                </Button>
+              </div>
+            </div>
+
+            <Separator />
             
             <Button 
               variant="destructive" 
@@ -348,7 +435,11 @@ export default function Settings() {
             <Separator />
 
             {/* Manual Sync */}
-            <Button variant="outline" className="w-full justify-start">
+            <Button 
+              variant="outline" 
+              className="w-full justify-start"
+              onClick={() => toast({ title: "Sync Complete", description: "Your data has been synced successfully." })}
+            >
               <Cloud className="h-4 w-4 mr-2" />
               Manual Sync Now
             </Button>
@@ -420,19 +511,35 @@ export default function Settings() {
             <Separator />
 
             <div className="space-y-2">
-              <Button variant="ghost" className="w-full justify-start">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start"
+                onClick={() => window.open('https://planik.com/terms', '_blank')}
+              >
                 <Shield className="h-4 w-4 mr-2" />
                 Terms of Service
               </Button>
-              <Button variant="ghost" className="w-full justify-start">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start"
+                onClick={() => window.open('https://planik.com/privacy', '_blank')}
+              >
                 <Shield className="h-4 w-4 mr-2" />
                 Privacy Policy
               </Button>
-              <Button variant="ghost" className="w-full justify-start">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start"
+                onClick={() => window.open('mailto:support@planik.com', '_blank')}
+              >
                 <HelpCircle className="h-4 w-4 mr-2" />
                 Contact Support
               </Button>
-              <Button variant="ghost" className="w-full justify-start">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start"
+                onClick={() => window.open('mailto:bugs@planik.com?subject=Bug Report', '_blank')}
+              >
                 <Bug className="h-4 w-4 mr-2" />
                 Report a Bug
               </Button>

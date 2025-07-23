@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Camera, Trophy, Flame, Target, Zap, Calendar, Star } from 'lucide-react';
+import { Camera, Trophy, Flame, Target, Zap, Calendar, Star, ArrowLeft, Dumbbell, Users, Weight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Achievement {
@@ -21,6 +22,7 @@ interface Achievement {
 }
 
 export default function Profile() {
+  const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState('');
@@ -53,7 +55,7 @@ export default function Profile() {
         id: '2',
         title: '10 Workout Club',
         description: 'Complete 10 workouts',
-        icon: <Trophy className="h-6 w-6" />,
+        icon: <Dumbbell className="h-6 w-6" />,
         completed: true,
         progress: 10,
         maxProgress: 10,
@@ -63,7 +65,7 @@ export default function Profile() {
         id: '3',
         title: '100kg Bench Club',
         description: 'Bench press 100kg or more',
-        icon: <Target className="h-6 w-6" />,
+        icon: <Weight className="h-6 w-6" />,
         completed: false,
         progress: 85,
         maxProgress: 100
@@ -92,7 +94,15 @@ export default function Profile() {
 
   const handleSaveName = async () => {
     try {
-      // In real app, update user metadata
+      // Update user in localStorage
+      const savedUsers = JSON.parse(localStorage.getItem('mock-users') || '[]');
+      const userIndex = savedUsers.findIndex((u: any) => u.email === user.email);
+      if (userIndex !== -1) {
+        savedUsers[userIndex].user_metadata.name = editedName;
+        localStorage.setItem('mock-users', JSON.stringify(savedUsers));
+        localStorage.setItem('current-user', JSON.stringify(savedUsers[userIndex]));
+      }
+      
       const updatedUser = {
         ...user,
         user_metadata: {
@@ -139,11 +149,21 @@ export default function Profile() {
   if (!user) return null;
 
   const displayName = user.user_metadata?.name || user.email?.split('@')[0] || 'User';
-  const joinDate = new Date('2024-01-01'); // Mock join date
+  const joinDate = user.created_at ? new Date(user.created_at) : new Date();
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl">
       <div className="space-y-6">
+        {/* Back Button */}
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 mb-4"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Home
+        </Button>
+
         {/* Profile Header */}
         <Card>
           <CardHeader>
