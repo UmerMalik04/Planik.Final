@@ -377,9 +377,9 @@ export default function StartWorkout() {
                             type="number"
                             placeholder={
                               exercise.previousSetData?.[setIndex]?.weight 
-                                ? `Previous: ${exercise.previousSetData[setIndex].weight}kg` 
+                                ? `Prev: ${exercise.previousSetData[setIndex].weight}kg` 
                                 : exercise.previousWeight 
-                                ? `Previous: ${exercise.previousWeight}kg` 
+                                ? `Prev: ${exercise.previousWeight}kg` 
                                 : "0"
                             }
                             value={exerciseSets[index]?.[setIndex]?.weight || ''}
@@ -397,9 +397,9 @@ export default function StartWorkout() {
                             type="number"
                             placeholder={
                               exercise.previousSetData?.[setIndex]?.reps 
-                                ? `Previous: ${exercise.previousSetData[setIndex].reps}` 
+                                ? `Prev: ${exercise.previousSetData[setIndex].reps}` 
                                 : exercise.previousReps 
-                                ? `Previous: ${exercise.previousReps}` 
+                                ? `Prev: ${exercise.previousReps}` 
                                 : "0"
                             }
                             value={exerciseSets[index]?.[setIndex]?.reps || ''}

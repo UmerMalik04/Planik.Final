@@ -301,8 +301,8 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
       getWorkoutFrequency: (workoutType) => {
         const { workoutSessions, workoutPlans } = get();
-        const threeMonthsAgo = new Date();
-        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
         
         const planIds = workoutPlans
           .filter(plan => plan.type === workoutType)
@@ -310,7 +310,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
         
         return workoutSessions.filter(session => 
           planIds.includes(session.planId) && 
-          new Date(session.date) >= threeMonthsAgo
+          new Date(session.date) >= oneMonthAgo
         ).length;
       },
 

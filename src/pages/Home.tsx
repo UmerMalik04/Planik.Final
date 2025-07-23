@@ -218,7 +218,7 @@ export default function Home() {
                   <CardContent className="p-4">
                     <div className="flex flex-col space-y-2">
                       <h3 className="text-lg font-bold text-foreground">{workout.name}</h3>
-                      <p className="text-sm text-muted-foreground">{frequency} Times past 3 months</p>
+                      <p className="text-sm text-muted-foreground">{frequency} Times past 1 month</p>
                       {progress !== 'none' && (
                         <div className={`text-xs px-2 py-1 rounded border ${getProgressColor()} border-current`}>
                           {getProgressMessage()}
