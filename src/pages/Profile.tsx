@@ -33,9 +33,18 @@ export default function Profile() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setEditedName(user?.user_metadata?.name || '');
+      // First try to get user from localStorage (for updated profile data)
+      const savedUser = localStorage.getItem('current-user');
+      if (savedUser) {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+        setEditedName(parsedUser?.user_metadata?.name || '');
+      } else {
+        // Fallback to Supabase if no saved user
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+        setEditedName(user?.user_metadata?.name || '');
+      }
       loadAchievements();
     };
 

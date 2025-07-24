@@ -33,15 +33,41 @@ export default function UserProfile() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+      // First try to get user from localStorage (for updated profile data)
+      const savedUser = localStorage.getItem('current-user');
+      if (savedUser) {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+      } else {
+        // Fallback to Supabase if no saved user
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+      }
     };
 
     getUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        setUser(session?.user ?? null);
+        if (session?.user) {
+          // Check if we have updated user data in localStorage
+          const savedUser = localStorage.getItem('current-user');
+          if (savedUser) {
+            const parsedUser = JSON.parse(savedUser);
+            // Merge Supabase user with saved data
+            setUser({
+              ...session.user,
+              user_metadata: {
+                ...session.user.user_metadata,
+                ...parsedUser.user_metadata
+              }
+            });
+          } else {
+            setUser(session.user);
+          }
+        } else {
+          setUser(null);
+        }
       }
     );
 
