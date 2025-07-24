@@ -149,20 +149,32 @@ export default function Profile() {
         reader.onload = (e) => {
           const imageUrl = e.target?.result as string;
           
-          // Save to localStorage and update user
           try {
+            // Get current users array
             const savedUsers = JSON.parse(localStorage.getItem('mock-users') || '[]');
+            
+            // Update the user in the array
             const userIndex = savedUsers.findIndex((u: any) => u.email === user.email);
             if (userIndex !== -1) {
               savedUsers[userIndex].user_metadata = {
                 ...savedUsers[userIndex].user_metadata,
                 avatar_url: imageUrl
               };
-              localStorage.setItem('mock-users', JSON.stringify(savedUsers));
-              localStorage.setItem('current-user', JSON.stringify(savedUsers[userIndex]));
+            } else {
+              // If user not found, add them
+              savedUsers.push({
+                ...user,
+                user_metadata: {
+                  ...user.user_metadata,
+                  avatar_url: imageUrl
+                }
+              });
             }
             
-            // Update current user state immediately
+            // Save updated users array
+            localStorage.setItem('mock-users', JSON.stringify(savedUsers));
+            
+            // Update current user
             const updatedUser = {
               ...user,
               user_metadata: {
@@ -170,7 +182,18 @@ export default function Profile() {
                 avatar_url: imageUrl
               }
             };
+            
+            // Save current user separately for immediate access
+            localStorage.setItem('current-user', JSON.stringify(updatedUser));
+            
+            // Also save just the avatar URL for easy access
+            localStorage.setItem('user-avatar', imageUrl);
+            
+            // Update state immediately
             setUser(updatedUser);
+            
+            // Force a page refresh to ensure all components update
+            window.dispatchEvent(new Event('storage'));
             
             toast({
               title: "Profile Picture Updated",
