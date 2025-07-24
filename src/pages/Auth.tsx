@@ -447,8 +447,12 @@ export default function Auth() {
                     className="w-full"
                     disabled={loading}
                   >
-                    <Fingerprint className="w-4 h-4 mr-2" />
-                    {loading ? 'Authenticating...' : 'Login with Biometrics'}
+                    <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 1C5.925 1 1 5.925 1 12s4.925 11 11 11 11-4.925 11-11S18.075 1 12 1zm0 20c-4.963 0-9-4.037-9-9s4.037-9 9-9 9 4.037 9 9-4.037 9-9 9z"/>
+                      <path d="M12 6c-3.309 0-6 2.691-6 6s2.691 6 6 6 6-2.691 6-6-2.691-6-6-6zm0 10c-2.206 0-4-1.794-4-4s1.794-4 4-4 4 1.794 4 4-1.794 4-4 4z"/>
+                      <circle cx="12" cy="12" r="2"/>
+                    </svg>
+                    {loading ? 'Authenticating...' : 'Login with Face ID'}
                   </Button>
 
                   {/* Forgot Password Link */}
@@ -556,7 +560,7 @@ export default function Auth() {
                         type="date"
                         value={signupForm.dateOfBirth}
                         onChange={(e) => setSignupForm({...signupForm, dateOfBirth: e.target.value})}
-                        className="pl-10"
+                        className="pl-10 text-sm"
                         required
                       />
                     </div>
