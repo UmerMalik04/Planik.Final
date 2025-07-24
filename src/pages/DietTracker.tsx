@@ -41,32 +41,32 @@ export default function DietTracker() {
 
     setIsScanning(true);
     try {
-      // Convert file to base64 for API call
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const imageData = e.target?.result as string;
-        const scannedResult = await scanFood(imageData);
-        
-        if (scannedResult) {
-          setScannedFood(scannedResult);
-          toast({
-            title: "Food Recognized!",
-            description: `Detected: ${scannedResult.name} with ${scannedResult.calories} calories`,
-            duration: 3000,
-          });
-        } else {
-          toast({
-            title: "Recognition Failed",
-            description: "Couldn't identify the food. You can add it manually.",
-            variant: "destructive",
-            duration: 3000,
-          });
-        }
-        setIsScanning(false);
-      };
-      reader.readAsDataURL(file);
+      const scannedResult = await scanFood(file);
+      
+      if (scannedResult) {
+        setScannedFood(scannedResult);
+        toast({
+          title: "Food Recognized!",
+          description: `Detected: ${scannedResult.name} with ${scannedResult.calories} calories`,
+          duration: 3000,
+        });
+      } else {
+        toast({
+          title: "Recognition Failed",
+          description: "Couldn't identify the food. You can add it manually.",
+          variant: "destructive",
+          duration: 3000,
+        });
+      }
     } catch (error) {
-      console.error('Scanning failed:', error);
+      console.error('Food scanning error:', error);
+      toast({
+        title: "Scan Failed",
+        description: "Failed to scan food. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
       setIsScanning(false);
     }
   };

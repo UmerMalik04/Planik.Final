@@ -32,7 +32,7 @@ interface DietStore {
   addFood: (food: Omit<FoodItem, 'id'>) => void;
   removeFood: (foodId: string, date: string) => void;
   getDailyNutrition: (date: string) => DailyNutrition;
-  scanFood: (imageData: string) => Promise<FoodItem | null>;
+  scanFood: (file: File) => Promise<FoodItem | null>;
 }
 
 export const useDietStore = create<DietStore>()(
@@ -126,10 +126,10 @@ export const useDietStore = create<DietStore>()(
         };
       },
 
-      scanFood: async (imageData) => {
+      scanFood: async (file: File) => {
         try {
           console.log('Starting food recognition...');
-          const recognitionResult = await FoodRecognitionService.recognizeFood(imageData);
+          const recognitionResult = await FoodRecognitionService.recognizeFood(file);
           
           if (recognitionResult) {
             console.log('Food recognized:', recognitionResult);
