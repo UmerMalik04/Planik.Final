@@ -132,7 +132,6 @@ export default function Profile() {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.capture = 'environment'; // This enables camera on mobile devices
     
     input.onchange = (event) => {
       const file = (event.target as HTMLInputElement).files?.[0];
@@ -146,25 +145,30 @@ export default function Profile() {
             const savedUsers = JSON.parse(localStorage.getItem('mock-users') || '[]');
             const userIndex = savedUsers.findIndex((u: any) => u.email === user.email);
             if (userIndex !== -1) {
-              savedUsers[userIndex].user_metadata.avatar_url = imageUrl;
+              savedUsers[userIndex].user_metadata = {
+                ...savedUsers[userIndex].user_metadata,
+                avatar_url: imageUrl
+              };
               localStorage.setItem('mock-users', JSON.stringify(savedUsers));
               localStorage.setItem('current-user', JSON.stringify(savedUsers[userIndex]));
-              
-              // Update current user state
-              setUser({
-                ...user,
-                user_metadata: {
-                  ...user.user_metadata,
-                  avatar_url: imageUrl
-                }
-              });
-              
-              toast({
-                title: "Profile Picture Updated",
-                description: "Your profile picture has been changed successfully.",
-              });
             }
+            
+            // Update current user state immediately
+            const updatedUser = {
+              ...user,
+              user_metadata: {
+                ...user.user_metadata,
+                avatar_url: imageUrl
+              }
+            };
+            setUser(updatedUser);
+            
+            toast({
+              title: "Profile Picture Updated",
+              description: "Your profile picture has been changed successfully.",
+            });
           } catch (error) {
+            console.error('Profile picture update error:', error);
             toast({
               title: "Error",
               description: "Failed to update profile picture. Please try again.",
@@ -242,21 +246,25 @@ export default function Profile() {
                 <div className="space-y-2">
                   <Label htmlFor="name">Name</Label>
                   {isEditing ? (
-                    <div className="flex gap-2">
+                    <div className="space-y-2 sm:space-y-0 sm:flex sm:gap-2">
                       <Input
                         id="name"
                         value={editedName}
                         onChange={(e) => setEditedName(e.target.value)}
-                        className="flex-1"
+                        className="flex-1 min-w-0 w-full sm:w-auto"
+                        placeholder="Enter your name"
                       />
-                      <Button onClick={handleSaveName} size="sm">Save</Button>
-                      <Button 
-                        onClick={() => setIsEditing(false)} 
-                        variant="outline" 
-                        size="sm"
-                      >
-                        Cancel
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button onClick={handleSaveName} size="sm" className="flex-1 sm:flex-none">Save</Button>
+                        <Button 
+                          onClick={() => setIsEditing(false)} 
+                          variant="outline" 
+                          size="sm"
+                          className="flex-1 sm:flex-none"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
