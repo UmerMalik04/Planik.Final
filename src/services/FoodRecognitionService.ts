@@ -180,49 +180,40 @@ export class FoodRecognitionService {
   }
 
   static getEnhancedMockFoodData(imageFile?: File): FoodItem {
-    // Enhanced mock foods with more variety and better names
-    const mockFoods = [
-      { name: 'Grilled Chicken Breast', calories: 165, protein: 31, carbs: 0, fat: 3.6, fiber: 0, sugar: 0 },
-      { name: 'Fresh Apple', calories: 52, protein: 0.3, carbs: 14, fat: 0.2, fiber: 2.4, sugar: 10 },
-      { name: 'Banana', calories: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6, sugar: 12 },
-      { name: 'Salmon Fillet', calories: 208, protein: 20, carbs: 0, fat: 13, fiber: 0, sugar: 0 },
-      { name: 'Brown Rice', calories: 111, protein: 2.6, carbs: 23, fat: 0.9, fiber: 1.8, sugar: 0.4 },
-      { name: 'Broccoli', calories: 34, protein: 2.8, carbs: 7, fat: 0.4, fiber: 2.6, sugar: 1.5 },
-      { name: 'Pasta with Marinara', calories: 220, protein: 8, carbs: 44, fat: 2, fiber: 3, sugar: 8 },
-      { name: 'Greek Salad', calories: 85, protein: 4, carbs: 8, fat: 6, fiber: 3, sugar: 5 },
-      { name: 'Beef Steak', calories: 250, protein: 26, carbs: 0, fat: 15, fiber: 0, sugar: 0 },
-      { name: 'Whole Grain Bread', calories: 247, protein: 13, carbs: 41, fat: 4.2, fiber: 6, sugar: 6 },
-      { name: 'Greek Yogurt', calories: 100, protein: 15, carbs: 6, fat: 0.4, fiber: 0, sugar: 6 },
-      { name: 'Scrambled Eggs', calories: 155, protein: 13, carbs: 1.1, fat: 11, fiber: 0, sugar: 1.1 },
-      { name: 'Quinoa Bowl', calories: 120, protein: 4.4, carbs: 22, fat: 1.9, fiber: 2.8, sugar: 0.9 },
-      { name: 'Sweet Potato', calories: 86, protein: 1.6, carbs: 20, fat: 0.1, fiber: 3, sugar: 4.2 },
-      { name: 'Avocado Toast', calories: 160, protein: 2, carbs: 9, fat: 15, fiber: 7, sugar: 0.7 }
-    ];
-    
-    // Try to get a smarter selection based on filename if available
+    // Try to analyze filename for clues
     if (imageFile) {
       const filename = imageFile.name.toLowerCase();
       
-      if (filename.includes('chicken')) {
-        return { ...mockFoods[0], confidence: 0.8 };
-      } else if (filename.includes('apple')) {
-        return { ...mockFoods[1], confidence: 0.8 };
-      } else if (filename.includes('fish') || filename.includes('salmon')) {
-        return { ...mockFoods[3], confidence: 0.8 };
-      } else if (filename.includes('rice')) {
-        return { ...mockFoods[4], confidence: 0.8 };
-      } else if (filename.includes('salad')) {
-        return { ...mockFoods[7], confidence: 0.8 };
+      // Common food keywords in filenames
+      const foodKeywords = {
+        'apple': { name: 'Fresh Apple', calories: 52, protein: 0.3, carbs: 14, fat: 0.2, fiber: 2.4, sugar: 10 },
+        'banana': { name: 'Banana', calories: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6, sugar: 12 },
+        'chicken': { name: 'Grilled Chicken Breast', calories: 165, protein: 31, carbs: 0, fat: 3.6, fiber: 0, sugar: 0 },
+        'fish': { name: 'Salmon Fillet', calories: 208, protein: 20, carbs: 0, fat: 13, fiber: 0, sugar: 0 },
+        'rice': { name: 'Brown Rice', calories: 111, protein: 2.6, carbs: 23, fat: 0.9, fiber: 1.8, sugar: 0.4 },
+        'bread': { name: 'Whole Grain Bread', calories: 247, protein: 13, carbs: 41, fat: 4.2, fiber: 6, sugar: 6 },
+        'salad': { name: 'Greek Salad', calories: 85, protein: 4, carbs: 8, fat: 6, fiber: 3, sugar: 5 },
+        'egg': { name: 'Scrambled Eggs', calories: 155, protein: 13, carbs: 1.1, fat: 11, fiber: 0, sugar: 1.1 },
+        'pasta': { name: 'Pasta with Marinara', calories: 220, protein: 8, carbs: 44, fat: 2, fiber: 3, sugar: 8 }
+      };
+      
+      for (const [keyword, foodData] of Object.entries(foodKeywords)) {
+        if (filename.includes(keyword)) {
+          return { ...foodData, confidence: 0.8 };
+        }
       }
     }
     
-    // Random selection with varied confidence
-    const randomFood = mockFoods[Math.floor(Math.random() * mockFoods.length)];
-    const confidence = 0.6 + Math.random() * 0.3; // Between 0.6-0.9
-    
+    // Default to a common food if no match found
     return {
-      ...randomFood,
-      confidence: Math.round(confidence * 100) / 100
+      name: 'Mixed Meal',
+      calories: 180,
+      protein: 12,
+      carbs: 18,
+      fat: 8,
+      fiber: 3,
+      sugar: 6,
+      confidence: 0.6
     };
   }
 
