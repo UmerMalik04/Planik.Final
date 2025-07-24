@@ -239,13 +239,26 @@ export default function Progress() {
 
       {/* Personal Records Section */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg sm:text-xl font-semibold">{getText('one_rep_max')}</h2>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between sm:justify-start sm:gap-4">
+            <h2 className="text-lg sm:text-xl font-semibold">{getText('one_rep_max')}</h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAddForm(true)}
+              className="hidden sm:flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              {getText('add_exercise')}
+            </Button>
+          </div>
+          
+          {/* Mobile Add Exercise Button */}
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2"
+            className="flex sm:hidden items-center gap-2 text-blue-500 hover:text-blue-600 border-blue-500 hover:border-blue-600"
           >
             <Plus className="w-4 h-4" />
             {getText('add_exercise')}

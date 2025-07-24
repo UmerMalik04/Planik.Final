@@ -139,17 +139,12 @@ export default function History() {
                               <div>Reps</div>
                             </div>
                              {Array.from({ length: exercise.sets }, (_, setIndex) => (
-                               <div key={setIndex} className="grid grid-cols-3 gap-2 p-2 bg-muted rounded">
-                                 <div className="font-medium">{setIndex + 1}</div>
-                                 <div>{formatWeight(exercise.weight)}</div>
-                                 <div>{exercise.reps}</div>
-                               </div>
-                             ))}
-                              <div className="mt-2 pt-2 border-t border-border">
-                                <div className="text-xs sm:text-sm text-muted-foreground">
-                                  <strong>{getText('total_volume')}:</strong> {formatWeight(exercise.weight * exercise.reps * exercise.sets)}
+                                <div key={setIndex} className="grid grid-cols-3 gap-2 p-2 bg-muted rounded">
+                                  <div className="font-medium">{setIndex + 1}</div>
+                                  <div>{formatWeight(exercise.weight)}</div>
+                                  <div>{exercise.reps}</div>
                                 </div>
-                              </div>
+                              ))}
                           </div>
                         </CardContent>
                       </Card>
