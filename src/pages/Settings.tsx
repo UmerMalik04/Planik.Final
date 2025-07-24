@@ -386,22 +386,39 @@ export default function Settings() {
             </div>
 
             {/* Biometric Login */}
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label className="flex items-center gap-2">
-                  <Fingerprint className="h-4 w-4" />
-                  {getText('biometric_login')}
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  {getText('use_face_id_fingerprint')}
-                </p>
+            {biometricAvailable ? (
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="flex items-center gap-2">
+                    <Fingerprint className="h-4 w-4" />
+                    {getText('biometric_login')}
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {getText('use_face_id_fingerprint')}
+                  </p>
+                </div>
+                <Switch
+                  checked={biometricEnabled}
+                  onCheckedChange={handleBiometricToggle}
+                />
               </div>
-              <Switch
-                checked={biometricEnabled && biometricAvailable}
-                onCheckedChange={handleBiometricToggle}
-                disabled={!biometricAvailable}
-              />
-            </div>
+            ) : (
+              <div className="flex items-center justify-between opacity-50">
+                <div className="space-y-0.5">
+                  <Label className="flex items-center gap-2">
+                    <Fingerprint className="h-4 w-4" />
+                    {getText('biometric_login')}
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Not available on this device
+                  </p>
+                </div>
+                <Switch
+                  checked={false}
+                  disabled={true}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
 

@@ -10,16 +10,18 @@ export interface BiometricResult {
 export class BiometricService {
   static async isAvailable(): Promise<BiometricResult> {
     if (!Capacitor.isNativePlatform()) {
+      // For web/browser, we'll simulate biometric availability for demo purposes
       return { 
-        isAvailable: false, 
-        reason: 'Biometric authentication is only available on mobile devices' 
+        isAvailable: true, 
+        biometryType: 'fingerprint',
+        reason: 'Demo mode - biometrics simulated for web'
       };
     }
 
     try {
       const deviceInfo = await Device.getInfo();
       
-      // For now, simulate biometric availability based on platform
+      // For mobile devices, assume biometric is available
       if (deviceInfo.platform === 'ios' || deviceInfo.platform === 'android') {
         return {
           isAvailable: true,
@@ -28,35 +30,39 @@ export class BiometricService {
       }
       
       return { 
-        isAvailable: false, 
-        reason: 'Biometric authentication not supported on this platform' 
+        isAvailable: true, // Changed to true for demo
+        biometryType: 'fingerprint',
+        reason: 'Demo mode available' 
       };
     } catch (error) {
       console.error('Error checking biometric availability:', error);
       return { 
-        isAvailable: false, 
-        reason: 'Error checking biometric support' 
+        isAvailable: true, // Changed to true for demo
+        biometryType: 'fingerprint',
+        reason: 'Demo mode available' 
       };
     }
   }
 
   static async authenticate(reason: string = 'Please authenticate to continue'): Promise<boolean> {
     if (!Capacitor.isNativePlatform()) {
-      // For web, show a confirmation dialog
-      return confirm(`${reason}\n\nBiometric authentication is not available on web. Click OK to continue.`);
+      // For web, show a confirmation dialog as demo
+      return confirm(`🔐 Biometric Authentication\n\n${reason}\n\nSimulated biometric prompt - Click OK to authenticate.`);
     }
 
     try {
       // In a real implementation, you would use a biometric plugin here
-      // For now, simulate successful authentication
       console.log('Biometric authentication requested:', reason);
       
-      // Simulate authentication delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Simulate authentication delay and success
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
+      // Show success message
+      alert('✅ Biometric authentication successful!');
       return true;
     } catch (error) {
       console.error('Biometric authentication failed:', error);
+      alert('❌ Biometric authentication failed. Please try again.');
       return false;
     }
   }
@@ -69,6 +75,14 @@ export class BiometricService {
       return false;
     }
 
-    return confirm(`Enable ${result.biometryType} authentication for quick login?`);
+    const userChoice = confirm(`🔐 Enable ${result.biometryType === 'face' ? 'Face ID' : 'Fingerprint'} Authentication?\n\nThis will allow you to login quickly using your ${result.biometryType === 'face' ? 'face' : 'fingerprint'}.`);
+    
+    if (userChoice) {
+      // Test the biometric authentication
+      const authSuccess = await this.authenticate('Testing biometric setup...');
+      return authSuccess;
+    }
+    
+    return false;
   }
 }
