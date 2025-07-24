@@ -34,6 +34,8 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { BiometricService } from '@/services/BiometricService';
+import { NotificationService } from '@/services/NotificationService';
 
 const languages = [
   { code: 'en', name: 'English' },
@@ -58,7 +60,70 @@ export default function Settings() {
   const [feedback, setFeedback] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    checkBiometricAvailability();
+  }, []);
+
+  const checkBiometricAvailability = async () => {
+    const result = await BiometricService.isAvailable();
+    setBiometricAvailable(result.isAvailable);
+    
+    // Check if biometric is already enabled
+    const saved = localStorage.getItem('biometric-enabled');
+    setBiometricEnabled(saved === 'true');
+  };
+
+  const handleBiometricToggle = async (enabled: boolean) => {
+    if (enabled) {
+      const success = await BiometricService.promptForBiometricSetup();
+      if (success) {
+        setBiometricEnabled(true);
+        localStorage.setItem('biometric-enabled', 'true');
+        updateSetting('biometricLogin', true);
+        toast({
+          title: "Biometric Login Enabled",
+          description: "You can now use biometric authentication to login.",
+        });
+      }
+    } else {
+      setBiometricEnabled(false);
+      localStorage.setItem('biometric-enabled', 'false');
+      updateSetting('biometricLogin', false);
+      toast({
+        title: "Biometric Login Disabled",
+        description: "Biometric authentication has been turned off.",
+      });
+    }
+  };
+
+  const handleNotificationToggle = async (enabled: boolean) => {
+    if (enabled) {
+      const permissionGranted = await NotificationService.requestPermissions();
+      if (permissionGranted) {
+        updateSetting('notifications', true);
+        toast({
+          title: "Notifications Enabled",
+          description: "You'll now receive workout and meal reminders.",
+        });
+      } else {
+        toast({
+          title: "Permission Denied",
+          description: "Please enable notifications in your device settings.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      updateSetting('notifications', false);
+      toast({
+        title: "Notifications Disabled",
+        description: "You won't receive any app notifications.",
+      });
+    }
+  };
 
   const handleChangePassword = () => {
     if (!newPassword || !confirmPassword) {
@@ -316,7 +381,7 @@ export default function Settings() {
               </div>
               <Switch
                 checked={settings.notifications}
-                onCheckedChange={(value) => updateSetting('notifications', value)}
+                onCheckedChange={handleNotificationToggle}
               />
             </div>
 
@@ -332,8 +397,9 @@ export default function Settings() {
                 </p>
               </div>
               <Switch
-                checked={settings.biometricLogin}
-                onCheckedChange={(value) => updateSetting('biometricLogin', value)}
+                checked={biometricEnabled && biometricAvailable}
+                onCheckedChange={handleBiometricToggle}
+                disabled={!biometricAvailable}
               />
             </div>
           </CardContent>
