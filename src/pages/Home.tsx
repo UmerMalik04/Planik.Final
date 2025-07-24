@@ -122,7 +122,7 @@ export default function Home() {
     <div className="min-h-screen p-6 space-y-6">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{getText('welcome_message')}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{getText('dynamic_greeting')}</h1>
         <p className="text-sm sm:text-base text-muted-foreground mt-1">{getText('gym_companion')}</p>
       </div>
 

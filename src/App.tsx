@@ -19,6 +19,8 @@ import AuthCallback from "./pages/AuthCallback";
 import Demo from "./pages/Demo";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import Exercises from "./pages/Exercises";
+import BodyMap from "./pages/BodyMap";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -107,6 +109,20 @@ function App() {
             <AuthGuard>
               <Layout>
                 <Settings />
+              </Layout>
+            </AuthGuard>
+          } />
+          <Route path="/exercises" element={
+            <AuthGuard>
+              <Layout>
+                <Exercises />
+              </Layout>
+            </AuthGuard>
+          } />
+          <Route path="/body-map" element={
+            <AuthGuard>
+              <Layout>
+                <BodyMap />
               </Layout>
             </AuthGuard>
           } />

@@ -300,14 +300,14 @@ export default function DietTracker() {
           disabled={isScanning}
         >
           <Camera className="w-4 h-4 mr-2" />
-          {isScanning ? 'Scanning...' : 'Scan Food'}
+          {isScanning ? getText('scanning') : getText('scan_food')}
         </Button>
         
         <Dialog open={showAddFood} onOpenChange={setShowAddFood}>
           <DialogTrigger asChild>
             <Button variant="outline" className="flex-1">
               <Plus className="w-4 h-4 mr-2" />
-              Add Manually
+              {getText('add_manually')}
             </Button>
           </DialogTrigger>
           <DialogContent className="bg-card border-border">

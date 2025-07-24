@@ -97,6 +97,17 @@ const translations: Record<Language, Record<string, string>> = {
     'exercise_progress': 'Exercise Progress',
     'no_exercise_data': 'No exercise data yet',
     'latest': 'Latest',
+    'dynamic_greeting': (() => {
+      const hour = new Date().getHours();
+      if (hour < 12) return 'Good Morning!';
+      if (hour < 18) return 'Good Afternoon!';
+      return 'Good Evening!';
+    })(),
+    'scan_food': 'Scan Food',
+    'add_manually': 'Add Manually',
+    'scanning': 'Scanning...',
+    'exercises_tab': 'Exercises',
+    'body_map_tab': 'Body Map',
     
     // History Page
     'workout_history': 'Workout History',
