@@ -138,13 +138,23 @@ export default function History() {
                               <div>Weight</div>
                               <div>Reps</div>
                             </div>
-                             {Array.from({ length: exercise.sets }, (_, setIndex) => (
-                                <div key={setIndex} className="grid grid-cols-3 gap-2 p-2 bg-muted rounded">
-                                  <div className="font-medium">{setIndex + 1}</div>
-                                  <div>{formatWeight(exercise.weight)}</div>
-                                  <div>{exercise.reps}</div>
-                                </div>
-                              ))}
+                             {exercise.setData && exercise.setData.length > 0 ? (
+                                exercise.setData.map((setData, setIndex) => (
+                                  <div key={`${exercise.id}-set-${setIndex}`} className="grid grid-cols-3 gap-2 p-2 bg-muted rounded">
+                                    <div className="font-medium">{setIndex + 1}</div>
+                                    <div>{formatWeight(setData.weight)}</div>
+                                    <div>{setData.reps}</div>
+                                  </div>
+                                ))
+                              ) : (
+                                Array.from({ length: exercise.sets }, (_, setIndex) => (
+                                  <div key={`${exercise.id}-fallback-${setIndex}`} className="grid grid-cols-3 gap-2 p-2 bg-muted rounded">
+                                    <div className="font-medium">{setIndex + 1}</div>
+                                    <div>{formatWeight(exercise.weight)}</div>
+                                    <div>{exercise.reps}</div>
+                                  </div>
+                                ))
+                              )}
                           </div>
                         </CardContent>
                       </Card>
