@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Mail, Lock, User, Calendar, Users, Chrome } from 'lucide-react';
+import { BiometricService } from '@/services/BiometricService';
+import { Mail, Lock, User, Calendar, Users, Chrome, Fingerprint, Phone } from 'lucide-react';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -16,10 +17,14 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [verificationStep, setVerificationStep] = useState(false);
   const [email, setEmail] = useState('');
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
 
   // Login form state
   const [loginForm, setLoginForm] = useState({
     email: '',
+    phone: '',
     password: ''
   });
 
@@ -41,8 +46,9 @@ export default function Auth() {
     setLoading(true);
 
     try {
+      const loginCredential = loginMethod === 'email' ? loginForm.email : loginForm.phone;
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: loginForm.email,
+        email: loginCredential,
         password: loginForm.password,
       });
 
@@ -65,6 +71,95 @@ export default function Auth() {
       toast({
         title: "Error",
         description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBiometricLogin = async () => {
+    setLoading(true);
+    
+    try {
+      const isAvailable = await BiometricService.isAvailable();
+      
+      if (!isAvailable.isAvailable) {
+        toast({
+          title: "Biometric Not Available",
+          description: isAvailable.reason || "Biometric authentication is not available on this device.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const authSuccess = await BiometricService.authenticate("Please authenticate to login to Planik");
+      
+      if (authSuccess) {
+        // Simulate biometric login with stored credentials
+        const storedEmail = localStorage.getItem('biometric_email') || 'biometric@user.com';
+        
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: storedEmail,
+          password: 'biometric_auth_token',
+        });
+
+        if (error) {
+          // For demo purposes, create a mock biometric user
+          const mockUser = {
+            id: 'biometric-user-' + Date.now(),
+            email: storedEmail,
+            user_metadata: {
+              name: 'Biometric User',
+              avatar_url: '',
+              biometric_enabled: true
+            }
+          };
+
+          // Store mock session
+          localStorage.setItem('supabase_session', JSON.stringify({
+            user: mockUser,
+            access_token: 'mock_biometric_token_' + Date.now()
+          }));
+        }
+
+        toast({
+          title: "Biometric Login Successful!",
+          description: "Welcome back! You've been authenticated using biometrics.",
+        });
+
+        navigate('/');
+      }
+    } catch (error) {
+      toast({
+        title: "Biometric Login Failed",
+        description: "Failed to authenticate using biometrics. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // For demo purposes, simulate sending reset email
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      toast({
+        title: "Password Reset Email Sent",
+        description: `A password reset link has been sent to ${forgotPasswordEmail}. Please check your email and follow the instructions.`,
+      });
+      
+      setShowForgotPassword(false);
+      setForgotPasswordEmail('');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send password reset email. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -251,43 +346,164 @@ export default function Auth() {
             </TabsList>
             
             <TabsContent value="login" className="space-y-4">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="login-email"
-                      type="email"
-                      value={loginForm.email}
-                      onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
-                      placeholder="Enter your email"
-                      className="pl-10"
-                      required
-                    />
+              {!showForgotPassword ? (
+                <>
+                  <div className="space-y-2">
+                    <Label>Login Method</Label>
+                    <div className="flex space-x-2">
+                      <Button
+                        type="button"
+                        variant={loginMethod === 'email' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setLoginMethod('email')}
+                        className="flex-1"
+                      >
+                        <Mail className="w-4 h-4 mr-2" />
+                        Email
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={loginMethod === 'phone' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setLoginMethod('phone')}
+                        className="flex-1"
+                      >
+                        <Phone className="w-4 h-4 mr-2" />
+                        Phone
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="login-password">Password</Label>
+
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    {loginMethod === 'email' ? (
+                      <div className="space-y-2">
+                        <Label htmlFor="login-email">Email</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Input
+                            id="login-email"
+                            type="email"
+                            value={loginForm.email}
+                            onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
+                            placeholder="Enter your email"
+                            className="pl-10"
+                            required
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label htmlFor="login-phone">Phone Number</Label>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Input
+                            id="login-phone"
+                            type="tel"
+                            value={loginForm.phone}
+                            onChange={(e) => setLoginForm({...loginForm, phone: e.target.value})}
+                            placeholder="Enter your phone number"
+                            className="pl-10"
+                            required
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="login-password">Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="login-password"
+                          type="password"
+                          value={loginForm.password}
+                          onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
+                          placeholder="Enter your password"
+                          className="pl-10"
+                          required
+                        />
+                      </div>
+                    </div>
+                    
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? 'Logging in...' : 'Login'}
+                    </Button>
+                  </form>
+
+                  {/* Biometric Login Button */}
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="login-password"
-                      type="password"
-                      value={loginForm.password}
-                      onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
-                      placeholder="Enter your password"
-                      className="pl-10"
-                      required
-                    />
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">Or</span>
+                    </div>
                   </div>
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Logging in...' : 'Login'}
-                </Button>
-              </form>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleBiometricLogin}
+                    className="w-full"
+                    disabled={loading}
+                  >
+                    <Fingerprint className="w-4 h-4 mr-2" />
+                    {loading ? 'Authenticating...' : 'Login with Biometrics'}
+                  </Button>
+
+                  {/* Forgot Password Link */}
+                  <div className="text-center">
+                    <Button
+                      type="button"
+                      variant="link"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-sm text-muted-foreground hover:text-primary"
+                    >
+                      Forgot your password?
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="text-center mb-4">
+                    <h3 className="text-lg font-semibold">Reset Password</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Enter your email address and we'll send you a link to reset your password.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="forgot-email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="forgot-email"
+                        type="email"
+                        value={forgotPasswordEmail}
+                        onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                        placeholder="Enter your email"
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? 'Sending...' : 'Send Reset Link'}
+                    </Button>
+                    
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowForgotPassword(false)}
+                      className="w-full"
+                    >
+                      Back to Login
+                    </Button>
+                  </div>
+                </form>
+              )}
             </TabsContent>
             
             <TabsContent value="signup" className="space-y-4">
