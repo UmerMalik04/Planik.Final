@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,9 @@ export default function Auth() {
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
 
   // Login form state
   const [loginForm, setLoginForm] = useState({
@@ -40,6 +43,74 @@ export default function Auth() {
 
   // Verification code state
   const [verificationCode, setVerificationCode] = useState('');
+
+  // Check URL parameters for password reset
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const type = urlParams.get('type');
+    const token = urlParams.get('token');
+    const emailParam = urlParams.get('email');
+    
+    if (type === 'recovery' && (token || emailParam)) {
+      setShowPasswordReset(true);
+      if (emailParam) {
+        setEmail(emailParam);
+      }
+    }
+  }, []);
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmNewPassword) {
+      toast({
+        title: "Password Mismatch",
+        description: "New passwords do not match.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Password Too Short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password Updated",
+        description: "Your password has been successfully updated. You can now log in with your new password.",
+      });
+
+      // Reset form and redirect to login
+      setShowPasswordReset(false);
+      setNewPassword('');
+      setConfirmNewPassword('');
+      
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, '/auth');
+      
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update password. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,41 +217,63 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      // First try the Supabase method to generate the token
+      // Generate password reset with Supabase
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: `${window.location.origin}/auth?type=recovery`,
       });
       
       // If Supabase's email service fails, use our custom Resend function
       if (resetError && resetError.message.includes('Error sending recovery email')) {
         console.log('Supabase email failed, using custom Resend service...');
         
-        // Call our custom send-email function
+        // Generate a temporary reset token
+        const resetToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        const resetUrl = `${window.location.origin}/auth?type=recovery&token=${resetToken}&email=${encodeURIComponent(forgotPasswordEmail)}`;
+        
+        // Call our custom send-email function with proper reset link
         const { error: emailError } = await supabase.functions.invoke('send-email', {
           body: {
             to: forgotPasswordEmail,
             subject: 'Reset your Planik password',
             html: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h1 style="color: #333; text-align: center;">Reset Your Password</h1>
-                <p>Hello,</p>
-                <p>You requested to reset your password for your Planik account.</p>
-                <p><strong>Note:</strong> Due to email configuration issues, please contact support or try logging in with a different method.</p>
-                <p>If you didn't request this, please ignore this email.</p>
-                <hr style="margin: 20px 0;">
-                <p style="color: #666; font-size: 12px;">This email was sent from Planik fitness app.</p>
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                  <h1 style="color: #333; margin-bottom: 10px;">Reset Your Password</h1>
+                  <p style="color: #666;">Planik Fitness App</p>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                  <p style="margin: 0 0 15px 0; color: #333;">Hello,</p>
+                  <p style="margin: 0 0 15px 0; color: #333;">You requested to reset your password for your Planik account.</p>
+                  <p style="margin: 0; color: #333;">Click the button below to reset your password:</p>
+                </div>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                  <a href="${resetUrl}" style="background: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">Reset My Password</a>
+                </div>
+                
+                <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                  <p style="margin: 0; color: #856404; font-size: 14px;"><strong>Security tip:</strong> This link will expire in 24 hours for your security.</p>
+                </div>
+                
+                <p style="color: #666; font-size: 14px; margin: 20px 0;">If you can't click the button, copy and paste this link into your browser:</p>
+                <p style="color: #007bff; font-size: 12px; word-break: break-all; background: #f8f9fa; padding: 10px; border-radius: 4px;">${resetUrl}</p>
+                
+                <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+                <p style="color: #666; font-size: 12px; text-align: center;">If you didn't request this password reset, please ignore this email. Your password will remain unchanged.</p>
+                <p style="color: #666; font-size: 12px; text-align: center;">This email was sent from Planik fitness app.</p>
               </div>
             `
           }
         });
         
         if (emailError) {
-          throw new Error('Failed to send email through backup service: ' + emailError.message);
+          throw new Error('Failed to send email: ' + emailError.message);
         }
         
         toast({
           title: "Password Reset Email Sent",
-          description: `A password reset notification has been sent to ${forgotPasswordEmail}. Please contact support for assistance.`,
+          description: `A password reset link has been sent to ${forgotPasswordEmail}. Please check your email and click the link to reset your password.`,
         });
       } else if (resetError) {
         throw resetError;
@@ -197,7 +290,7 @@ export default function Auth() {
       console.error('Password reset error:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to send password reset email. Please try again or contact support.",
+        description: error.message || "Failed to send password reset email. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -348,341 +441,400 @@ export default function Auth() {
     }
   };
 
-  // Verification step UI removed since mock system doesn't need email verification
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold text-foreground">
-            Welcome to Planik
+            {showPasswordReset ? 'Reset Your Password' : 'Welcome to Planik'}
           </CardTitle>
-          <p className="text-muted-foreground mt-2">Your fitness journey starts here</p>
+          <p className="text-muted-foreground mt-2">
+            {showPasswordReset ? 'Enter your new password below' : 'Your fitness journey starts here'}
+          </p>
         </CardHeader>
         <CardContent>
-          {/* Google Login Button - Prominent at Top */}
-          <div className="mb-6">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleGoogleLogin}
-              className="w-full h-12 bg-white hover:bg-gray-50 border-gray-300 text-gray-700 font-medium shadow-sm transition-all duration-200 hover:shadow-md"
-              disabled={loading}
-            >
-              <svg className="mr-3 h-5 w-5" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
-              </svg>
-              {loading ? 'Connecting...' : 'Continue with Google'}
-            </Button>
-          </div>
-          
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with email</span>
-            </div>
-          </div>
-          <Tabs defaultValue="login" className="space-y-4 mt-6">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="login" className="space-y-4">
-              {!showForgotPassword ? (
-                <>
-                  <div className="space-y-2">
-                    <Label>Login Method</Label>
-                    <div className="flex space-x-2">
-                      <Button
-                        type="button"
-                        variant={loginMethod === 'email' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setLoginMethod('email')}
-                        className="flex-1"
-                      >
-                        <Mail className="w-4 h-4 mr-2" />
-                        Email
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={loginMethod === 'phone' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setLoginMethod('phone')}
-                        className="flex-1"
-                      >
-                        <Phone className="w-4 h-4 mr-2" />
-                        Phone
-                      </Button>
-                    </div>
-                  </div>
-
-                  <form onSubmit={handleLogin} className="space-y-4">
-                    {loginMethod === 'email' ? (
+          {showPasswordReset ? (
+            /* Password Reset Form */
+            <form onSubmit={handlePasswordReset} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-password">New Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="new-password"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter your new password"
+                    className="pl-10"
+                    required
+                    minLength={6}
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="confirm-new-password"
+                    type="password"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    placeholder="Confirm your new password"
+                    className="pl-10"
+                    required
+                    minLength={6}
+                  />
+                </div>
+              </div>
+              
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Updating Password...' : 'Update Password'}
+              </Button>
+              
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowPasswordReset(false);
+                  window.history.replaceState({}, document.title, '/auth');
+                }}
+                className="w-full"
+              >
+                Back to Login
+              </Button>
+            </form>
+          ) : (
+            /* Regular Auth Forms */
+            <>
+              {/* Google Login Button - Prominent at Top */}
+              <div className="mb-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleGoogleLogin}
+                  className="w-full h-12 bg-white hover:bg-gray-50 border-gray-300 text-gray-700 font-medium shadow-sm transition-all duration-200 hover:shadow-md"
+                  disabled={loading}
+                >
+                  <svg className="mr-3 h-5 w-5" viewBox="0 0 24 24">
+                    <path
+                      fill="#4285F4"
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    />
+                  </svg>
+                  {loading ? 'Connecting...' : 'Continue with Google'}
+                </Button>
+              </div>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">Or continue with email</span>
+                </div>
+              </div>
+              
+              <Tabs defaultValue="login" className="space-y-4 mt-6">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="login">Login</TabsTrigger>
+                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="login" className="space-y-4">
+                  {!showForgotPassword ? (
+                    <>
                       <div className="space-y-2">
-                        <Label htmlFor="login-email">Email</Label>
+                        <Label>Login Method</Label>
+                        <div className="flex space-x-2">
+                          <Button
+                            type="button"
+                            variant={loginMethod === 'email' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setLoginMethod('email')}
+                            className="flex-1"
+                          >
+                            <Mail className="w-4 h-4 mr-2" />
+                            Email
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={loginMethod === 'phone' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setLoginMethod('phone')}
+                            className="flex-1"
+                          >
+                            <Phone className="w-4 h-4 mr-2" />
+                            Phone
+                          </Button>
+                        </div>
+                      </div>
+
+                      <form onSubmit={handleLogin} className="space-y-4">
+                        {loginMethod === 'email' ? (
+                          <div className="space-y-2">
+                            <Label htmlFor="login-email">Email</Label>
+                            <div className="relative">
+                              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <Input
+                                id="login-email"
+                                type="email"
+                                value={loginForm.email}
+                                onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
+                                placeholder="Enter your email"
+                                className="pl-10"
+                                required
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <Label htmlFor="login-phone">Phone Number</Label>
+                            <div className="relative">
+                              <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <Input
+                                id="login-phone"
+                                type="tel"
+                                value={loginForm.phone}
+                                onChange={(e) => setLoginForm({...loginForm, phone: e.target.value})}
+                                placeholder="Enter your phone number"
+                                className="pl-10"
+                                required
+                              />
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="login-password">Password</Label>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                            <Input
+                              id="login-password"
+                              type="password"
+                              value={loginForm.password}
+                              onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
+                              placeholder="Enter your password"
+                              className="pl-10"
+                              required
+                            />
+                          </div>
+                        </div>
+                        
+                        <Button type="submit" className="w-full" disabled={loading}>
+                          {loading ? 'Logging in...' : 'Login'}
+                        </Button>
+                      </form>
+
+                      {/* Biometric Login Button */}
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-background px-2 text-muted-foreground">Or</span>
+                        </div>
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleBiometricLogin}
+                        className="w-full"
+                        disabled={loading}
+                      >
+                        <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 1C5.925 1 1 5.925 1 12s4.925 11 11 11 11-4.925 11-11S18.075 1 12 1zm0 20c-4.963 0-9-4.037-9-9s4.037-9 9-9 9 4.037 9 9-4.037 9-9 9z"/>
+                          <path d="M12 6c-3.309 0-6 2.691-6 6s2.691 6 6 6 6-2.691 6-6-2.691-6-6-6zm0 10c-2.206 0-4-1.794-4-4s1.794-4 4-4 4 1.794 4 4-1.794 4-4 4z"/>
+                          <circle cx="12" cy="12" r="2"/>
+                        </svg>
+                        {loading ? 'Authenticating...' : 'Login with Face ID'}
+                      </Button>
+
+                      {/* Forgot Password Link */}
+                      <div className="text-center">
+                        <Button
+                          type="button"
+                          variant="link"
+                          onClick={() => setShowForgotPassword(true)}
+                          className="text-sm text-muted-foreground hover:text-primary"
+                        >
+                          Forgot your password?
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <form onSubmit={handleForgotPassword} className="space-y-4">
+                      <div className="text-center mb-4">
+                        <h3 className="text-lg font-semibold">Reset Password</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Enter your email address and we'll send you a link to reset your password.
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="forgot-email">Email</Label>
                         <div className="relative">
                           <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                           <Input
-                            id="login-email"
+                            id="forgot-email"
                             type="email"
-                            value={loginForm.email}
-                            onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
+                            value={forgotPasswordEmail}
+                            onChange={(e) => setForgotPasswordEmail(e.target.value)}
                             placeholder="Enter your email"
                             className="pl-10"
                             required
                           />
                         </div>
                       </div>
-                    ) : (
+                      
                       <div className="space-y-2">
-                        <Label htmlFor="login-phone">Phone Number</Label>
-                        <div className="relative">
-                          <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                          <Input
-                            id="login-phone"
-                            type="tel"
-                            value={loginForm.phone}
-                            onChange={(e) => setLoginForm({...loginForm, phone: e.target.value})}
-                            placeholder="Enter your phone number"
-                            className="pl-10"
-                            required
-                          />
-                        </div>
+                        <Button type="submit" className="w-full" disabled={loading}>
+                          {loading ? 'Sending...' : 'Send Reset Link'}
+                        </Button>
+                        
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setShowForgotPassword(false)}
+                          className="w-full"
+                        >
+                          Back to Login
+                        </Button>
                       </div>
-                    )}
-                    
+                    </form>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="signup" className="space-y-4">
+                  <form onSubmit={handleSignup} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="login-password">Password</Label>
+                      <Label htmlFor="signup-name">Full Name</Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                         <Input
-                          id="login-password"
-                          type="password"
-                          value={loginForm.password}
-                          onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
-                          placeholder="Enter your password"
+                          id="signup-name"
+                          type="text"
+                          value={signupForm.name}
+                          onChange={(e) => setSignupForm({...signupForm, name: e.target.value})}
+                          placeholder="Enter your full name"
                           className="pl-10"
                           required
                         />
                       </div>
                     </div>
                     
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-gender">Gender</Label>
+                        <div className="relative">
+                          <Users className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10" />
+                          <Select
+                            value={signupForm.gender}
+                            onValueChange={(value) => setSignupForm({...signupForm, gender: value})}
+                            required
+                          >
+                            <SelectTrigger className="pl-10">
+                              <SelectValue placeholder="Gender" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="male">Male</SelectItem>
+                              <SelectItem value="female">Female</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                              <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-dob">Date of Birth</Label>
+                        <div className="relative">
+                          <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Input
+                            id="signup-dob"
+                            type="date"
+                            value={signupForm.dateOfBirth}
+                            onChange={(e) => setSignupForm({...signupForm, dateOfBirth: e.target.value})}
+                            className="pl-10 text-sm"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email">Email</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="signup-email"
+                          type="email"
+                          value={signupForm.email}
+                          onChange={(e) => setSignupForm({...signupForm, email: e.target.value})}
+                          placeholder="Enter your email"
+                          className="pl-10"
+                          required
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-password">Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="signup-password"
+                          type="password"
+                          value={signupForm.password}
+                          onChange={(e) => setSignupForm({...signupForm, password: e.target.value})}
+                          placeholder="Create a password"
+                          className="pl-10"
+                          required
+                          minLength={6}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-confirm-password">Confirm Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="signup-confirm-password"
+                          type="password"
+                          value={signupForm.confirmPassword}
+                          onChange={(e) => setSignupForm({...signupForm, confirmPassword: e.target.value})}
+                          placeholder="Confirm your password"
+                          className="pl-10"
+                          required
+                          minLength={6}
+                        />
+                      </div>
+                    </div>
+                    
                     <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? 'Logging in...' : 'Login'}
+                      {loading ? 'Creating Account...' : 'Create Account'}
                     </Button>
                   </form>
-
-                  {/* Biometric Login Button */}
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">Or</span>
-                    </div>
-                  </div>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleBiometricLogin}
-                    className="w-full"
-                    disabled={loading}
-                  >
-                    <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 1C5.925 1 1 5.925 1 12s4.925 11 11 11 11-4.925 11-11S18.075 1 12 1zm0 20c-4.963 0-9-4.037-9-9s4.037-9 9-9 9 4.037 9 9-4.037 9-9 9z"/>
-                      <path d="M12 6c-3.309 0-6 2.691-6 6s2.691 6 6 6 6-2.691 6-6-2.691-6-6-6zm0 10c-2.206 0-4-1.794-4-4s1.794-4 4-4 4 1.794 4 4-1.794 4-4 4z"/>
-                      <circle cx="12" cy="12" r="2"/>
-                    </svg>
-                    {loading ? 'Authenticating...' : 'Login with Face ID'}
-                  </Button>
-
-                  {/* Forgot Password Link */}
-                  <div className="text-center">
-                    <Button
-                      type="button"
-                      variant="link"
-                      onClick={() => setShowForgotPassword(true)}
-                      className="text-sm text-muted-foreground hover:text-primary"
-                    >
-                      Forgot your password?
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <form onSubmit={handleForgotPassword} className="space-y-4">
-                  <div className="text-center mb-4">
-                    <h3 className="text-lg font-semibold">Reset Password</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Enter your email address and we'll send you a link to reset your password.
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="forgot-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="forgot-email"
-                        type="email"
-                        value={forgotPasswordEmail}
-                        onChange={(e) => setForgotPasswordEmail(e.target.value)}
-                        placeholder="Enter your email"
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? 'Sending...' : 'Send Reset Link'}
-                    </Button>
-                    
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowForgotPassword(false)}
-                      className="w-full"
-                    >
-                      Back to Login
-                    </Button>
-                  </div>
-                </form>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="signup" className="space-y-4">
-              <form onSubmit={handleSignup} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-name">Full Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="signup-name"
-                      type="text"
-                      value={signupForm.name}
-                      onChange={(e) => setSignupForm({...signupForm, name: e.target.value})}
-                      placeholder="Enter your full name"
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-gender">Gender</Label>
-                    <div className="relative">
-                      <Users className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10" />
-                      <Select
-                        value={signupForm.gender}
-                        onValueChange={(value) => setSignupForm({...signupForm, gender: value})}
-                        required
-                      >
-                        <SelectTrigger className="pl-10">
-                          <SelectValue placeholder="Gender" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                          <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-dob">Date of Birth</Label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="signup-dob"
-                        type="date"
-                        value={signupForm.dateOfBirth}
-                        onChange={(e) => setSignupForm({...signupForm, dateOfBirth: e.target.value})}
-                        className="pl-10 text-sm"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      value={signupForm.email}
-                      onChange={(e) => setSignupForm({...signupForm, email: e.target.value})}
-                      placeholder="Enter your email"
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      value={signupForm.password}
-                      onChange={(e) => setSignupForm({...signupForm, password: e.target.value})}
-                      placeholder="Create a password"
-                      className="pl-10"
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="signup-confirm-password">Confirm Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="signup-confirm-password"
-                      type="password"
-                      value={signupForm.confirmPassword}
-                      onChange={(e) => setSignupForm({...signupForm, confirmPassword: e.target.value})}
-                      placeholder="Confirm your password"
-                      className="pl-10"
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Creating Account...' : 'Create Account'}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+                </TabsContent>
+              </Tabs>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>
