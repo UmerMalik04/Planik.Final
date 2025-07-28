@@ -48,6 +48,7 @@ export default function Progress() {
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [editForm, setEditForm] = useState({ weight: "", reps: "", date: "" });
   const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedWorkoutType, setSelectedWorkoutType] = useState<string | null>(null);
   const [newRecord, setNewRecord] = useState({ exerciseName: "", weight: "", date: new Date() });
   const [recordToDelete, setRecordToDelete] = useState<any>(null);
 
@@ -218,6 +219,50 @@ export default function Progress() {
         total: exercise.weight * exercise.reps,
         date: formatDate(exercise.date)
       }));
+  };
+
+  const getWorkoutTypeChartData = (workoutTypeName: string) => {
+    // Get all sessions for this workout type
+    const typeSessions = workoutSessions.filter(session => {
+      const plan = workoutPlans.find(plan => plan.id === session.planId);
+      return plan?.type === workoutTypeName;
+    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    // Group sessions by week and calculate weekly averages
+    const weeklyData: { [key: string]: { totalWeight: number; exerciseCount: number; date: string } } = {};
+    
+    typeSessions.forEach(session => {
+      const sessionDate = new Date(session.date);
+      const weekKey = `${sessionDate.getFullYear()}-W${Math.ceil(sessionDate.getDate() / 7)}`;
+      
+      const weekAverage = session.exercises.reduce((sum, exercise) => sum + exercise.weight, 0) / session.exercises.length;
+      
+      if (!weeklyData[weekKey]) {
+        weeklyData[weekKey] = {
+          totalWeight: 0,
+          exerciseCount: 0,
+          date: formatDate(session.date)
+        };
+      }
+      
+      weeklyData[weekKey].totalWeight += weekAverage;
+      weeklyData[weekKey].exerciseCount += 1;
+    });
+
+    // Convert to chart format with percentage improvement
+    const chartData = Object.entries(weeklyData).map(([week, data], index) => {
+      const weeklyAverage = data.totalWeight / data.exerciseCount;
+      const firstWeekAverage = index === 0 ? weeklyAverage : Object.values(weeklyData)[0].totalWeight / Object.values(weeklyData)[0].exerciseCount;
+      const improvementPercentage = firstWeekAverage > 0 ? ((weeklyAverage / firstWeekAverage - 1) * 100) : 0;
+      
+      return {
+        week,
+        percentage: Math.round(improvementPercentage * 10) / 10,
+        date: data.date
+      };
+    });
+
+    return chartData;
   };
 
   return (
@@ -478,7 +523,11 @@ export default function Progress() {
         ) : (
           <div className="space-y-3">
             {workoutTypeProgress.map((workoutType) => (
-              <Card key={workoutType.name} className="border-l-4 border-l-secondary">
+              <Card 
+                key={workoutType.name} 
+                className="border-l-4 border-l-secondary cursor-pointer hover:bg-accent/50 transition-colors"
+                onClick={() => setSelectedWorkoutType(workoutType.name)}
+              >
                 <CardContent className="p-4">
                   <div className="flex justify-between items-center">
                     <div className="flex-1">
@@ -560,6 +609,50 @@ export default function Progress() {
               </div>
               <div className="text-sm text-muted-foreground text-center">
                 Tap outside to close
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Workout Type Progress Dialog */}
+      <Dialog open={!!selectedWorkoutType} onOpenChange={() => setSelectedWorkoutType(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{selectedWorkoutType} Progress Over Time</DialogTitle>
+          </DialogHeader>
+          {selectedWorkoutType && (
+            <div className="space-y-4">
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={getWorkoutTypeChartData(selectedWorkoutType)}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="date" 
+                      label={{ value: 'Date', position: 'insideBottom', offset: -5 }}
+                    />
+                    <YAxis 
+                      label={{ value: 'Improvement %', angle: -90, position: 'insideLeft' }}
+                    />
+                    <Tooltip 
+                      formatter={(value, name) => [
+                        `${value}%`,
+                        'Improvement'
+                      ]}
+                      labelFormatter={(label) => label}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="percentage" 
+                      stroke="hsl(var(--secondary))" 
+                      strokeWidth={2}
+                      dot={{ fill: "hsl(var(--secondary))" }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="text-sm text-muted-foreground text-center">
+                Shows percentage improvement from your baseline week
               </div>
             </div>
           )}
