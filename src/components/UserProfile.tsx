@@ -16,7 +16,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 
 interface AuthUser {
   id: string;
-  email: string;
+  email?: string;
   user_metadata: {
     name?: string;
     gender?: string;

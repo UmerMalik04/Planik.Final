@@ -146,8 +146,11 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      // For demo purposes, simulate sending reset email
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+      
+      if (error) throw error;
       
       toast({
         title: "Password Reset Email Sent",
@@ -156,10 +159,10 @@ export default function Auth() {
       
       setShowForgotPassword(false);
       setForgotPasswordEmail('');
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to send password reset email. Please try again.",
+        description: error.message || "Failed to send password reset email. Please try again.",
         variant: "destructive",
       });
     } finally {

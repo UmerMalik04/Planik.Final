@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface AuthUser {
   id: string;
-  email: string;
+  email?: string;
   user_metadata: {
     name?: string;
     gender?: string;
