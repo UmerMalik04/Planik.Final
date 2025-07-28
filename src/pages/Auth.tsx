@@ -199,6 +199,7 @@ export default function Auth() {
         email: signupForm.email,
         password: signupForm.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             name: signupForm.name,
             gender: signupForm.gender,
@@ -209,11 +210,21 @@ export default function Auth() {
 
       if (error) {
         console.error('Signup error:', error);
-        toast({
-          title: "Signup Failed",
-          description: error.message,
-          variant: "destructive",
-        });
+        
+        // Handle specific error cases
+        if (error.message.includes('rate limit')) {
+          toast({
+            title: "Too Many Attempts",
+            description: "Please wait a few minutes before trying to sign up again.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Signup Failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
         return;
       }
 
@@ -245,40 +256,36 @@ export default function Auth() {
     try {
       console.log('Starting Google OAuth...');
       
-      // Simulate Google OAuth data retrieval
-      const mockGoogleUser = {
-        id: 'google-' + Date.now(),
-        email: 'user@gmail.com',
-        user_metadata: {
-          name: 'Google User',
-          avatar_url: 'https://lh3.googleusercontent.com/a/default-user=s96-c',
-          provider: 'google'
-        }
-      };
-
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google'
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
       });
 
       if (error) {
         console.error('Google login error:', error);
-        toast({
-          title: "Google Login Failed",  
-          description: error.message,
-          variant: "destructive",
-        });
+        
+        // Handle specific error cases
+        if (error.message.includes('provider is not enabled') || error.message.includes('Unsupported provider')) {
+          toast({
+            title: "Google Login Not Configured",  
+            description: "Google OAuth needs to be set up in your Supabase project. Please configure it in the Authentication settings.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Google Login Failed",  
+            description: error.message,
+            variant: "destructive",
+          });
+        }
         return;
       }
 
-      console.log('Google login successful - retrieved user data:', mockGoogleUser);
+      console.log('Google login initiated successfully');
+      // OAuth will redirect to callback URL, no need to handle response here
       
-      toast({
-        title: "Welcome!",
-        description: `Successfully logged in as ${mockGoogleUser.user_metadata.name}`,
-        duration: 2000,
-      });
-
-      navigate('/');
     } catch (error) {
       console.error('Google login error:', error);
       toast({
