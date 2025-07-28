@@ -212,10 +212,22 @@ export default function Auth() {
         console.error('Signup error:', error);
         
         // Handle specific error cases
-        if (error.message.includes('rate limit')) {
+        if (error.message.includes('rate limit') || error.code === 'over_email_send_rate_limit') {
           toast({
             title: "Too Many Attempts",
             description: "Please wait a few minutes before trying to sign up again.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('Error sending confirmation email') || error.code === 'unexpected_failure') {
+          toast({
+            title: "Email Service Issue", 
+            description: "There's an issue with the email confirmation service. You can try disabling email confirmation in Supabase settings for testing.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('User already registered')) {
+          toast({
+            title: "Account Already Exists",
+            description: "An account with this email already exists. Try logging in instead.",
             variant: "destructive",
           });
         } else {
@@ -256,7 +268,7 @@ export default function Auth() {
     try {
       console.log('Starting Google OAuth...');
       
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`
@@ -266,11 +278,14 @@ export default function Auth() {
       if (error) {
         console.error('Google login error:', error);
         
-        // Handle specific error cases
-        if (error.message.includes('provider is not enabled') || error.message.includes('Unsupported provider')) {
+        // Handle specific error cases  
+        if (error.message.includes('Invalid provider') || 
+            error.message.includes('provider is not enabled') || 
+            error.message.includes('Unsupported provider') ||
+            error.code === 'unsupported_provider') {
           toast({
-            title: "Google Login Not Configured",  
-            description: "Google OAuth needs to be set up in your Supabase project. Please configure it in the Authentication settings.",
+            title: "Google OAuth Not Configured",  
+            description: "Please set up Google OAuth in your Supabase project. Go to Authentication > Providers > Google and add your Client ID and Secret.",
             variant: "destructive",
           });
         } else {
@@ -280,20 +295,20 @@ export default function Auth() {
             variant: "destructive",
           });
         }
+        setLoading(false);
         return;
       }
 
-      console.log('Google login initiated successfully');
-      // OAuth will redirect to callback URL, no need to handle response here
+      console.log('Google OAuth initiated - redirecting to Google...');
+      // OAuth will redirect to Google, so don't set loading to false here
       
     } catch (error) {
       console.error('Google login error:', error);
       toast({
-        title: "Error",
-        description: "An unexpected error occurred during Google login.",
+        title: "Google Login Failed",
+        description: "An unexpected error occurred. Please ensure Google OAuth is configured in your Supabase project.",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };
