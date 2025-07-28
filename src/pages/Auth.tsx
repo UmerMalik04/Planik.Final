@@ -224,14 +224,19 @@ export default function Auth() {
       
       // If Supabase's email service fails, use our custom Resend function
       if (resetError && resetError.message.includes('Error sending recovery email')) {
-        console.log('Supabase email failed, using custom Resend service...');
+        console.log('Supabase email failed, using custom Resend service for:', forgotPasswordEmail);
         
         // Generate a temporary reset token
         const resetToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         const resetUrl = `${window.location.origin}/auth?type=recovery&token=${resetToken}&email=${encodeURIComponent(forgotPasswordEmail)}`;
         
+        console.log('Calling send-email function with:', {
+          to: forgotPasswordEmail,
+          subject: 'Reset your Planik password'
+        });
+        
         // Call our custom send-email function with proper reset link
-        const { error: emailError } = await supabase.functions.invoke('send-email', {
+        const { data: emailData, error: emailError } = await supabase.functions.invoke('send-email', {
           body: {
             to: forgotPasswordEmail,
             subject: 'Reset your Planik password',
@@ -262,18 +267,25 @@ export default function Auth() {
                 <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
                 <p style="color: #666; font-size: 12px; text-align: center;">If you didn't request this password reset, please ignore this email. Your password will remain unchanged.</p>
                 <p style="color: #666; font-size: 12px; text-align: center;">This email was sent from Planik fitness app.</p>
+                
+                <div style="margin-top: 20px; padding: 10px; background: #e7f3ff; border-radius: 6px;">
+                  <p style="margin: 0; color: #0066cc; font-size: 12px;"><strong>Note for Outlook users:</strong> Sometimes emails may take a few minutes to arrive or might be in your spam folder. Please check both your inbox and spam folder.</p>
+                </div>
               </div>
             `
           }
         });
         
+        console.log('Send-email function response:', { data: emailData, error: emailError });
+        
         if (emailError) {
+          console.error('Custom email service failed:', emailError);
           throw new Error('Failed to send email: ' + emailError.message);
         }
         
         toast({
           title: "Password Reset Email Sent",
-          description: `A password reset link has been sent to ${forgotPasswordEmail}. Please check your email and click the link to reset your password.`,
+          description: `A password reset link has been sent to ${forgotPasswordEmail}. Please check your email and click the link to reset your password. ${forgotPasswordEmail.includes('outlook') ? 'Note: Outlook emails may take a few minutes to arrive or might be in spam.' : ''}`,
         });
       } else if (resetError) {
         throw resetError;
