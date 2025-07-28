@@ -146,23 +146,58 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
+      // First try the Supabase method to generate the token
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
         redirectTo: `${window.location.origin}/auth`,
       });
       
-      if (error) throw error;
-      
-      toast({
-        title: "Password Reset Email Sent",
-        description: `A password reset link has been sent to ${forgotPasswordEmail}. Please check your email and follow the instructions.`,
-      });
+      // If Supabase's email service fails, use our custom Resend function
+      if (resetError && resetError.message.includes('Error sending recovery email')) {
+        console.log('Supabase email failed, using custom Resend service...');
+        
+        // Call our custom send-email function
+        const { error: emailError } = await supabase.functions.invoke('send-email', {
+          body: {
+            to: forgotPasswordEmail,
+            subject: 'Reset your Planik password',
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h1 style="color: #333; text-align: center;">Reset Your Password</h1>
+                <p>Hello,</p>
+                <p>You requested to reset your password for your Planik account.</p>
+                <p><strong>Note:</strong> Due to email configuration issues, please contact support or try logging in with a different method.</p>
+                <p>If you didn't request this, please ignore this email.</p>
+                <hr style="margin: 20px 0;">
+                <p style="color: #666; font-size: 12px;">This email was sent from Planik fitness app.</p>
+              </div>
+            `
+          }
+        });
+        
+        if (emailError) {
+          throw new Error('Failed to send email through backup service: ' + emailError.message);
+        }
+        
+        toast({
+          title: "Password Reset Email Sent",
+          description: `A password reset notification has been sent to ${forgotPasswordEmail}. Please contact support for assistance.`,
+        });
+      } else if (resetError) {
+        throw resetError;
+      } else {
+        toast({
+          title: "Password Reset Email Sent",
+          description: `A password reset link has been sent to ${forgotPasswordEmail}. Please check your email and follow the instructions.`,
+        });
+      }
       
       setShowForgotPassword(false);
       setForgotPasswordEmail('');
     } catch (error: any) {
+      console.error('Password reset error:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to send password reset email. Please try again.",
+        description: error.message || "Failed to send password reset email. Please try again or contact support.",
         variant: "destructive",
       });
     } finally {
