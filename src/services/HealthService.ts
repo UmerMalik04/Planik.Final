@@ -1,6 +1,29 @@
 import { Capacitor } from '@capacitor/core';
 import { Device } from '@capacitor/device';
 
+// Health plugin interface
+interface HealthPlugin {
+  isAvailable(): Promise<{ available: boolean }>;
+  requestAuthorization(options: { read: string[]; write?: string[] }): Promise<{ granted: boolean }>;
+  queryHKitSampleType(options: {
+    sampleName: string;
+    startDate: Date;
+    endDate: Date;
+    limit?: number;
+  }): Promise<{ samples?: Array<{ quantity: number; startDate: string; endDate: string }> }>;
+}
+
+// Declare Capacitor plugin
+declare global {
+  interface Window {
+    Capacitor?: {
+      Plugins?: {
+        Health?: HealthPlugin;
+      };
+    };
+  }
+}
+
 export interface HealthData {
   steps: number;
   calories?: number;
@@ -17,6 +40,14 @@ export interface PermissionStatus {
 export class HealthService {
   private static mockSteps = 0;
   private static stepInterval: NodeJS.Timeout | null = null;
+  private static healthPlugin: HealthPlugin | null = null;
+
+  private static getHealthPlugin(): HealthPlugin | null {
+    if (typeof window !== 'undefined' && window.Capacitor?.Plugins?.Health) {
+      return window.Capacitor.Plugins.Health;
+    }
+    return null;
+  }
 
   static async requestPermissions(): Promise<PermissionStatus> {
     if (!Capacitor.isNativePlatform()) {
@@ -31,26 +62,56 @@ export class HealthService {
       const deviceInfo = await Device.getInfo();
       console.log('Requesting health permissions for:', deviceInfo.platform);
       
-      if (deviceInfo.platform === 'ios') {
-        // For iOS, inform user about HealthKit setup needed
-        return { 
-          granted: false, 
-          reason: 'Please enable HealthKit access in Settings > Privacy & Security > Health > Data Access & Devices',
-          shouldShowSettings: true
-        };
-      } else if (deviceInfo.platform === 'android') {
-        // For Android, we need Google Fit permissions
-        return { 
-          granted: false, 
-          reason: 'Please install Google Fit app and enable step tracking. Then allow this app to access Google Fit data in your device settings.',
+      const healthPlugin = this.getHealthPlugin();
+      
+      if (healthPlugin) {
+        try {
+          // Check if health data is available
+          const available = await healthPlugin.isAvailable();
+          
+          if (available.available) {
+            // Request authorization for step data
+            const result = await healthPlugin.requestAuthorization({
+              read: ['steps']
+            });
+            
+            if (result.granted) {
+              console.log('Health permissions granted');
+              return { granted: true };
+            } else {
+              return {
+                granted: false,
+                reason: deviceInfo.platform === 'ios' 
+                  ? 'Please enable HealthKit access in Settings > Privacy & Security > Health > Data Access & Devices'
+                  : 'Please enable Google Fit access and install Google Fit app',
+                shouldShowSettings: true
+              };
+            }
+          } else {
+            return {
+              granted: false,
+              reason: 'Health tracking not available on this device',
+              shouldShowSettings: false
+            };
+          }
+        } catch (error) {
+          console.error('Health plugin error:', error);
+          return {
+            granted: false,
+            reason: 'Health plugin error: ' + (error as Error).message,
+            shouldShowSettings: false
+          };
+        }
+      } else {
+        // Health plugin not available, provide guidance
+        return {
+          granted: false,
+          reason: deviceInfo.platform === 'ios' 
+            ? 'HealthKit integration requires native build. Please enable in Settings > Privacy & Security > Health'
+            : 'Google Fit integration requires native build. Please install Google Fit app',
           shouldShowSettings: true
         };
       }
-      
-      return { 
-        granted: false, 
-        reason: 'Health tracking not supported on this platform' 
-      };
     } catch (error) {
       console.error('Error requesting health permissions:', error);
       return { 
@@ -68,13 +129,31 @@ export class HealthService {
     }
 
     try {
-      const deviceInfo = await Device.getInfo();
+      const healthPlugin = this.getHealthPlugin();
       
-      if (deviceInfo.platform === 'ios') {
-        // For iOS, use mock data for now (real implementation would require HealthKit plugin)
-        return this.getMockSteps();
+      if (healthPlugin) {
+        const today = new Date();
+        const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const endOfDay = new Date();
+        
+        try {
+          const result = await healthPlugin.queryHKitSampleType({
+            sampleName: 'steps',
+            startDate: startOfDay,
+            endDate: endOfDay,
+            limit: 1000
+          });
+          
+          // Sum up all step data for today
+          const totalSteps = result.samples?.reduce((sum, entry) => sum + (entry.quantity || 0), 0) || 0;
+          console.log('Native step count:', totalSteps);
+          return Math.floor(totalSteps);
+        } catch (error) {
+          console.error('Error getting native step count:', error);
+          return this.getMockSteps();
+        }
       } else {
-        // For Android and other platforms, use mock data for now
+        // Fallback to mock data
         return this.getMockSteps();
       }
     } catch (error) {
@@ -105,14 +184,18 @@ export class HealthService {
   }
 
   static startStepTracking(): void {
-    // Simulate step tracking with periodic updates
-    this.stopStepTracking(); // Clear existing interval
+    // Stop any existing interval
+    this.stopStepTracking();
     
+    // Update steps every minute
     this.stepInterval = setInterval(() => {
-      // Randomly add 1-3 steps every minute (simulating walking)
-      if (Math.random() > 0.7) { // 30% chance of adding steps
-        this.mockSteps += Math.floor(Math.random() * 3) + 1;
+      // For mock data, randomly add steps
+      if (!Capacitor.isNativePlatform() || !this.getHealthPlugin()) {
+        if (Math.random() > 0.7) { // 30% chance of adding steps
+          this.mockSteps += Math.floor(Math.random() * 3) + 1;
+        }
       }
+      // For native platforms, step count will be fetched in the component
     }, 60000); // Update every minute
   }
 
@@ -129,17 +212,14 @@ export class HealthService {
     }
 
     try {
-      const deviceInfo = await Device.getInfo();
+      const healthPlugin = this.getHealthPlugin();
       
-      if (deviceInfo.platform === 'ios') {
-        // iOS devices generally support HealthKit
-        return true;
-      } else if (deviceInfo.platform === 'android') {
-        // Android support would require Google Fit integration
-        return true; // Return true but actual implementation needed
+      if (healthPlugin) {
+        const result = await healthPlugin.isAvailable();
+        return result.available;
+      } else {
+        return false;
       }
-      
-      return false;
     } catch {
       return false;
     }
@@ -149,6 +229,10 @@ export class HealthService {
     if (Capacitor.isNativePlatform()) {
       // Guide user to open settings
       console.log('Please open your device settings and enable health data access for this app');
+      
+      // You could implement deep linking to settings here
+      // For iOS: App-Prefs:Privacy&path=HEALTH
+      // For Android: Intent to open settings
     }
   }
 }
