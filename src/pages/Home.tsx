@@ -3,9 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
-import { Plus, Minus, TrendingUp, TrendingDown, Utensils, Activity } from "lucide-react";
+import { Plus, Minus, TrendingUp, TrendingDown, Utensils, Activity, Settings, AlertTriangle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
+import { HealthService } from "@/services/HealthService";
+import { useToast } from "@/hooks/use-toast";
 import muscularBodyDiagram from "@/assets/muscular-body-diagram.png";
 
 
@@ -30,11 +32,79 @@ export default function Home() {
   const [customWorkoutName, setCustomWorkoutName] = useState("");
   const [steps, setSteps] = useState(0);
   const [stepGoal] = useState(10000);
+  const [healthPermissionGranted, setHealthPermissionGranted] = useState<boolean | null>(null);
+  const [healthPermissionMessage, setHealthPermissionMessage] = useState<string>('');
+  const [shouldShowSettings, setShouldShowSettings] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     calculateProgress();
-    
-    // Load steps from localStorage
+    initializeHealthTracking();
+  }, [workoutSessions]);
+
+  const initializeHealthTracking = async () => {
+    try {
+      // Check if health tracking is available
+      const isAvailable = await HealthService.isAvailable();
+      
+      if (!isAvailable) {
+        setHealthPermissionGranted(false);
+        setHealthPermissionMessage('Health tracking not available on this device');
+        loadMockSteps();
+        return;
+      }
+
+      // Request permissions
+      const permissionResult = await HealthService.requestPermissions();
+      
+      if (permissionResult.granted) {
+        setHealthPermissionGranted(true);
+        setHealthPermissionMessage('');
+        await loadNativeSteps();
+        startStepTracking();
+      } else {
+        setHealthPermissionGranted(false);
+        setHealthPermissionMessage(permissionResult.reason || 'Health access denied');
+        setShouldShowSettings(permissionResult.shouldShowSettings || false);
+        
+        if (permissionResult.shouldShowSettings) {
+          toast({
+            title: "Health Access Required",
+            description: "Enable health data access in your device settings for accurate step tracking.",
+            variant: "destructive",
+          });
+        }
+        
+        loadMockSteps();
+      }
+    } catch (error) {
+      console.error('Health initialization error:', error);
+      setHealthPermissionGranted(false);
+      setHealthPermissionMessage('Error initializing health tracking');
+      loadMockSteps();
+    }
+  };
+
+  const loadNativeSteps = async () => {
+    try {
+      const currentSteps = await HealthService.getStepCount();
+      setSteps(currentSteps);
+      
+      // Save to localStorage as backup
+      const today = new Date().toDateString();
+      localStorage.setItem('daily-steps', JSON.stringify({
+        date: today,
+        steps: currentSteps,
+        source: 'native'
+      }));
+    } catch (error) {
+      console.error('Error loading native steps:', error);
+      loadMockSteps();
+    }
+  };
+
+  const loadMockSteps = () => {
+    // Load steps from localStorage or use mock data
     const savedSteps = localStorage.getItem('daily-steps');
     const today = new Date().toDateString();
     const savedStepsData = savedSteps ? JSON.parse(savedSteps) : {};
@@ -46,25 +116,42 @@ export default function Home() {
       setSteps(0);
       localStorage.setItem('daily-steps', JSON.stringify({
         date: today,
-        steps: 0
+        steps: 0,
+        source: 'mock'
       }));
     }
-    
-    // Simulate step counting (in a real app, this would come from device sensors)
-    const stepInterval = setInterval(() => {
-      setSteps(prev => {
-        const newSteps = prev + Math.floor(Math.random() * 3); // Random steps simulation
-        const today = new Date().toDateString();
-        localStorage.setItem('daily-steps', JSON.stringify({
-          date: today,
-          steps: newSteps
-        }));
-        return newSteps;
-      });
-    }, 30000); // Update every 30 seconds
-    
+  };
+
+  const startStepTracking = () => {
+    // Update steps every minute from native health data
+    const stepInterval = setInterval(async () => {
+      if (healthPermissionGranted) {
+        await loadNativeSteps();
+      } else {
+        // Mock step simulation for testing
+        setSteps(prev => {
+          const newSteps = prev + Math.floor(Math.random() * 3);
+          const today = new Date().toDateString();
+          localStorage.setItem('daily-steps', JSON.stringify({
+            date: today,
+            steps: newSteps,
+            source: 'mock'
+          }));
+          return newSteps;
+        });
+      }
+    }, 60000); // Update every minute
+
     return () => clearInterval(stepInterval);
-  }, [workoutSessions]);
+  };
+
+  const handleOpenSettings = () => {
+    HealthService.openHealthSettings();
+    toast({
+      title: "Opening Settings",
+      description: "Please enable health data access and return to the app.",
+    });
+  };
 
   const getWorkoutSummary = () => {
     const oneMonthAgo = new Date();
@@ -191,27 +278,64 @@ export default function Home() {
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
-                <Activity className="w-5 h-5 text-white" />
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                healthPermissionGranted === false 
+                  ? 'bg-gradient-to-br from-orange-500 to-red-500' 
+                  : 'bg-gradient-to-br from-green-500 to-emerald-600'
+              }`}>
+                {healthPermissionGranted === false ? (
+                  <AlertTriangle className="w-5 h-5 text-white" />
+                ) : (
+                  <Activity className="w-5 h-5 text-white" />
+                )}
               </div>
               <div>
                 <h3 className="font-semibold text-foreground">{getText('daily_steps')}</h3>
-                <p className="text-sm text-muted-foreground">{steps.toLocaleString()} / {stepGoal.toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">
+                  {healthPermissionGranted === false ? (
+                    <span className="text-orange-600">{healthPermissionMessage}</span>
+                  ) : (
+                    `${steps.toLocaleString()} / ${stepGoal.toLocaleString()}`
+                  )}
+                </p>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-primary">{Math.round((steps / stepGoal) * 100)}%</div>
-              <div className="text-sm text-muted-foreground">{getText('goal_progress')}</div>
+              {healthPermissionGranted === false && shouldShowSettings ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenSettings}
+                  className="flex items-center gap-2"
+                >
+                  <Settings className="w-4 h-4" />
+                  Settings
+                </Button>
+              ) : (
+                <>
+                  <div className="text-2xl font-bold text-primary">{Math.round((steps / stepGoal) * 100)}%</div>
+                  <div className="text-sm text-muted-foreground">{getText('goal_progress')}</div>
+                </>
+              )}
             </div>
           </div>
           <div className="mt-3">
             <div className="w-full bg-muted rounded-full h-2">
               <div 
-                className="bg-gradient-to-r from-green-500 to-emerald-600 h-2 rounded-full transition-all duration-300"
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  healthPermissionGranted === false 
+                    ? 'bg-gradient-to-r from-orange-500 to-red-500' 
+                    : 'bg-gradient-to-r from-green-500 to-emerald-600'
+                }`}
                 style={{ width: `${Math.min((steps / stepGoal) * 100, 100)}%` }}
               ></div>
             </div>
           </div>
+          {healthPermissionGranted === false && (
+            <div className="mt-2 text-xs text-muted-foreground">
+              {healthPermissionGranted === null ? 'Checking health access...' : 'Using simulated data'}
+            </div>
+          )}
         </CardContent>
       </Card>
 

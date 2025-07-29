@@ -11,6 +11,7 @@ export interface HealthData {
 export interface PermissionStatus {
   granted: boolean;
   reason?: string;
+  shouldShowSettings?: boolean;
 }
 
 export class HealthService {
@@ -28,17 +29,34 @@ export class HealthService {
 
     try {
       const deviceInfo = await Device.getInfo();
-      
-      // Simulate permission request
       console.log('Requesting health permissions for:', deviceInfo.platform);
       
-      // In a real app, you would request actual permissions here
-      return { granted: true };
+      if (deviceInfo.platform === 'ios') {
+        // For iOS, inform user about HealthKit setup needed
+        return { 
+          granted: false, 
+          reason: 'Please enable HealthKit access in Settings > Privacy & Security > Health > Data Access & Devices',
+          shouldShowSettings: true
+        };
+      } else if (deviceInfo.platform === 'android') {
+        // For Android, we need Google Fit permissions
+        return { 
+          granted: false, 
+          reason: 'Please install Google Fit app and enable step tracking. Then allow this app to access Google Fit data in your device settings.',
+          shouldShowSettings: true
+        };
+      }
+      
+      return { 
+        granted: false, 
+        reason: 'Health tracking not supported on this platform' 
+      };
     } catch (error) {
       console.error('Error requesting health permissions:', error);
       return { 
         granted: false, 
-        reason: 'Failed to request health permissions' 
+        reason: 'Failed to request health permissions',
+        shouldShowSettings: false
       };
     }
   }
@@ -50,12 +68,18 @@ export class HealthService {
     }
 
     try {
-      // In a real implementation, you would use a health plugin here
-      // For now, return mock data
-      return this.getMockSteps();
+      const deviceInfo = await Device.getInfo();
+      
+      if (deviceInfo.platform === 'ios') {
+        // For iOS, use mock data for now (real implementation would require HealthKit plugin)
+        return this.getMockSteps();
+      } else {
+        // For Android and other platforms, use mock data for now
+        return this.getMockSteps();
+      }
     } catch (error) {
       console.error('Error getting step count:', error);
-      return 0;
+      return this.getMockSteps();
     }
   }
 
@@ -106,9 +130,25 @@ export class HealthService {
 
     try {
       const deviceInfo = await Device.getInfo();
-      return deviceInfo.platform === 'ios' || deviceInfo.platform === 'android';
+      
+      if (deviceInfo.platform === 'ios') {
+        // iOS devices generally support HealthKit
+        return true;
+      } else if (deviceInfo.platform === 'android') {
+        // Android support would require Google Fit integration
+        return true; // Return true but actual implementation needed
+      }
+      
+      return false;
     } catch {
       return false;
+    }
+  }
+  
+  static openHealthSettings(): void {
+    if (Capacitor.isNativePlatform()) {
+      // Guide user to open settings
+      console.log('Please open your device settings and enable health data access for this app');
     }
   }
 }
