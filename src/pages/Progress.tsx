@@ -525,7 +525,7 @@ export default function Progress() {
             {workoutTypeProgress.map((workoutType) => (
               <Card 
                 key={workoutType.name} 
-                className="border-l-4 border-l-secondary cursor-pointer hover:bg-accent/50 transition-colors"
+                className="border-l-4 border-l-primary cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
                 onClick={() => setSelectedWorkoutType(workoutType.name)}
               >
                 <CardContent className="p-4">
