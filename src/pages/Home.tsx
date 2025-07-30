@@ -276,7 +276,7 @@ export default function Home() {
             return (
               <div key={workout.name} className="relative">
                 <Card 
-                  className={`border-2 transition-all duration-200 hover:scale-105 cursor-pointer ${workout.color} dark:bg-card dark:border-border`}
+                  className="border-2 border-widget transition-all duration-200 hover:scale-105 cursor-pointer bg-card"
                   onClick={() => handleWorkoutTypeClick(workout.name)}
                 >
                   <CardContent className="p-3 sm:p-4">
@@ -310,7 +310,7 @@ export default function Home() {
 
       {/* Diet Tracker */}
       <Card 
-        className="p-4 cursor-pointer hover:shadow-md transition-all border-2 border-orange-500 bg-background"
+        className="p-4 cursor-pointer hover:shadow-md transition-all border-2 border-widget bg-background"
         onClick={() => navigate("/diet-tracker")}
       >
         <div className="flex items-center space-x-3">
