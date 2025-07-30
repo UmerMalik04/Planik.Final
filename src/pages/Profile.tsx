@@ -355,7 +355,7 @@ export default function Profile() {
                   key={achievement.id}
                   className={`relative p-4 rounded-lg border-2 transition-all ${
                     achievement.completed 
-                      ? 'border-primary bg-primary/5' 
+                      ? 'border-widget bg-primary/5' 
                       : 'border-muted bg-muted/20'
                   }`}
                 >

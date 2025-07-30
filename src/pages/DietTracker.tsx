@@ -181,7 +181,7 @@ export default function DietTracker() {
                 <Card 
                   className={`border-2 transition-all duration-200 hover:scale-105 cursor-pointer ${
                     day.isToday 
-                      ? 'border-primary bg-primary/5' 
+                      ? 'border-widget bg-primary/5' 
                       : day.calories > 0 
                         ? 'border-green-500/30 bg-green-500/5' 
                         : 'border-muted bg-card'

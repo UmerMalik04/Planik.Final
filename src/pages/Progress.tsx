@@ -468,7 +468,7 @@ export default function Progress() {
             {exercisesProgress.map((exercise) => (
               <Card 
                 key={exercise.name} 
-                className="border-l-4 border-l-primary cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
+                className="border-l-4 border-l-widget cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
                 onClick={() => handleRecordClick(exercise.name)}
               >
                 <CardContent className="p-4">
@@ -527,7 +527,7 @@ export default function Progress() {
             {workoutTypeProgress.map((workoutType) => (
               <Card 
                 key={workoutType.name} 
-                className="border-l-4 border-l-primary cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
+                className="border-l-4 border-l-widget cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
                 onClick={() => setSelectedWorkoutType(workoutType.name)}
               >
                 <CardContent className="p-4">

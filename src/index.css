@@ -15,7 +15,7 @@ All colors MUST be HSL.
     --card: 0 0% 100%;
     --card-foreground: 0 0% 15%;  /* Darker text for better contrast */
     
-    --widget-border: 25 95% 53%;  /* Orange outline for widgets */
+    --widget-border: var(--primary);  /* Dynamic outline using theme primary color */
 
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 15%;
@@ -58,7 +58,7 @@ All colors MUST be HSL.
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
     
-    --widget-border: 217 91% 60%;  /* Light blue outline for widgets */
+    --widget-border: var(--primary);  /* Dynamic outline using theme primary color */
 
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
@@ -99,5 +99,27 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .border-widget {
+    border-color: hsl(var(--widget-border));
+  }
+  
+  .border-l-widget {
+    border-left-color: hsl(var(--widget-border));
+  }
+  
+  .border-r-widget {
+    border-right-color: hsl(var(--widget-border));
+  }
+  
+  .border-t-widget {
+    border-top-color: hsl(var(--widget-border));
+  }
+  
+  .border-b-widget {
+    border-bottom-color: hsl(var(--widget-border));
   }
 }
