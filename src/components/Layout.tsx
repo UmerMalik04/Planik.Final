@@ -33,10 +33,10 @@ export default function Layout({ children }: LayoutProps) {
   
   const navItems = [
     { icon: Home, path: "/", label: getText('home') },
-    { icon: History, path: "/history", label: getText('history') },
-    { icon: BarChart3, path: "/progress", label: getText('progress') },
     { icon: Dumbbell, path: "/exercises", label: getText('exercises_tab') },
-    { icon: User, path: "/body-map", label: getText('body_map_tab') }
+    { icon: User, path: "/body-map", label: getText('body_map_tab') },
+    { icon: BarChart3, path: "/progress", label: getText('progress') },
+    { icon: History, path: "/history", label: getText('history') }
   ];
 
   // Don't show navigation on auth pages

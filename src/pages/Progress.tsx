@@ -487,7 +487,7 @@ export default function Progress() {
                     <div className="flex items-center gap-2">
                       {exercise.trend !== 'none' && (
                         <>
-                          {exercise.trend === 'increase' ? (
+                           {exercise.trend === 'increase' ? (
                             <TrendingUp className="w-4 h-4 text-green-500" />
                           ) : exercise.trend === 'decrease' ? (
                             <TrendingDown className="w-4 h-4 text-red-500" />
@@ -498,7 +498,9 @@ export default function Progress() {
                             exercise.trend === 'increase' ? 'text-green-500' : 
                             exercise.trend === 'decrease' ? 'text-red-500' : 'text-yellow-500'
                           }`}>
-                            {exercise.weightDiff > 0 ? '+' : ''}{formatWeight(Math.abs(exercise.weightDiff))}
+                            {exercise.trend === 'increase' ? getText('seen_increase') :
+                             exercise.trend === 'decrease' ? getText('seen_decrease') :
+                             getText('same_as_last_week')}
                           </span>
                         </>
                       )}
@@ -558,7 +560,9 @@ export default function Progress() {
                             workoutType.trend === 'increase' ? 'text-green-500' : 
                             workoutType.trend === 'decrease' ? 'text-red-500' : 'text-yellow-500'
                           }`}>
-                            {workoutType.difference > 0 ? '+' : ''}{formatWeight(workoutType.difference)}
+                            {workoutType.trend === 'increase' ? getText('seen_increase') :
+                             workoutType.trend === 'decrease' ? getText('seen_decrease') :
+                             getText('same_as_last_week')}
                           </span>
                         </>
                       )}
