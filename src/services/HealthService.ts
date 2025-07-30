@@ -1,29 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { Device } from '@capacitor/device';
 
-// Health plugin interface
-interface HealthPlugin {
-  isAvailable(): Promise<{ available: boolean }>;
-  requestAuthorization(options: { read: string[]; write?: string[] }): Promise<{ granted: boolean }>;
-  queryHKitSampleType(options: {
-    sampleName: string;
-    startDate: Date;
-    endDate: Date;
-    limit?: number;
-  }): Promise<{ samples?: Array<{ quantity: number; startDate: string; endDate: string }> }>;
-}
-
-// Declare Capacitor plugin
-declare global {
-  interface Window {
-    Capacitor?: {
-      Plugins?: {
-        Health?: HealthPlugin;
-      };
-    };
-  }
-}
-
 export interface HealthData {
   steps: number;
   calories?: number;
@@ -34,20 +11,11 @@ export interface HealthData {
 export interface PermissionStatus {
   granted: boolean;
   reason?: string;
-  shouldShowSettings?: boolean;
 }
 
 export class HealthService {
   private static mockSteps = 0;
   private static stepInterval: NodeJS.Timeout | null = null;
-  private static healthPlugin: HealthPlugin | null = null;
-
-  private static getHealthPlugin(): HealthPlugin | null {
-    if (typeof window !== 'undefined' && window.Capacitor?.Plugins?.Health) {
-      return window.Capacitor.Plugins.Health;
-    }
-    return null;
-  }
 
   static async requestPermissions(): Promise<PermissionStatus> {
     if (!Capacitor.isNativePlatform()) {
@@ -60,64 +28,17 @@ export class HealthService {
 
     try {
       const deviceInfo = await Device.getInfo();
+      
+      // Simulate permission request
       console.log('Requesting health permissions for:', deviceInfo.platform);
       
-      const healthPlugin = this.getHealthPlugin();
-      
-      if (healthPlugin) {
-        try {
-          // Check if health data is available
-          const available = await healthPlugin.isAvailable();
-          
-          if (available.available) {
-            // Request authorization for step data
-            const result = await healthPlugin.requestAuthorization({
-              read: ['steps']
-            });
-            
-            if (result.granted) {
-              console.log('Health permissions granted');
-              return { granted: true };
-            } else {
-              return {
-                granted: false,
-                reason: deviceInfo.platform === 'ios' 
-                  ? 'Please enable HealthKit access in Settings > Privacy & Security > Health > Data Access & Devices'
-                  : 'Please enable Google Fit access and install Google Fit app',
-                shouldShowSettings: true
-              };
-            }
-          } else {
-            return {
-              granted: false,
-              reason: 'Health tracking not available on this device',
-              shouldShowSettings: false
-            };
-          }
-        } catch (error) {
-          console.error('Health plugin error:', error);
-          return {
-            granted: false,
-            reason: 'Health plugin error: ' + (error as Error).message,
-            shouldShowSettings: false
-          };
-        }
-      } else {
-        // Health plugin not available, provide guidance
-        return {
-          granted: false,
-          reason: deviceInfo.platform === 'ios' 
-            ? 'HealthKit integration requires native build. Please enable in Settings > Privacy & Security > Health'
-            : 'Google Fit integration requires native build. Please install Google Fit app',
-          shouldShowSettings: true
-        };
-      }
+      // In a real app, you would request actual permissions here
+      return { granted: true };
     } catch (error) {
       console.error('Error requesting health permissions:', error);
       return { 
         granted: false, 
-        reason: 'Failed to request health permissions',
-        shouldShowSettings: false
+        reason: 'Failed to request health permissions' 
       };
     }
   }
@@ -129,36 +50,12 @@ export class HealthService {
     }
 
     try {
-      const healthPlugin = this.getHealthPlugin();
-      
-      if (healthPlugin) {
-        const today = new Date();
-        const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const endOfDay = new Date();
-        
-        try {
-          const result = await healthPlugin.queryHKitSampleType({
-            sampleName: 'steps',
-            startDate: startOfDay,
-            endDate: endOfDay,
-            limit: 1000
-          });
-          
-          // Sum up all step data for today
-          const totalSteps = result.samples?.reduce((sum, entry) => sum + (entry.quantity || 0), 0) || 0;
-          console.log('Native step count:', totalSteps);
-          return Math.floor(totalSteps);
-        } catch (error) {
-          console.error('Error getting native step count:', error);
-          return this.getMockSteps();
-        }
-      } else {
-        // Fallback to mock data
-        return this.getMockSteps();
-      }
+      // In a real implementation, you would use a health plugin here
+      // For now, return mock data
+      return this.getMockSteps();
     } catch (error) {
       console.error('Error getting step count:', error);
-      return this.getMockSteps();
+      return 0;
     }
   }
 
@@ -184,18 +81,14 @@ export class HealthService {
   }
 
   static startStepTracking(): void {
-    // Stop any existing interval
-    this.stopStepTracking();
+    // Simulate step tracking with periodic updates
+    this.stopStepTracking(); // Clear existing interval
     
-    // Update steps every minute
     this.stepInterval = setInterval(() => {
-      // For mock data, randomly add steps
-      if (!Capacitor.isNativePlatform() || !this.getHealthPlugin()) {
-        if (Math.random() > 0.7) { // 30% chance of adding steps
-          this.mockSteps += Math.floor(Math.random() * 3) + 1;
-        }
+      // Randomly add 1-3 steps every minute (simulating walking)
+      if (Math.random() > 0.7) { // 30% chance of adding steps
+        this.mockSteps += Math.floor(Math.random() * 3) + 1;
       }
-      // For native platforms, step count will be fetched in the component
     }, 60000); // Update every minute
   }
 
@@ -212,27 +105,10 @@ export class HealthService {
     }
 
     try {
-      const healthPlugin = this.getHealthPlugin();
-      
-      if (healthPlugin) {
-        const result = await healthPlugin.isAvailable();
-        return result.available;
-      } else {
-        return false;
-      }
+      const deviceInfo = await Device.getInfo();
+      return deviceInfo.platform === 'ios' || deviceInfo.platform === 'android';
     } catch {
       return false;
-    }
-  }
-  
-  static openHealthSettings(): void {
-    if (Capacitor.isNativePlatform()) {
-      // Guide user to open settings
-      console.log('Please open your device settings and enable health data access for this app');
-      
-      // You could implement deep linking to settings here
-      // For iOS: App-Prefs:Privacy&path=HEALTH
-      // For Android: Intent to open settings
     }
   }
 }

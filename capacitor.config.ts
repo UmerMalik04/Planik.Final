@@ -17,18 +17,6 @@ const config: CapacitorConfig = {
       iconColor: '#488AFF',
       sound: 'beep.wav'
     }
-  },
-  ios: {
-    entitlements: {
-      'com.apple.developer.healthkit': true,
-      'com.apple.developer.healthkit.access': ['read']
-    }
-  },
-  android: {
-    permissions: [
-      'android.permission.ACTIVITY_RECOGNITION',
-      'com.google.android.gms.permission.ACTIVITY_RECOGNITION'
-    ]
   }
 };
 

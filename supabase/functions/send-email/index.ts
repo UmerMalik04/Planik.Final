@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
         Authorization: `Bearer ${RESEND_API_KEY}`
       },
       body: JSON.stringify({
-        from: 'Planik <no-reply@planik.app>', // Use your domain once verified
+        from: 'Planik <onboarding@resend.dev>', // Using Resend's default domain
         to,
         subject,
         html
