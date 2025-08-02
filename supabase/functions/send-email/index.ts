@@ -49,10 +49,27 @@ Deno.serve(async (req) => {
 
     if (!res.ok) {
       console.error('Resend API error:', data);
+      
+      // Handle specific Resend errors with appropriate HTTP status codes
+      if (data.statusCode === 403 && data.error?.includes('verify a domain')) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Domain verification required', 
+            message: 'Please verify your domain at resend.com/domains to send emails to other recipients',
+            details: data 
+          }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+      
+      // Return 500 for other Resend API errors
       return new Response(
         JSON.stringify({ error: 'Failed to send email', details: data }),
         { 
-          status: res.status, 
+          status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
