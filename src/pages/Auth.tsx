@@ -132,6 +132,19 @@ export default function Auth() {
         return;
       }
 
+      // Check if biometric is enabled and save credentials
+      const isBiometricEnabled = await BiometricService.isBiometricEnabled();
+      if (isBiometricEnabled) {
+        try {
+          await BiometricService.saveCredentials(
+            loginCredential,
+            loginForm.password
+          );
+        } catch (error) {
+          console.error('Failed to save credentials for biometric login:', error);
+        }
+      }
+
       toast({
         title: "Welcome back!",
         description: "You have been logged in successfully.",
@@ -153,45 +166,31 @@ export default function Auth() {
     setLoading(true);
     
     try {
-      const isAvailable = await BiometricService.isAvailable();
+      const result = await BiometricService.biometricLogin();
       
-      if (!isAvailable.isAvailable) {
+      if (!result.success) {
         toast({
-          title: "Biometric Not Available",
-          description: isAvailable.reason || "Biometric authentication is not available on this device.",
+          title: "Biometric Login Failed",
+          description: result.error,
           variant: "destructive",
         });
         return;
       }
 
-      const authSuccess = await BiometricService.authenticate("Please authenticate to login to Planik");
-      
-      if (authSuccess) {
-        // Simulate biometric login with stored credentials
-        const storedEmail = localStorage.getItem('biometric_email') || 'biometric@user.com';
-        
+      if (result.credentials) {
+        // Use the stored credentials to login
         const { data, error } = await supabase.auth.signInWithPassword({
-          email: storedEmail,
-          password: 'biometric_auth_token',
+          email: result.credentials.email,
+          password: result.credentials.password,
         });
 
         if (error) {
-          // For demo purposes, create a mock biometric user
-          const mockUser = {
-            id: 'biometric-user-' + Date.now(),
-            email: storedEmail,
-            user_metadata: {
-              name: 'Biometric User',
-              avatar_url: '',
-              biometric_enabled: true
-            }
-          };
-
-          // Store mock session
-          localStorage.setItem('supabase_session', JSON.stringify({
-            user: mockUser,
-            access_token: 'mock_biometric_token_' + Date.now()
-          }));
+          toast({
+            title: "Login Failed",
+            description: "Stored credentials are invalid. Please login manually and re-enable biometric login.",
+            variant: "destructive",
+          });
+          return;
         }
 
         toast({
@@ -204,7 +203,7 @@ export default function Auth() {
     } catch (error) {
       toast({
         title: "Biometric Login Failed",
-        description: "Failed to authenticate using biometrics. Please try again.",
+        description: "An unexpected error occurred during biometric login.",
         variant: "destructive",
       });
     } finally {

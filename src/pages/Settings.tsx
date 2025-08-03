@@ -36,6 +36,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { BiometricService } from '@/services/BiometricService';
 import { NotificationService } from '@/services/NotificationService';
+import BiometricSettings from '@/components/BiometricSettings';
 
 const languages = [
   { code: 'en', name: 'English' },
@@ -385,42 +386,11 @@ export default function Settings() {
               />
             </div>
 
-            {/* Biometric Login */}
-            {biometricAvailable ? (
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="flex items-center gap-2">
-                    <Fingerprint className="h-4 w-4" />
-                    {getText('biometric_login')}
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    {getText('use_face_id_fingerprint')}
-                  </p>
-                </div>
-                <Switch
-                  checked={biometricEnabled}
-                  onCheckedChange={handleBiometricToggle}
-                />
-              </div>
-            ) : (
-              <div className="flex items-center justify-between opacity-50">
-                <div className="space-y-0.5">
-                  <Label className="flex items-center gap-2">
-                    <Fingerprint className="h-4 w-4" />
-                    {getText('biometric_login')}
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Not available on this device
-                  </p>
-                </div>
-                <Switch
-                  checked={false}
-                  disabled={true}
-                />
-              </div>
-            )}
           </CardContent>
         </Card>
+
+        {/* Biometric Authentication */}
+        <BiometricSettings />
 
         {/* Security */}
         <Card>

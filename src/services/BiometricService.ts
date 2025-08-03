@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { Device } from '@capacitor/device';
+import { Preferences } from '@capacitor/preferences';
 
 export interface BiometricResult {
   isAvailable: boolean;
@@ -8,6 +9,64 @@ export interface BiometricResult {
 }
 
 export class BiometricService {
+  private static readonly CREDENTIALS_KEY = 'biometric_credentials';
+  private static readonly BIOMETRIC_ENABLED_KEY = 'biometric_enabled';
+
+  static async saveCredentials(email: string, password: string): Promise<void> {
+    try {
+      const credentials = { email, password };
+      await Preferences.set({
+        key: this.CREDENTIALS_KEY,
+        value: JSON.stringify(credentials)
+      });
+    } catch (error) {
+      console.error('Error saving credentials:', error);
+      throw new Error('Failed to save credentials securely');
+    }
+  }
+
+  static async getStoredCredentials(): Promise<{ email: string; password: string } | null> {
+    try {
+      const result = await Preferences.get({ key: this.CREDENTIALS_KEY });
+      if (result.value) {
+        return JSON.parse(result.value);
+      }
+      return null;
+    } catch (error) {
+      console.error('Error retrieving credentials:', error);
+      return null;
+    }
+  }
+
+  static async clearStoredCredentials(): Promise<void> {
+    try {
+      await Preferences.remove({ key: this.CREDENTIALS_KEY });
+    } catch (error) {
+      console.error('Error clearing credentials:', error);
+    }
+  }
+
+  static async setBiometricEnabled(enabled: boolean): Promise<void> {
+    try {
+      await Preferences.set({
+        key: this.BIOMETRIC_ENABLED_KEY,
+        value: enabled.toString()
+      });
+    } catch (error) {
+      console.error('Error setting biometric preference:', error);
+    }
+  }
+
+  static async isBiometricEnabled(): Promise<boolean> {
+    try {
+      const result = await Preferences.get({ key: this.BIOMETRIC_ENABLED_KEY });
+      return result.value === 'true';
+    } catch (error) {
+      console.error('Error getting biometric preference:', error);
+      return false;
+    }
+  }
+
   static async isAvailable(): Promise<BiometricResult> {
     if (!Capacitor.isNativePlatform()) {
       // For web/browser, we'll simulate biometric availability for demo purposes
@@ -84,5 +143,38 @@ export class BiometricService {
     }
     
     return false;
+  }
+
+  static async biometricLogin(): Promise<{ success: boolean; credentials?: { email: string; password: string }; error?: string }> {
+    try {
+      // Check if biometric is enabled
+      const isBiometricEnabled = await this.isBiometricEnabled();
+      if (!isBiometricEnabled) {
+        return { success: false, error: 'Biometric login is not enabled. Please enable it in settings.' };
+      }
+
+      // Check if device supports biometric
+      const availability = await this.isAvailable();
+      if (!availability.isAvailable) {
+        return { success: false, error: availability.reason || 'Biometric authentication is not available on this device.' };
+      }
+
+      // Get stored credentials
+      const credentials = await this.getStoredCredentials();
+      if (!credentials) {
+        return { success: false, error: 'No stored credentials found. Please login with email/password first and enable biometric login.' };
+      }
+
+      // Prompt for biometric authentication
+      const authResult = await this.authenticate(`Login with ${availability.biometryType === 'face' ? 'Face ID' : 'Fingerprint'}`);
+      if (!authResult) {
+        return { success: false, error: 'Biometric authentication failed or was cancelled.' };
+      }
+
+      return { success: true, credentials };
+    } catch (error) {
+      console.error('Biometric login error:', error);
+      return { success: false, error: 'An error occurred during biometric login. Please try again.' };
+    }
   }
 }
