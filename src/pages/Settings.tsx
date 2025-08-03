@@ -63,10 +63,13 @@ export default function Settings() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [customReminderTime, setCustomReminderTime] = useState('19:00');
+  const [notificationPermission, setNotificationPermission] = useState('default');
   const { toast } = useToast();
 
   useEffect(() => {
     checkBiometricAvailability();
+    checkNotificationPermission();
   }, []);
 
   const checkBiometricAvailability = async () => {
@@ -76,6 +79,11 @@ export default function Settings() {
     // Check if biometric is already enabled
     const saved = localStorage.getItem('biometric-enabled');
     setBiometricEnabled(saved === 'true');
+  };
+
+  const checkNotificationPermission = async () => {
+    const permission = await NotificationService.getNotificationPermissionStatus();
+    setNotificationPermission(permission);
   };
 
   const handleBiometricToggle = async (enabled: boolean) => {
@@ -106,14 +114,19 @@ export default function Settings() {
       const success = await NotificationService.enablePushNotifications();
       if (success) {
         updateSetting('notifications', true);
+        setNotificationPermission('granted');
         toast({
           title: "Notifications Enabled",
           description: "You'll now receive daily workout reminders at 7:00 PM.",
         });
       } else {
+        const permission = await NotificationService.getNotificationPermissionStatus();
+        setNotificationPermission(permission);
         toast({
-          title: "Permission Denied",
-          description: "Please enable notifications in your device settings.",
+          title: "Permission Required",
+          description: permission === 'denied' 
+            ? "Notifications are blocked. Please enable them in your browser/device settings."
+            : "Please allow notifications to receive workout reminders.",
           variant: "destructive",
         });
       }
@@ -125,6 +138,37 @@ export default function Settings() {
         description: "All scheduled notifications have been cancelled.",
       });
     }
+  };
+
+  const handleCustomReminderTime = async () => {
+    const success = await NotificationService.scheduleCustomWorkoutReminder(customReminderTime);
+    if (success) {
+      toast({
+        title: "Reminder Scheduled",
+        description: `Workout reminder set for ${customReminderTime}`,
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to schedule reminder. Please check notification permissions.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const testNotifications = async () => {
+    // Test workout completion notification
+    await NotificationService.sendWorkoutCompleteNotification();
+    
+    // Test achievement notification after a short delay
+    setTimeout(async () => {
+      await NotificationService.sendAchievementNotification("First Workout Completed");
+    }, 2000);
+    
+    toast({
+      title: "Test Notifications Sent",
+      description: "Check if you received the test notifications",
+    });
   };
 
   const handleChangePassword = () => {
@@ -386,6 +430,54 @@ export default function Settings() {
                 onCheckedChange={handleNotificationToggle}
               />
             </div>
+
+            {/* Notification Permission Status */}
+            {notificationPermission === 'denied' && (
+              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <p className="text-sm text-destructive">
+                  Notifications are blocked. Please enable them in your browser settings to receive reminders.
+                </p>
+              </div>
+            )}
+
+            {settings.notifications && (
+              <>
+                <Separator />
+                
+                {/* Custom Reminder Time */}
+                <div className="space-y-3">
+                  <Label>Custom Workout Reminder</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="time"
+                      value={customReminderTime}
+                      onChange={(e) => setCustomReminderTime(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button onClick={handleCustomReminderTime} variant="outline">
+                      Schedule
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Set a custom time for workout reminders
+                  </p>
+                </div>
+
+                <Separator />
+
+                {/* Test Notifications */}
+                <div className="space-y-2">
+                  <Label>Test Notifications</Label>
+                  <Button onClick={testNotifications} variant="outline" className="w-full">
+                    <Bell className="h-4 w-4 mr-2" />
+                    Test Workout & Achievement Notifications
+                  </Button>
+                  <p className="text-sm text-muted-foreground">
+                    Test workout completion and achievement notifications
+                  </p>
+                </div>
+              </>
+            )}
 
           </CardContent>
         </Card>

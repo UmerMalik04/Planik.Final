@@ -19,6 +19,16 @@ export class NotificationService {
     if (!Capacitor.isNativePlatform()) {
       // For web, check if notifications are supported
       if ('Notification' in window) {
+        // Check current permission status first
+        if (Notification.permission === 'granted') {
+          return true;
+        }
+        
+        if (Notification.permission === 'denied') {
+          return false;
+        }
+        
+        // Request permission
         const permission = await Notification.requestPermission();
         return permission === 'granted';
       }
@@ -35,27 +45,48 @@ export class NotificationService {
   }
 
   static async enablePushNotifications(): Promise<boolean> {
-    const hasPermission = await this.requestPermissions();
-    
-    if (!hasPermission) {
-      if (!Capacitor.isNativePlatform() && 'Notification' in window) {
-        alert("Notifications are blocked. Please allow them in your browser settings.");
-      }
-      return false;
-    }
-
     if (!Capacitor.isNativePlatform()) {
-      // Web: Show test notification
+      // For web, check if notifications are supported first
+      if (!('Notification' in window)) {
+        return false;
+      }
+      
+      // Check current permission status
+      if (Notification.permission === 'denied') {
+        return false;
+      }
+      
+      // Request permission if not already granted
+      if (Notification.permission !== 'granted') {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          return false;
+        }
+      }
+      
+      // Show test notification
       new Notification("Push notifications enabled!", {
         body: "You'll now receive workout reminders",
         icon: '/favicon.ico'
       });
-    } else {
-      // Mobile: Schedule daily workout reminder at 7:00 PM
-      await this.scheduleDailyWorkoutReminder();
+      
+      return true;
     }
 
-    return true;
+    // Mobile platform handling
+    try {
+      const permStatus = await LocalNotifications.requestPermissions();
+      if (permStatus.display !== 'granted') {
+        return false;
+      }
+      
+      // Schedule daily workout reminder at 7:00 PM
+      await this.scheduleDailyWorkoutReminder();
+      return true;
+    } catch (error) {
+      console.error('Error enabling push notifications:', error);
+      return false;
+    }
   }
 
   static async disablePushNotifications(): Promise<void> {
@@ -172,5 +203,49 @@ export class NotificationService {
       body: 'Workout completed! Keep up the great work!',
       sound: true,
     });
+  }
+
+  static async sendAchievementNotification(achievement: string): Promise<boolean> {
+    return await this.scheduleNotification({
+      title: 'Achievement Unlocked! 🏆',
+      body: `Congratulations! You've earned: ${achievement}`,
+      sound: true,
+    });
+  }
+
+  static async scheduleCustomWorkoutReminder(time: string): Promise<boolean> {
+    const [hours, minutes] = time.split(':').map(Number);
+    const reminderTime = new Date();
+    reminderTime.setHours(hours, minutes, 0, 0);
+    
+    // If the time has passed today, schedule for tomorrow
+    if (reminderTime <= new Date()) {
+      reminderTime.setDate(reminderTime.getDate() + 1);
+    }
+
+    return await this.scheduleNotification({
+      title: 'Workout Time! 💪',
+      body: 'Your scheduled workout reminder',
+      schedule: { at: reminderTime },
+      sound: true,
+      id: 1002, // Different ID from daily reminder
+    });
+  }
+
+  static async getNotificationPermissionStatus(): Promise<string> {
+    if (!Capacitor.isNativePlatform()) {
+      if ('Notification' in window) {
+        return Notification.permission;
+      }
+      return 'default';
+    }
+    
+    try {
+      const permStatus = await LocalNotifications.checkPermissions();
+      return permStatus.display;
+    } catch (error) {
+      console.error('Error checking notification permissions:', error);
+      return 'denied';
+    }
   }
 }
