@@ -390,7 +390,30 @@ export default function Settings() {
         </Card>
 
         {/* Biometric Authentication */}
-        <BiometricSettings />
+        {biometricAvailable && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Fingerprint className="h-5 w-5" />
+                {getText('biometric_login')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>{getText('face_id_fingerprint')}</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {getText('use_biometric_quick_login')}
+                  </p>
+                </div>
+                <Switch
+                  checked={biometricEnabled}
+                  onCheckedChange={handleBiometricToggle}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Security */}
         <Card>
