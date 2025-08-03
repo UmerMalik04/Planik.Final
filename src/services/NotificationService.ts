@@ -34,6 +34,84 @@ export class NotificationService {
     }
   }
 
+  static async enablePushNotifications(): Promise<boolean> {
+    const hasPermission = await this.requestPermissions();
+    
+    if (!hasPermission) {
+      if (!Capacitor.isNativePlatform() && 'Notification' in window) {
+        alert("Notifications are blocked. Please allow them in your browser settings.");
+      }
+      return false;
+    }
+
+    if (!Capacitor.isNativePlatform()) {
+      // Web: Show test notification
+      new Notification("Push notifications enabled!", {
+        body: "You'll now receive workout reminders",
+        icon: '/favicon.ico'
+      });
+    } else {
+      // Mobile: Schedule daily workout reminder at 7:00 PM
+      await this.scheduleDailyWorkoutReminder();
+    }
+
+    return true;
+  }
+
+  static async disablePushNotifications(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) {
+      // Web: Just log or show message
+      console.log("Notifications turned off");
+    } else {
+      // Mobile: Cancel all scheduled notifications
+      try {
+        await LocalNotifications.cancel({ notifications: [] });
+        const pending = await LocalNotifications.getPending();
+        if (pending.notifications.length > 0) {
+          const ids = pending.notifications.map(n => ({ id: n.id }));
+          await LocalNotifications.cancel({ notifications: ids });
+        }
+      } catch (error) {
+        console.error('Error canceling notifications:', error);
+      }
+    }
+  }
+
+  static async scheduleDailyWorkoutReminder(): Promise<boolean> {
+    try {
+      // Schedule daily notification at 7:00 PM
+      const now = new Date();
+      const reminderTime = new Date();
+      reminderTime.setHours(19, 0, 0, 0); // 7:00 PM
+      
+      // If 7 PM has passed today, schedule for tomorrow
+      if (reminderTime <= now) {
+        reminderTime.setDate(reminderTime.getDate() + 1);
+      }
+
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: 'Time to workout! 💪',
+            body: 'Your daily workout reminder',
+            id: 1001, // Fixed ID for daily reminder
+            schedule: {
+              at: reminderTime,
+              repeats: true,
+              every: 'day'
+            },
+            sound: 'default',
+          },
+        ],
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error scheduling daily workout reminder:', error);
+      return false;
+    }
+  }
+
   static async scheduleNotification(options: NotificationOptions): Promise<boolean> {
     try {
       if (!Capacitor.isNativePlatform()) {

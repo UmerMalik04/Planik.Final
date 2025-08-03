@@ -103,12 +103,12 @@ export default function Settings() {
 
   const handleNotificationToggle = async (enabled: boolean) => {
     if (enabled) {
-      const permissionGranted = await NotificationService.requestPermissions();
-      if (permissionGranted) {
+      const success = await NotificationService.enablePushNotifications();
+      if (success) {
         updateSetting('notifications', true);
         toast({
           title: "Notifications Enabled",
-          description: "You'll now receive workout and meal reminders.",
+          description: "You'll now receive daily workout reminders at 7:00 PM.",
         });
       } else {
         toast({
@@ -118,10 +118,11 @@ export default function Settings() {
         });
       }
     } else {
+      await NotificationService.disablePushNotifications();
       updateSetting('notifications', false);
       toast({
         title: "Notifications Disabled",
-        description: "You won't receive any app notifications.",
+        description: "All scheduled notifications have been cancelled.",
       });
     }
   };
