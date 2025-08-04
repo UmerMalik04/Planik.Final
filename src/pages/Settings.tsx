@@ -70,7 +70,20 @@ export default function Settings() {
   useEffect(() => {
     checkBiometricAvailability();
     checkNotificationPermission();
-  }, []);
+    
+    // Start reminder checker for web platform when component mounts
+    if (settings.notifications) {
+      NotificationService.startReminderChecker();
+    }
+    
+    // Cleanup interval on unmount
+    return () => {
+      if (window.workoutReminderInterval) {
+        clearInterval(window.workoutReminderInterval);
+        window.workoutReminderInterval = null;
+      }
+    };
+  }, [settings.notifications]);
 
   const checkBiometricAvailability = async () => {
     const result = await BiometricService.isAvailable();
@@ -169,7 +182,7 @@ export default function Settings() {
     if (success) {
       toast({
         title: "Reminder Scheduled",
-        description: `Workout reminder set for ${customReminderTime}`,
+        description: `Daily workout reminder set for ${customReminderTime}. You'll receive notifications every day at this time.`,
       });
     } else {
       toast({
@@ -504,9 +517,22 @@ export default function Settings() {
                     <Button onClick={handleCustomReminderTime} variant="outline">
                       Schedule
                     </Button>
+                    <Button 
+                      onClick={async () => {
+                        await NotificationService.cancelCustomWorkoutReminder();
+                        toast({
+                          title: "Reminder Cancelled",
+                          description: "Custom workout reminder has been cancelled.",
+                        });
+                      }} 
+                      variant="outline"
+                      size="sm"
+                    >
+                      Cancel
+                    </Button>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Set a custom time for workout reminders
+                    Set a custom daily time for workout reminders (repeats every day)
                   </p>
                 </div>
 

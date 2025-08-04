@@ -115,7 +115,12 @@ export class NotificationService {
 
   static async disablePushNotifications(): Promise<void> {
     if (!Capacitor.isNativePlatform()) {
-      // Web: Just log or show message
+      // Web: Cancel custom reminders and clear intervals
+      localStorage.removeItem('custom-workout-reminder');
+      if (window.workoutReminderInterval) {
+        clearInterval(window.workoutReminderInterval);
+        window.workoutReminderInterval = null;
+      }
       console.log("Notifications turned off");
     } else {
       // Mobile: Cancel all scheduled notifications
@@ -247,13 +252,119 @@ export class NotificationService {
       reminderTime.setDate(reminderTime.getDate() + 1);
     }
 
-    return await this.scheduleNotification({
-      title: 'Workout Time! 💪',
-      body: 'Your scheduled workout reminder',
-      schedule: { at: reminderTime },
-      sound: true,
-      id: 1002, // Different ID from daily reminder
-    });
+    if (!Capacitor.isNativePlatform()) {
+      // For web, we need to use a different approach since we can't schedule future notifications
+      // Store the reminder time in localStorage and check it periodically
+      const reminderData = {
+        time: time,
+        enabled: true,
+        nextReminderDate: reminderTime.toISOString()
+      };
+      localStorage.setItem('custom-workout-reminder', JSON.stringify(reminderData));
+      
+      // Start the reminder checker
+      this.startReminderChecker();
+      
+      console.log(`Custom reminder scheduled for ${reminderTime.toLocaleString()}`);
+      return true;
+    }
+
+    // For mobile platforms, use LocalNotifications
+    try {
+      // Cancel any existing custom reminder first
+      await LocalNotifications.cancel({ notifications: [{ id: 1002 }] });
+      
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: 'Workout Time! 💪',
+            body: 'Your scheduled workout reminder',
+            id: 1002,
+            schedule: {
+              at: reminderTime,
+              repeats: true,
+              every: 'day'
+            },
+            sound: 'default',
+          },
+        ],
+      });
+      
+      console.log(`Custom reminder scheduled for ${reminderTime.toLocaleString()}`);
+      return true;
+    } catch (error) {
+      console.error('Error scheduling custom workout reminder:', error);
+      return false;
+    }
+  }
+
+  static startReminderChecker() {
+    // Clear any existing interval
+    if (window.workoutReminderInterval) {
+      clearInterval(window.workoutReminderInterval);
+    }
+
+    // Check every minute for pending reminders
+    window.workoutReminderInterval = setInterval(() => {
+      this.checkPendingReminders();
+    }, 60000); // Check every minute
+  }
+
+  static async checkPendingReminders() {
+    if (Capacitor.isNativePlatform()) return; // Only for web
+
+    const reminderData = localStorage.getItem('custom-workout-reminder');
+    if (!reminderData) return;
+
+    try {
+      const reminder = JSON.parse(reminderData);
+      if (!reminder.enabled) return;
+
+      const now = new Date();
+      const reminderTime = new Date(reminder.nextReminderDate);
+      
+      // Check if it's time for the reminder (within 1 minute window)
+      const timeDiff = Math.abs(now.getTime() - reminderTime.getTime());
+      if (timeDiff <= 60000) { // Within 1 minute
+        // Send notification
+        if (Notification.permission === 'granted') {
+          new Notification('Workout Time! 💪', {
+            body: 'Your scheduled workout reminder',
+            icon: '/favicon.ico'
+          });
+        }
+        
+        // Schedule next reminder for tomorrow
+        const nextReminder = new Date(reminderTime);
+        nextReminder.setDate(nextReminder.getDate() + 1);
+        reminder.nextReminderDate = nextReminder.toISOString();
+        localStorage.setItem('custom-workout-reminder', JSON.stringify(reminder));
+        
+        console.log(`Workout reminder sent! Next reminder: ${nextReminder.toLocaleString()}`);
+      }
+    } catch (error) {
+      console.error('Error checking pending reminders:', error);
+    }
+  }
+
+  static cancelCustomWorkoutReminder(): Promise<boolean> {
+    if (!Capacitor.isNativePlatform()) {
+      // For web, remove from localStorage and clear interval
+      localStorage.removeItem('custom-workout-reminder');
+      if (window.workoutReminderInterval) {
+        clearInterval(window.workoutReminderInterval);
+        window.workoutReminderInterval = null;
+      }
+      return Promise.resolve(true);
+    }
+
+    // For mobile, cancel the scheduled notification
+    return LocalNotifications.cancel({ notifications: [{ id: 1002 }] })
+      .then(() => true)
+      .catch((error) => {
+        console.error('Error canceling custom workout reminder:', error);
+        return false;
+      });
   }
 
   static async getNotificationPermissionStatus(): Promise<string> {
