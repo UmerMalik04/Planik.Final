@@ -111,6 +111,20 @@ export default function Settings() {
 
   const handleNotificationToggle = async (enabled: boolean) => {
     if (enabled) {
+      // Check permission status first
+      const permission = await NotificationService.getNotificationPermissionStatus();
+      console.log('Current permission status:', permission);
+      
+      if (permission === 'denied') {
+        setNotificationPermission('denied');
+        toast({
+          title: "Notifications Blocked",
+          description: "Notifications are blocked in your browser. Please enable them in your browser settings and refresh the page.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       const success = await NotificationService.enablePushNotifications();
       if (success) {
         updateSetting('notifications', true);
@@ -120,15 +134,25 @@ export default function Settings() {
           description: "You'll now receive daily workout reminders at 7:00 PM.",
         });
       } else {
-        const permission = await NotificationService.getNotificationPermissionStatus();
-        setNotificationPermission(permission);
-        toast({
-          title: "Permission Required",
-          description: permission === 'denied' 
-            ? "Notifications are blocked. Please enable them in your browser/device settings."
-            : "Please allow notifications to receive workout reminders.",
-          variant: "destructive",
-        });
+        const newPermission = await NotificationService.getNotificationPermissionStatus();
+        setNotificationPermission(newPermission);
+        
+        if (newPermission === 'denied') {
+          toast({
+            title: "Notifications Blocked",
+            description: "Notifications are blocked. Please enable them in your browser settings, then refresh the page and try again.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Permission Required",
+            description: "Please allow notifications when prompted to receive workout reminders.",
+            variant: "destructive",
+          });
+        }
+        
+        // Don't update the setting if it failed
+        updateSetting('notifications', false);
       }
     } else {
       await NotificationService.disablePushNotifications();
@@ -433,9 +457,32 @@ export default function Settings() {
 
             {/* Notification Permission Status */}
             {notificationPermission === 'denied' && (
-              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                <p className="text-sm text-destructive">
-                  Notifications are blocked. Please enable them in your browser settings to receive reminders.
+              <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <h4 className="font-medium text-destructive mb-2">Notifications Blocked</h4>
+                <p className="text-sm text-destructive mb-3">
+                  Notifications are blocked in your browser. To enable them:
+                </p>
+                <ol className="text-sm text-destructive space-y-1 mb-3 list-decimal list-inside">
+                  <li>Click the settings/lock icon in your browser's address bar</li>
+                  <li>Change notifications from "Block" to "Allow"</li>
+                  <li>Refresh this page</li>
+                  <li>Try enabling notifications again</li>
+                </ol>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => window.location.reload()}
+                  className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  Refresh Page
+                </Button>
+              </div>
+            )}
+
+            {notificationPermission === 'default' && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-950 dark:border-blue-800">
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  Click the toggle above to request notification permissions
                 </p>
               </div>
             )}

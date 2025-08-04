@@ -48,29 +48,53 @@ export class NotificationService {
     if (!Capacitor.isNativePlatform()) {
       // For web, check if notifications are supported first
       if (!('Notification' in window)) {
+        console.log('Notifications not supported in this browser');
         return false;
       }
       
-      // Check current permission status
+      console.log('Current notification permission:', Notification.permission);
+      
+      // If permission is already denied, don't try to request again
       if (Notification.permission === 'denied') {
+        console.log('Notification permission is denied');
         return false;
       }
       
-      // Request permission if not already granted
-      if (Notification.permission !== 'granted') {
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') {
+      // If permission is already granted, show test notification
+      if (Notification.permission === 'granted') {
+        try {
+          new Notification("Push notifications enabled!", {
+            body: "You'll now receive workout reminders",
+            icon: '/favicon.ico'
+          });
+          return true;
+        } catch (error) {
+          console.error('Error showing notification:', error);
           return false;
         }
       }
       
-      // Show test notification
-      new Notification("Push notifications enabled!", {
-        body: "You'll now receive workout reminders",
-        icon: '/favicon.ico'
-      });
+      // Request permission if not set
+      if (Notification.permission === 'default') {
+        try {
+          const permission = await Notification.requestPermission();
+          console.log('Permission request result:', permission);
+          
+          if (permission === 'granted') {
+            new Notification("Push notifications enabled!", {
+              body: "You'll now receive workout reminders",
+              icon: '/favicon.ico'
+            });
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error('Error requesting notification permission:', error);
+          return false;
+        }
+      }
       
-      return true;
+      return false;
     }
 
     // Mobile platform handling
