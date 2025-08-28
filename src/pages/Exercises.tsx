@@ -9,7 +9,7 @@ import { ArrowLeft, Search, X } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { exercisesData, type Exercise } from '@/data/exercises_full';
 
-const muscleGroups = ['All', 'Legs', 'Back', 'Chest', 'Shoulders', 'Arms', 'Abs', 'Cardio', 'Triceps', 'Biceps'];
+const muscleGroups = ['All', 'Legs', 'Back', 'Chest', 'Shoulders', 'Abs', 'Cardio', 'Triceps', 'Biceps'];
 
 export default function Exercises() {
   const navigate = useNavigate();
