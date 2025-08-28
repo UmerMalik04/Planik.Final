@@ -117,6 +117,24 @@ export default function Auth() {
     setLoading(true);
 
     try {
+      // Clean up any existing auth state first
+      const cleanupAuthState = () => {
+        Object.keys(localStorage).forEach((key) => {
+          if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+            localStorage.removeItem(key);
+          }
+        });
+      };
+
+      cleanupAuthState();
+
+      // Attempt global sign out first
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+      }
+
       const loginCredential = loginMethod === 'email' ? loginForm.email : loginForm.phone;
       const { data, error } = await supabase.auth.signInWithPassword({
         email: loginCredential,
@@ -124,37 +142,44 @@ export default function Auth() {
       });
 
       if (error) {
+        console.error('Login error:', error);
         toast({
-          title: "Login Failed",
-          description: error.message,
+          title: "Login Failed", 
+          description: error.message === 'Invalid login credentials' 
+            ? 'Incorrect email or password. Please check your credentials and try again.'
+            : error.message,
           variant: "destructive",
         });
         return;
       }
 
-      // Check if biometric is enabled and save credentials
-      const isBiometricEnabled = await BiometricService.isBiometricEnabled();
-      if (isBiometricEnabled) {
+      if (data.user) {
+        // Check if biometric is enabled and save credentials
         try {
-          await BiometricService.saveCredentials(
-            loginCredential,
-            loginForm.password
-          );
+          const isBiometricEnabled = await BiometricService.isBiometricEnabled();
+          if (isBiometricEnabled) {
+            await BiometricService.saveCredentials(
+              loginCredential,
+              loginForm.password
+            );
+          }
         } catch (error) {
           console.error('Failed to save credentials for biometric login:', error);
         }
+
+        toast({
+          title: "Welcome back!",
+          description: "You have been logged in successfully.",
+        });
+
+        // Force page reload for clean state
+        window.location.href = '/';
       }
-
-      toast({
-        title: "Welcome back!",
-        description: "You have been logged in successfully.",
-      });
-
-      navigate('/');
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Login error:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred.",
+        description: error.message || "An unexpected error occurred.",
         variant: "destructive",
       });
     } finally {
@@ -216,92 +241,77 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      // Generate password reset with Supabase
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
-        redirectTo: `${window.location.origin}/auth?type=recovery`,
+      console.log('Starting password reset for:', forgotPasswordEmail);
+      
+      // Always use our custom Resend service since Supabase email has issues
+      const resetToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      const resetUrl = `${window.location.origin}/auth?type=recovery&token=${resetToken}&email=${encodeURIComponent(forgotPasswordEmail)}`;
+      
+      console.log('Calling send-email function with:', {
+        to: forgotPasswordEmail,
+        subject: 'Reset your Planik password'
       });
       
-      // If Supabase's email service fails, use our custom Resend function
-      if (resetError && resetError.message.includes('Error sending recovery email')) {
-        console.log('Supabase email failed, using custom Resend service for:', forgotPasswordEmail);
-        
-        // Generate a temporary reset token
-        const resetToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-        const resetUrl = `${window.location.origin}/auth?type=recovery&token=${resetToken}&email=${encodeURIComponent(forgotPasswordEmail)}`;
-        
-        console.log('Calling send-email function with:', {
+      // Call our custom send-email function with proper reset link
+      const { data: emailData, error: emailError } = await supabase.functions.invoke('send-email', {
+        body: {
           to: forgotPasswordEmail,
-          subject: 'Reset your Planik password'
-        });
-        
-        // Call our custom send-email function with proper reset link
-        const { data: emailData, error: emailError } = await supabase.functions.invoke('send-email', {
-          body: {
-            to: forgotPasswordEmail,
-            subject: 'Reset your Planik password',
-            html: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <div style="text-align: center; margin-bottom: 30px;">
-                  <h1 style="color: #333; margin-bottom: 10px;">Reset Your Password</h1>
-                  <p style="color: #666;">Planik Fitness App</p>
-                </div>
-                
-                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                  <p style="margin: 0 0 15px 0; color: #333;">Hello,</p>
-                  <p style="margin: 0 0 15px 0; color: #333;">You requested to reset your password for your Planik account.</p>
-                  <p style="margin: 0; color: #333;">Click the button below to reset your password:</p>
-                </div>
-                
-                <div style="text-align: center; margin: 30px 0;">
-                  <a href="${resetUrl}" style="background: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">Reset My Password</a>
-                </div>
-                
-                <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 6px; margin: 20px 0;">
-                  <p style="margin: 0; color: #856404; font-size: 14px;"><strong>Security tip:</strong> This link will expire in 24 hours for your security.</p>
-                </div>
-                
-                <p style="color: #666; font-size: 14px; margin: 20px 0;">If you can't click the button, copy and paste this link into your browser:</p>
-                <p style="color: #007bff; font-size: 12px; word-break: break-all; background: #f8f9fa; padding: 10px; border-radius: 4px;">${resetUrl}</p>
-                
-                <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-                <p style="color: #666; font-size: 12px; text-align: center;">If you didn't request this password reset, please ignore this email. Your password will remain unchanged.</p>
-                <p style="color: #666; font-size: 12px; text-align: center;">This email was sent from Planik fitness app.</p>
-                
-                <div style="margin-top: 20px; padding: 10px; background: #e7f3ff; border-radius: 6px;">
-                  <p style="margin: 0; color: #0066cc; font-size: 12px;"><strong>Note for Outlook users:</strong> Sometimes emails may take a few minutes to arrive or might be in your spam folder. Please check both your inbox and spam folder.</p>
-                </div>
+          subject: 'Reset your Planik password',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #333; margin-bottom: 10px;">Reset Your Password</h1>
+                <p style="color: #666;">Planik Fitness App</p>
               </div>
-            `
-          }
-        });
-        
-        console.log('Send-email function response:', { data: emailData, error: emailError });
-        
-        if (emailError) {
-          console.error('Custom email service failed:', emailError);
-          throw new Error('Failed to send email: ' + emailError.message);
+              
+              <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <p style="margin: 0 0 15px 0; color: #333;">Hello,</p>
+                <p style="margin: 0 0 15px 0; color: #333;">You requested to reset your password for your Planik account.</p>
+                <p style="margin: 0; color: #333;">Click the button below to reset your password:</p>
+              </div>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetUrl}" style="background: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">Reset My Password</a>
+              </div>
+              
+              <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                <p style="margin: 0; color: #856404; font-size: 14px;"><strong>Security tip:</strong> This link will expire in 24 hours for your security.</p>
+              </div>
+              
+              <p style="color: #666; font-size: 14px; margin: 20px 0;">If you can't click the button, copy and paste this link into your browser:</p>
+              <p style="color: #007bff; font-size: 12px; word-break: break-all; background: #f8f9fa; padding: 10px; border-radius: 4px;">${resetUrl}</p>
+              
+              <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+              <p style="color: #666; font-size: 12px; text-align: center;">If you didn't request this password reset, please ignore this email. Your password will remain unchanged.</p>
+              <p style="color: #666; font-size: 12px; text-align: center;">This email was sent from Planik fitness app.</p>
+              
+              <div style="margin-top: 20px; padding: 10px; background: #e7f3ff; border-radius: 6px;">
+                <p style="margin: 0; color: #0066cc; font-size: 12px;"><strong>Note:</strong> Check your inbox and spam folder. The email should arrive within a few minutes.</p>
+              </div>
+            </div>
+          `
         }
-        
-        toast({
-          title: "Password Reset Email Sent",
-          description: `A password reset link has been sent to ${forgotPasswordEmail}. Please check your email and click the link to reset your password. ${forgotPasswordEmail.includes('outlook') ? 'Note: Outlook emails may take a few minutes to arrive or might be in spam.' : ''}`,
-        });
-      } else if (resetError) {
-        throw resetError;
-      } else {
-        toast({
-          title: "Password Reset Email Sent",
-          description: `A password reset link has been sent to ${forgotPasswordEmail}. Please check your email and follow the instructions.`,
-        });
+      });
+      
+      console.log('Send-email function response:', { data: emailData, error: emailError });
+      
+      if (emailError) {
+        console.error('Custom email service failed:', emailError);
+        throw new Error('Failed to send email: ' + emailError.message);
       }
+      
+      toast({
+        title: "Password Reset Email Sent!",
+        description: `A password reset link has been sent to ${forgotPasswordEmail}. Please check your email (including spam folder) and click the link to reset your password.`,
+      });
       
       setShowForgotPassword(false);
       setForgotPasswordEmail('');
     } catch (error: any) {
       console.error('Password reset error:', error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to send password reset email. Please try again.",
+        title: "Error Sending Email",
+        description: error.message || "Failed to send password reset email. Please try again or contact support.",
         variant: "destructive",
       });
     } finally {
