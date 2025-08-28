@@ -20,6 +20,7 @@ import Demo from "./pages/Demo";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Exercises from "./pages/Exercises";
+import ExerciseDetail from "./pages/ExerciseDetail";
 import BodyMap from "./pages/BodyMap";
 import NotFound from "./pages/NotFound";
 
@@ -116,6 +117,13 @@ function App() {
             <AuthGuard>
               <Layout>
                 <Exercises />
+              </Layout>
+            </AuthGuard>
+          } />
+          <Route path="/exercises/:exerciseName" element={
+            <AuthGuard>
+              <Layout>
+                <ExerciseDetail />
               </Layout>
             </AuthGuard>
           } />
