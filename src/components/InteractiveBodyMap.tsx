@@ -14,6 +14,40 @@ const bodyMaps = {
   'female-back': '/lovable-uploads/2ba581e5-8af8-4079-90a5-b3752b8d2395.png',
 };
 
+// Muscle group areas for highlighting (approximate coordinates for your body images)
+const muscleAreas: Record<string, Record<string, string>> = {
+  'male-front': {
+    chest: "M 130,80 L 170,80 L 175,110 L 165,130 L 135,130 L 125,110 Z",
+    shoulders: "M 100,70 L 130,80 L 125,110 L 95,100 Z M 170,80 L 200,70 L 205,100 L 175,110 Z",
+    biceps: "M 80,90 L 100,95 L 95,130 L 75,125 Z M 200,95 L 220,90 L 225,125 L 205,130 Z",
+    abs: "M 135,130 L 165,130 L 165,180 L 135,180 Z",
+    quads: "M 125,200 L 145,200 L 150,270 L 120,270 Z M 155,200 L 175,200 L 180,270 L 150,270 Z",
+    calves: "M 125,290 L 145,290 L 140,330 L 130,330 Z M 155,290 L 175,290 L 170,330 L 160,330 Z"
+  },
+  'male-back': {
+    back: "M 115,70 L 185,70 L 180,140 L 120,140 Z",
+    lats: "M 95,90 L 115,95 L 120,140 L 100,135 Z M 185,95 L 205,90 L 200,135 L 180,140 Z",
+    glutes: "M 125,140 L 175,140 L 175,180 L 125,180 Z",
+    hamstrings: "M 125,200 L 145,200 L 150,270 L 120,270 Z M 155,200 L 175,200 L 180,270 L 150,270 Z",
+    calves: "M 125,290 L 145,290 L 140,330 L 130,330 Z M 155,290 L 175,290 L 170,330 L 160,330 Z"
+  },
+  'female-front': {
+    chest: "M 130,80 L 170,80 L 175,110 L 165,130 L 135,130 L 125,110 Z",
+    shoulders: "M 100,70 L 130,80 L 125,110 L 95,100 Z M 170,80 L 200,70 L 205,100 L 175,110 Z",
+    biceps: "M 80,90 L 100,95 L 95,130 L 75,125 Z M 200,95 L 220,90 L 225,125 L 205,130 Z",
+    abs: "M 135,130 L 165,130 L 165,180 L 135,180 Z",
+    quads: "M 125,200 L 145,200 L 150,270 L 120,270 Z M 155,200 L 175,200 L 180,270 L 150,270 Z",
+    calves: "M 125,290 L 145,290 L 140,330 L 130,330 Z M 155,290 L 175,290 L 170,330 L 160,330 Z"
+  },
+  'female-back': {
+    back: "M 115,70 L 185,70 L 180,140 L 120,140 Z",
+    lats: "M 95,90 L 115,95 L 120,140 L 100,135 Z M 185,95 L 205,90 L 200,135 L 180,140 Z",
+    glutes: "M 125,140 L 175,140 L 175,180 L 125,180 Z",
+    hamstrings: "M 125,200 L 145,200 L 150,270 L 120,270 Z M 155,200 L 175,200 L 180,270 L 150,270 Z",
+    calves: "M 125,290 L 145,290 L 140,330 L 130,330 Z M 155,290 L 175,290 L 170,330 L 160,330 Z"
+  }
+};
+
 // Muscle groups for tracking
 const muscleGroups = ['chest', 'shoulders', 'biceps', 'abs', 'back', 'lats', 'quads', 'hamstrings', 'glutes', 'calves'];
 
@@ -109,14 +143,13 @@ export function InteractiveBodyMap() {
     return progressPercentage;
   };
 
-  const getProgressFilter = (progress: number) => {
-    // Use CSS filters to tint the muscle areas based on progress
-    if (progress >= 80) return 'hue-rotate(320deg) saturate(1.5) brightness(1.2)'; // Elite - Pink
-    if (progress >= 60) return 'hue-rotate(270deg) saturate(1.3) brightness(1.1)'; // Advanced - Purple  
-    if (progress >= 40) return 'hue-rotate(220deg) saturate(1.2) brightness(1.0)'; // Intermediate - Blue
-    if (progress >= 20) return 'hue-rotate(45deg) saturate(1.1) brightness(0.9)'; // Novice - Yellow
-    if (progress > 0) return 'hue-rotate(20deg) saturate(1.0) brightness(0.8)'; // Beginner - Orange
-    return 'grayscale(0.5) brightness(0.7)'; // No progress - Gray
+  const getProgressColor = (progress: number) => {
+    if (progress >= 80) return '#ec4899'; // Elite - Pink
+    if (progress >= 60) return '#8b5cf6'; // Advanced - Purple  
+    if (progress >= 40) return '#3b82f6'; // Intermediate - Blue
+    if (progress >= 20) return '#eab308'; // Novice - Yellow
+    if (progress > 0) return '#f97316'; // Beginner - Orange
+    return '#6b7280'; // No progress - Gray
   };
 
   const getCurrentFitnessLevel = () => {
@@ -161,12 +194,28 @@ export function InteractiveBodyMap() {
               <img 
                 src={bodyMaps[`${selectedGender}-front`]}
                 alt={`${selectedGender} front view`}
-                className="w-full h-auto cursor-pointer transition-all duration-300"
-                style={{ 
-                  filter: `${getProgressFilter(getMuscleProgress('overall'))} contrast(1.1)` 
-                }}
-                onClick={() => setSelectedMuscle('front-view')}
+                className="w-full h-auto"
               />
+              
+              {/* Muscle Group Color Overlays */}
+              <svg 
+                className="absolute inset-0 w-full h-full"
+                viewBox="0 0 300 400"
+                preserveAspectRatio="xMidYMid meet"
+              >
+                {muscleAreas[`${selectedGender}-front`] && Object.entries(muscleAreas[`${selectedGender}-front`]).map(([muscle, path]) => (
+                  <polygon
+                    key={muscle}
+                    points={path.replace(/[MLZ]/g, '').replace(/\s+/g, ' ').trim()}
+                    fill={getProgressColor(getMuscleProgress(muscle))}
+                    fillOpacity="0.7"
+                    stroke="rgba(255,255,255,0.3)"
+                    strokeWidth="1"
+                    className="cursor-pointer transition-all duration-300 hover:fill-opacity-90"
+                    onClick={() => setSelectedMuscle(muscle)}
+                  />
+                ))}
+              </svg>
             </div>
           </CardContent>
         </Card>
@@ -179,12 +228,28 @@ export function InteractiveBodyMap() {
               <img 
                 src={bodyMaps[`${selectedGender}-back`]}
                 alt={`${selectedGender} back view`}
-                className="w-full h-auto cursor-pointer transition-all duration-300"
-                style={{ 
-                  filter: `${getProgressFilter(getMuscleProgress('overall'))} contrast(1.1)` 
-                }}
-                onClick={() => setSelectedMuscle('back-view')}
+                className="w-full h-auto"
               />
+              
+              {/* Muscle Group Color Overlays */}
+              <svg 
+                className="absolute inset-0 w-full h-full"
+                viewBox="0 0 300 400"
+                preserveAspectRatio="xMidYMid meet"
+              >
+                {muscleAreas[`${selectedGender}-back`] && Object.entries(muscleAreas[`${selectedGender}-back`]).map(([muscle, path]) => (
+                  <polygon
+                    key={muscle}
+                    points={path.replace(/[MLZ]/g, '').replace(/\s+/g, ' ').trim()}
+                    fill={getProgressColor(getMuscleProgress(muscle))}
+                    fillOpacity="0.7"
+                    stroke="rgba(255,255,255,0.3)"
+                    strokeWidth="1"
+                    className="cursor-pointer transition-all duration-300 hover:fill-opacity-90"
+                    onClick={() => setSelectedMuscle(muscle)}
+                  />
+                ))}
+              </svg>
             </div>
           </CardContent>
         </Card>
