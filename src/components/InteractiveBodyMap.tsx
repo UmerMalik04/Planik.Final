@@ -14,30 +14,55 @@ const bodyMaps = {
   'female-back': '/lovable-uploads/2ba581e5-8af8-4079-90a5-b3752b8d2395.png',
 };
 
-const muscleGroups = {
-  chest: { name: 'Chest', color: '#ef4444', coordinates: { x: 50, y: 35 } },
-  shoulders: { name: 'Shoulders', color: '#f97316', coordinates: { x: 30, y: 25 } },
-  biceps: { name: 'Biceps', color: '#eab308', coordinates: { x: 25, y: 40 } },
-  triceps: { name: 'Triceps', color: '#84cc16', coordinates: { x: 75, y: 40 } },
-  forearms: { name: 'Forearms', color: '#06b6d4', coordinates: { x: 20, y: 55 } },
-  abs: { name: 'Abs', color: '#8b5cf6', coordinates: { x: 50, y: 50 } },
-  obliques: { name: 'Obliques', color: '#ec4899', coordinates: { x: 40, y: 55 } },
-  back: { name: 'Back', color: '#f59e0b', coordinates: { x: 50, y: 30 } },
-  lats: { name: 'Lats', color: '#10b981', coordinates: { x: 35, y: 45 } },
-  quads: { name: 'Quadriceps', color: '#3b82f6', coordinates: { x: 45, y: 70 } },
-  hamstrings: { name: 'Hamstrings', color: '#6366f1', coordinates: { x: 55, y: 75 } },
-  glutes: { name: 'Glutes', color: '#8b5cf6', coordinates: { x: 50, y: 65 } },
-  calves: { name: 'Calves', color: '#06b6d4', coordinates: { x: 50, y: 85 } },
+const muscleOverlays: Record<string, Record<string, string>> = {
+  'male-front': {
+    chest: "M 45,30 Q 50,25 55,30 Q 55,40 50,45 Q 45,40 45,30 Z",
+    shoulders: "M 35,25 Q 40,20 45,25 Q 45,35 40,40 Q 35,35 35,25 Z M 55,25 Q 60,20 65,25 Q 65,35 60,40 Q 55,35 55,25 Z",
+    biceps: "M 30,35 Q 35,30 40,35 Q 40,50 35,55 Q 30,50 30,35 Z M 60,35 Q 65,30 70,35 Q 70,50 65,55 Q 60,50 60,35 Z",
+    abs: "M 45,45 Q 50,40 55,45 Q 55,65 50,70 Q 45,65 45,45 Z",
+    quads: "M 42,70 Q 47,65 52,70 Q 52,85 47,90 Q 42,85 42,70 Z M 48,70 Q 53,65 58,70 Q 58,85 53,90 Q 48,85 48,70 Z",
+    calves: "M 44,88 Q 49,83 54,88 Q 54,95 49,98 Q 44,95 44,88 Z M 46,88 Q 51,83 56,88 Q 56,95 51,98 Q 46,95 46,88 Z"
+  },
+  'male-back': {
+    back: "M 40,25 Q 50,20 60,25 Q 60,50 50,55 Q 40,50 40,25 Z",
+    lats: "M 35,35 Q 45,30 50,35 Q 50,55 45,60 Q 35,55 35,35 Z M 50,35 Q 55,30 65,35 Q 65,55 55,60 Q 50,55 50,35 Z",
+    glutes: "M 42,55 Q 50,50 58,55 Q 58,70 50,75 Q 42,70 42,55 Z",
+    hamstrings: "M 42,75 Q 47,70 52,75 Q 52,88 47,93 Q 42,88 42,75 Z M 48,75 Q 53,70 58,75 Q 58,88 53,93 Q 48,88 48,75 Z",
+    calves: "M 44,90 Q 49,85 54,90 Q 54,97 49,100 Q 44,97 44,90 Z M 46,90 Q 51,85 56,90 Q 56,97 51,100 Q 46,97 46,90 Z"
+  },
+  'female-front': {
+    chest: "M 45,30 Q 50,25 55,30 Q 55,40 50,45 Q 45,40 45,30 Z",
+    shoulders: "M 35,25 Q 40,20 45,25 Q 45,35 40,40 Q 35,35 35,25 Z M 55,25 Q 60,20 65,25 Q 65,35 60,40 Q 55,35 55,25 Z",
+    biceps: "M 30,35 Q 35,30 40,35 Q 40,50 35,55 Q 30,50 30,35 Z M 60,35 Q 65,30 70,35 Q 70,50 65,55 Q 60,50 60,35 Z",
+    abs: "M 45,45 Q 50,40 55,45 Q 55,65 50,70 Q 45,65 45,45 Z",
+    quads: "M 42,70 Q 47,65 52,70 Q 52,85 47,90 Q 42,85 42,70 Z M 48,70 Q 53,65 58,70 Q 58,85 53,90 Q 48,85 48,70 Z",
+    calves: "M 44,88 Q 49,83 54,88 Q 54,95 49,98 Q 44,95 44,88 Z M 46,88 Q 51,83 56,88 Q 56,95 51,98 Q 46,95 46,88 Z"
+  },
+  'female-back': {
+    back: "M 40,25 Q 50,20 60,25 Q 60,50 50,55 Q 40,50 40,25 Z",
+    lats: "M 35,35 Q 45,30 50,35 Q 50,55 45,60 Q 35,55 35,35 Z M 50,35 Q 55,30 65,35 Q 65,55 55,60 Q 50,55 50,35 Z",
+    glutes: "M 42,55 Q 50,50 58,55 Q 58,70 50,75 Q 42,70 42,55 Z",
+    hamstrings: "M 42,75 Q 47,70 52,75 Q 52,88 47,93 Q 42,88 42,75 Z M 48,75 Q 53,70 58,75 Q 58,88 53,93 Q 48,88 48,75 Z",
+    calves: "M 44,90 Q 49,85 54,90 Q 54,97 49,100 Q 44,97 44,90 Z M 46,90 Q 51,85 56,90 Q 56,97 51,100 Q 46,97 46,90 Z"
+  }
 };
 
+const fitnessLevels = [
+  { name: 'Beginner', color: '#ef4444', range: '0-20%' },
+  { name: 'Novice', color: '#f97316', range: '20-40%' },
+  { name: 'Intermediate', color: '#eab308', range: '40-60%' },
+  { name: 'Advanced', color: '#3b82f6', range: '60-80%' },
+  { name: 'Elite', color: '#8b5cf6', range: '80-95%' },
+  { name: 'World Class', color: '#ec4899', range: '95-100%' }
+];
+
 interface MuscleGroupOverlayProps {
-  muscleGroup: keyof typeof muscleGroups;
+  muscleGroup: string;
   onClose: () => void;
 }
 
 function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
   const { getExerciseHistory } = useWorkoutStore();
-  const muscle = muscleGroups[muscleGroup];
   
   // Mock exercise data for the muscle group
   const exercises = [
@@ -53,11 +78,7 @@ function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <div 
-              className="w-4 h-4 rounded-full"
-              style={{ backgroundColor: muscle.color }}
-            />
-            {muscle.name}
+            {muscleGroup}
             {trend === 'up' && <TrendingUp className="w-4 h-4 text-green-500" />}
             {trend === 'down' && <TrendingDown className="w-4 h-4 text-red-500" />}
             {trend === 'stable' && <Minus className="w-4 h-4 text-yellow-500" />}
@@ -100,105 +121,172 @@ function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
 }
 
 export function InteractiveBodyMap() {
-  const [selectedView, setSelectedView] = useState<keyof typeof bodyMaps>('male-front');
-  const [selectedMuscle, setSelectedMuscle] = useState<keyof typeof muscleGroups | null>(null);
+  const [selectedGender, setSelectedGender] = useState<'male' | 'female'>('male');
+  const [selectedMuscle, setSelectedMuscle] = useState<string | null>(null);
   const { workoutSessions } = useWorkoutStore();
 
-  const getMuscleIntensity = (muscleGroup: keyof typeof muscleGroups) => {
-    // Mock logic to determine muscle group training intensity based on recent workouts
-    const recentSessions = workoutSessions.slice(-5);
+  const getMuscleProgress = (muscleGroup: string) => {
+    // Mock logic to determine muscle group progress based on recent workouts
+    const recentSessions = workoutSessions.slice(-10);
     const trainingCount = recentSessions.reduce((count, session) => {
       return count + (session.exercises.some(ex => 
         ex.name.toLowerCase().includes(muscleGroup.toLowerCase())
       ) ? 1 : 0);
     }, 0);
     
-    if (trainingCount >= 3) return 'high';
-    if (trainingCount >= 1) return 'medium';
-    return 'low';
+    // Convert training frequency to progress percentage
+    const progressPercentage = Math.min((trainingCount / 10) * 100, 100);
+    return progressPercentage;
   };
 
-  const getIntensityColor = (intensity: string) => {
-    switch (intensity) {
-      case 'high': return 'rgba(34, 197, 94, 0.8)'; // green
-      case 'medium': return 'rgba(249, 115, 22, 0.8)'; // orange
-      case 'low': return 'rgba(239, 68, 68, 0.8)'; // red
-      default: return 'rgba(156, 163, 175, 0.5)'; // gray
-    }
+  const getProgressColor = (progress: number) => {
+    if (progress >= 80) return '#ec4899'; // Elite - Pink
+    if (progress >= 60) return '#8b5cf6'; // Advanced - Purple  
+    if (progress >= 40) return '#3b82f6'; // Intermediate - Blue
+    if (progress >= 20) return '#eab308'; // Novice - Yellow
+    if (progress > 0) return '#f97316'; // Beginner - Orange
+    return '#6b7280'; // No progress - Gray
   };
+
+  const getCurrentFitnessLevel = () => {
+    // Calculate overall fitness level based on all muscle groups
+    const allMuscles = ['chest', 'shoulders', 'biceps', 'abs', 'back', 'lats', 'quads', 'hamstrings', 'glutes', 'calves'];
+    const totalProgress = allMuscles.reduce((sum, muscle) => sum + getMuscleProgress(muscle), 0);
+    const averageProgress = totalProgress / allMuscles.length;
+    
+    if (averageProgress >= 95) return fitnessLevels[5]; // World Class
+    if (averageProgress >= 80) return fitnessLevels[4]; // Elite
+    if (averageProgress >= 60) return fitnessLevels[3]; // Advanced
+    if (averageProgress >= 40) return fitnessLevels[2]; // Intermediate
+    if (averageProgress >= 20) return fitnessLevels[1]; // Novice
+    return fitnessLevels[0]; // Beginner
+  };
+
+  const currentLevel = getCurrentFitnessLevel();
 
   return (
     <div className="space-y-6">
-      {/* View Selector */}
+      {/* Gender Selector */}
       <Card>
         <CardContent className="p-4">
-          <Select value={selectedView} onValueChange={(value) => setSelectedView(value as keyof typeof bodyMaps)}>
+          <Select value={selectedGender} onValueChange={(value) => setSelectedGender(value as 'male' | 'female')}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select body map view" />
+              <SelectValue placeholder="Select body type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="male-front">Male - Front View</SelectItem>
-              <SelectItem value="male-back">Male - Back View</SelectItem>
-              <SelectItem value="female-front">Female - Front View</SelectItem>
-              <SelectItem value="female-back">Female - Back View</SelectItem>
+              <SelectItem value="male">Male</SelectItem>
+              <SelectItem value="female">Female</SelectItem>
             </SelectContent>
           </Select>
         </CardContent>
       </Card>
 
-      {/* Interactive Body Map */}
-      <Card className="overflow-hidden">
-        <CardContent className="p-0">
-          <div className="relative w-full max-w-md mx-auto">
-            <img 
-              src={bodyMaps[selectedView]}
-              alt={`${selectedView} body map`}
-              className="w-full h-auto"
-            />
-            
-            {/* Muscle Group Overlays */}
-            {Object.entries(muscleGroups).map(([key, muscle]) => {
-              const intensity = getMuscleIntensity(key as keyof typeof muscleGroups);
-              return (
-                <button
-                  key={key}
-                  className="absolute w-8 h-8 rounded-full border-2 border-white shadow-lg transition-all duration-300 hover:scale-125 hover:z-10"
-                  style={{
-                    left: `${muscle.coordinates.x}%`,
-                    top: `${muscle.coordinates.y}%`,
-                    backgroundColor: getIntensityColor(intensity),
-                    transform: 'translate(-50%, -50%)',
-                  }}
-                  onClick={() => setSelectedMuscle(key as keyof typeof muscleGroups)}
-                >
-                  <span className="sr-only">{muscle.name}</span>
-                </button>
-              );
-            })}
+      {/* Side by Side Body Maps */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Front View */}
+        <Card className="overflow-hidden">
+          <CardContent className="p-2">
+            <h3 className="text-center text-sm font-medium mb-2">Front View</h3>
+            <div className="relative w-full max-w-xs mx-auto">
+              <img 
+                src={bodyMaps[`${selectedGender}-front`]}
+                alt={`${selectedGender} front view`}
+                className="w-full h-auto"
+              />
+              
+              {/* SVG Muscle Overlays */}
+              <svg 
+                className="absolute inset-0 w-full h-full pointer-events-none"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+              >
+                {muscleOverlays[`${selectedGender}-front`] && Object.entries(muscleOverlays[`${selectedGender}-front`]).map(([muscle, path]) => (
+                  <path
+                    key={muscle}
+                    d={path}
+                    fill={getProgressColor(getMuscleProgress(muscle))}
+                    fillOpacity="0.6"
+                    stroke="white"
+                    strokeWidth="0.5"
+                    className="cursor-pointer transition-all duration-300 hover:fill-opacity-80"
+                    onClick={() => setSelectedMuscle(muscle)}
+                  />
+                ))}
+              </svg>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Back View */}
+        <Card className="overflow-hidden">
+          <CardContent className="p-2">
+            <h3 className="text-center text-sm font-medium mb-2">Back View</h3>
+            <div className="relative w-full max-w-xs mx-auto">
+              <img 
+                src={bodyMaps[`${selectedGender}-back`]}
+                alt={`${selectedGender} back view`}
+                className="w-full h-auto"
+              />
+              
+              {/* SVG Muscle Overlays */}
+              <svg 
+                className="absolute inset-0 w-full h-full pointer-events-none"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+              >
+                {muscleOverlays[`${selectedGender}-back`] && Object.entries(muscleOverlays[`${selectedGender}-back`]).map(([muscle, path]) => (
+                  <path
+                    key={muscle}
+                    d={path}
+                    fill={getProgressColor(getMuscleProgress(muscle))}
+                    fillOpacity="0.6"
+                    stroke="white"
+                    strokeWidth="0.5"
+                    className="cursor-pointer transition-all duration-300 hover:fill-opacity-80"
+                    onClick={() => setSelectedMuscle(muscle)}
+                  />
+                ))}
+              </svg>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Current Fitness Level */}
+      <Card>
+        <CardContent className="p-4 text-center">
+          <h3 className="font-medium mb-3">Your Current Level</h3>
+          <div 
+            className="inline-block px-6 py-2 rounded-full text-white font-medium text-lg"
+            style={{ backgroundColor: currentLevel.color }}
+          >
+            {currentLevel.name}
           </div>
+          <p className="text-sm text-muted-foreground mt-2">
+            Progress Range: {currentLevel.range}
+          </p>
         </CardContent>
       </Card>
 
-      {/* Legend */}
+      {/* Fitness Level Progression */}
       <Card>
         <CardContent className="p-4">
-          <h3 className="font-medium mb-3">Training Intensity Legend</h3>
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-green-500/80" />
-              <span className="text-sm">High Activity</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-orange-500/80" />
-              <span className="text-sm">Moderate Activity</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-red-500/80" />
-              <span className="text-sm">Low Activity</span>
-            </div>
+          <h3 className="font-medium mb-3">Fitness Level Progression</h3>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {fitnessLevels.map((level, index) => (
+              <div 
+                key={level.name}
+                className={`px-3 py-1 rounded-full text-white text-xs font-medium transition-all duration-300 ${
+                  level.name === currentLevel.name ? 'scale-110 ring-2 ring-white ring-offset-2' : 'opacity-70'
+                }`}
+                style={{ backgroundColor: level.color }}
+              >
+                {level.name}
+              </div>
+            ))}
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Tap any muscle group to view detailed exercise history and performance trends.
+          <p className="text-xs text-muted-foreground mt-3 text-center">
+            Keep working out to progress through the levels! Colors on your body show muscle group development.
           </p>
         </CardContent>
       </Card>
