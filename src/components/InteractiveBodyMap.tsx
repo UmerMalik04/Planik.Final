@@ -196,26 +196,6 @@ export function InteractiveBodyMap() {
                 alt={`${selectedGender} front view`}
                 className="w-full h-auto"
               />
-              
-              {/* Muscle Group Color Overlays */}
-              <svg 
-                className="absolute inset-0 w-full h-full"
-                viewBox="0 0 300 400"
-                preserveAspectRatio="xMidYMid meet"
-              >
-                {muscleAreas[`${selectedGender}-front`] && Object.entries(muscleAreas[`${selectedGender}-front`]).map(([muscle, path]) => (
-                  <polygon
-                    key={muscle}
-                    points={path.replace(/[MLZ]/g, '').replace(/\s+/g, ' ').trim()}
-                    fill={getProgressColor(getMuscleProgress(muscle))}
-                    fillOpacity="0.7"
-                    stroke="rgba(255,255,255,0.3)"
-                    strokeWidth="1"
-                    className="cursor-pointer transition-all duration-300 hover:fill-opacity-90"
-                    onClick={() => setSelectedMuscle(muscle)}
-                  />
-                ))}
-              </svg>
             </div>
           </CardContent>
         </Card>
@@ -230,26 +210,6 @@ export function InteractiveBodyMap() {
                 alt={`${selectedGender} back view`}
                 className="w-full h-auto"
               />
-              
-              {/* Muscle Group Color Overlays */}
-              <svg 
-                className="absolute inset-0 w-full h-full"
-                viewBox="0 0 300 400"
-                preserveAspectRatio="xMidYMid meet"
-              >
-                {muscleAreas[`${selectedGender}-back`] && Object.entries(muscleAreas[`${selectedGender}-back`]).map(([muscle, path]) => (
-                  <polygon
-                    key={muscle}
-                    points={path.replace(/[MLZ]/g, '').replace(/\s+/g, ' ').trim()}
-                    fill={getProgressColor(getMuscleProgress(muscle))}
-                    fillOpacity="0.7"
-                    stroke="rgba(255,255,255,0.3)"
-                    strokeWidth="1"
-                    className="cursor-pointer transition-all duration-300 hover:fill-opacity-90"
-                    onClick={() => setSelectedMuscle(muscle)}
-                  />
-                ))}
-              </svg>
             </div>
           </CardContent>
         </Card>
