@@ -191,7 +191,44 @@ function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
 export function InteractiveBodyMap() {
   const [selectedGender, setSelectedGender] = useState<'male' | 'female'>('male');
   const [selectedMuscle, setSelectedMuscle] = useState<string | null>(null);
+  const [markerPosition, setMarkerPosition] = useState<{x: number, y: number, muscle: string} | null>(null);
   const { workoutSessions } = useWorkoutStore();
+
+  // Calculate the centroid of a polygon path
+  const calculatePolygonCentroid = (pathString: string) => {
+    // Parse the path string to get coordinate pairs
+    const coords = pathString
+      .replace(/[MLZ]/g, '')
+      .trim()
+      .split(/\s+/)
+      .map(Number)
+      .filter(n => !isNaN(n));
+    
+    // Group coordinates into [x, y] pairs
+    const points = [];
+    for (let i = 0; i < coords.length; i += 2) {
+      if (coords[i + 1] !== undefined) {
+        points.push([coords[i], coords[i + 1]]);
+      }
+    }
+    
+    if (points.length === 0) return { x: 150, y: 200 }; // fallback center
+    
+    // Calculate centroid
+    const centroidX = points.reduce((sum, point) => sum + point[0], 0) / points.length;
+    const centroidY = points.reduce((sum, point) => sum + point[1], 0) / points.length;
+    
+    return { x: centroidX, y: centroidY };
+  };
+
+  const handleMuscleClick = (muscle: string, view: 'front' | 'back') => {
+    const muscleData = muscleAreas[`${selectedGender}-${view}`]?.[muscle];
+    if (muscleData) {
+      const center = calculatePolygonCentroid(muscleData);
+      setMarkerPosition({ x: center.x, y: center.y, muscle: `${muscle}-${view}` });
+      setSelectedMuscle(muscle);
+    }
+  };
 
   const getMuscleProgress = (muscleGroup: string) => {
     // Mock logic to determine muscle group progress based on recent workouts
@@ -247,7 +284,11 @@ export function InteractiveBodyMap() {
       {/* Gender Selector */}
       <Card>
         <CardContent className="p-4">
-          <Select value={selectedGender} onValueChange={(value) => setSelectedGender(value as 'male' | 'female')}>
+          <Select value={selectedGender} onValueChange={(value) => {
+            setSelectedGender(value as 'male' | 'female');
+            setMarkerPosition(null); // Clear marker when changing gender
+            setSelectedMuscle(null);
+          }}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select body type" />
             </SelectTrigger>
@@ -287,13 +328,70 @@ export function InteractiveBodyMap() {
                     stroke="rgba(255,255,255,0.2)"
                     strokeWidth="1"
                     className="cursor-pointer transition-all duration-300 hover:fill-opacity-80"
-                    onClick={() => setSelectedMuscle(muscle)}
+                    onClick={() => handleMuscleClick(muscle, 'front')}
                   />
-                ))}
-              </svg>
-            </div>
-          </CardContent>
-        </Card>
+                 ))}
+                 
+                 {/* Interactive Marker for Front View */}
+                 {markerPosition && markerPosition.muscle.endsWith('-front') && (
+                   <circle
+                     cx={markerPosition.x}
+                     cy={markerPosition.y}
+                     r="8"
+                     fill="rgba(59, 130, 246, 0.9)"
+                     stroke="white"
+                     strokeWidth="2"
+                     className="animate-scale-in drop-shadow-lg"
+                   >
+                     <animate
+                       attributeName="r"
+                       values="0;8;12;8"
+                       dur="0.6s"
+                       begin="0s"
+                     />
+                     <animate
+                       attributeName="fill-opacity"
+                       values="0;0.9;0.9;0.9"
+                       dur="0.6s"
+                       begin="0s"
+                     />
+                   </circle>
+                 )}
+               </svg>
+               
+               {/* Pulse ring animation */}
+               {markerPosition && markerPosition.muscle.endsWith('-front') && (
+                 <svg 
+                   className="absolute inset-0 w-full h-full pointer-events-none"
+                   viewBox="0 0 300 400"
+                   preserveAspectRatio="xMidYMid meet"
+                 >
+                   <circle
+                     cx={markerPosition.x}
+                     cy={markerPosition.y}
+                     r="8"
+                     fill="none"
+                     stroke="rgba(59, 130, 246, 0.4)"
+                     strokeWidth="2"
+                   >
+                     <animate
+                       attributeName="r"
+                       values="8;20;8"
+                       dur="1.5s"
+                       repeatCount="indefinite"
+                     />
+                     <animate
+                       attributeName="stroke-opacity"
+                       values="0.4;0;0.4"
+                       dur="1.5s"
+                       repeatCount="indefinite"
+                     />
+                   </circle>
+                 </svg>
+               )}
+             </div>
+           </CardContent>
+         </Card>
 
         {/* Back View */}
         <Card className="overflow-hidden">
@@ -321,14 +419,71 @@ export function InteractiveBodyMap() {
                     stroke="rgba(255,255,255,0.2)"
                     strokeWidth="1"
                     className="cursor-pointer transition-all duration-300 hover:fill-opacity-80"
-                    onClick={() => setSelectedMuscle(muscle)}
+                    onClick={() => handleMuscleClick(muscle, 'back')}
                   />
-                ))}
-              </svg>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                 ))}
+                 
+                 {/* Interactive Marker for Back View */}
+                 {markerPosition && markerPosition.muscle.endsWith('-back') && (
+                   <circle
+                     cx={markerPosition.x}
+                     cy={markerPosition.y}
+                     r="8"
+                     fill="rgba(59, 130, 246, 0.9)"
+                     stroke="white"
+                     strokeWidth="2"
+                     className="animate-scale-in drop-shadow-lg"
+                   >
+                     <animate
+                       attributeName="r"
+                       values="0;8;12;8"
+                       dur="0.6s"
+                       begin="0s"
+                     />
+                     <animate
+                       attributeName="fill-opacity"
+                       values="0;0.9;0.9;0.9"
+                       dur="0.6s"
+                       begin="0s"
+                     />
+                   </circle>
+                 )}
+               </svg>
+               
+               {/* Pulse ring animation for back view */}
+               {markerPosition && markerPosition.muscle.endsWith('-back') && (
+                 <svg 
+                   className="absolute inset-0 w-full h-full pointer-events-none"
+                   viewBox="0 0 300 400"
+                   preserveAspectRatio="xMidYMid meet"
+                 >
+                   <circle
+                     cx={markerPosition.x}
+                     cy={markerPosition.y}
+                     r="8"
+                     fill="none"
+                     stroke="rgba(59, 130, 246, 0.4)"
+                     strokeWidth="2"
+                   >
+                     <animate
+                       attributeName="r"
+                       values="8;20;8"
+                       dur="1.5s"
+                       repeatCount="indefinite"
+                     />
+                     <animate
+                       attributeName="stroke-opacity"
+                       values="0.4;0;0.4"
+                       dur="1.5s"
+                       repeatCount="indefinite"
+                     />
+                   </circle>
+                 </svg>
+               )}
+             </div>
+           </CardContent>
+         </Card>
+       </div>
 
       {/* Current Fitness Level */}
       <Card>
