@@ -17,36 +17,36 @@ const bodyMaps = {
 // Precise muscle click points (black dots on muscles)
 const muscleClickPoints: Record<string, Record<string, { x: number; y: number }[]>> = {
   'male-front': {
-    chest: [{ x: 140, y: 95 }, { x: 160, y: 95 }],
-    biceps: [{ x: 85, y: 105 }, { x: 215, y: 105 }],
-    triceps: [{ x: 80, y: 115 }, { x: 220, y: 115 }],
-    abs: [{ x: 145, y: 140 }, { x: 155, y: 140 }, { x: 150, y: 160 }],
-    quads: [{ x: 130, y: 220 }, { x: 150, y: 225 }, { x: 170, y: 220 }],
-    calves: [{ x: 132, y: 300 }, { x: 168, y: 300 }]
+    chest: [{ x: 150, y: 95 }],
+    biceps: [{ x: 85, y: 105 }],
+    triceps: [{ x: 215, y: 115 }],
+    abs: [{ x: 150, y: 150 }],
+    quads: [{ x: 150, y: 225 }],
+    calves: [{ x: 150, y: 300 }]
   },
   'male-back': {
-    back: [{ x: 140, y: 90 }, { x: 160, y: 90 }, { x: 150, y: 110 }],
-    lats: [{ x: 105, y: 110 }, { x: 195, y: 110 }],
-    triceps: [{ x: 95, y: 115 }, { x: 205, y: 115 }],
-    glutes: [{ x: 140, y: 155 }, { x: 160, y: 155 }],
-    hamstrings: [{ x: 130, y: 220 }, { x: 150, y: 225 }, { x: 170, y: 220 }],
-    calves: [{ x: 132, y: 300 }, { x: 168, y: 300 }]
+    back: [{ x: 150, y: 100 }],
+    lats: [{ x: 150, y: 110 }],
+    triceps: [{ x: 150, y: 115 }],
+    glutes: [{ x: 150, y: 155 }],
+    hamstrings: [{ x: 150, y: 225 }],
+    calves: [{ x: 150, y: 300 }]
   },
   'female-front': {
-    chest: [{ x: 140, y: 95 }, { x: 160, y: 95 }],
-    biceps: [{ x: 85, y: 105 }, { x: 215, y: 105 }],
-    triceps: [{ x: 80, y: 115 }, { x: 220, y: 115 }],
-    abs: [{ x: 145, y: 140 }, { x: 155, y: 140 }, { x: 150, y: 160 }],
-    quads: [{ x: 130, y: 220 }, { x: 150, y: 225 }, { x: 170, y: 220 }],
-    calves: [{ x: 132, y: 300 }, { x: 168, y: 300 }]
+    chest: [{ x: 150, y: 95 }],
+    biceps: [{ x: 85, y: 105 }],
+    triceps: [{ x: 215, y: 115 }],
+    abs: [{ x: 150, y: 150 }],
+    quads: [{ x: 150, y: 225 }],
+    calves: [{ x: 150, y: 300 }]
   },
   'female-back': {
-    back: [{ x: 140, y: 90 }, { x: 160, y: 90 }, { x: 150, y: 110 }],
-    lats: [{ x: 105, y: 110 }, { x: 195, y: 110 }],
-    triceps: [{ x: 95, y: 115 }, { x: 205, y: 115 }],
-    glutes: [{ x: 140, y: 155 }, { x: 160, y: 155 }],
-    hamstrings: [{ x: 130, y: 220 }, { x: 150, y: 225 }, { x: 170, y: 220 }],
-    calves: [{ x: 132, y: 300 }, { x: 168, y: 300 }]
+    back: [{ x: 150, y: 100 }],
+    lats: [{ x: 150, y: 110 }],
+    triceps: [{ x: 150, y: 115 }],
+    glutes: [{ x: 150, y: 155 }],
+    hamstrings: [{ x: 150, y: 225 }],
+    calves: [{ x: 150, y: 300 }]
   }
 };
 
