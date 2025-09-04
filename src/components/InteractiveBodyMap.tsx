@@ -45,23 +45,23 @@ const muscleAreas: Record<string, Record<string, { path: string; center: { x: nu
       path: "M 115,285 L 155,285 L 150,345 L 120,345 Z",
       center: { x: 135, y: 315 }
     },
-    'right-biceps': { 
+    'biceps': { 
       path: "M 185,90 L 225,85 L 230,135 L 190,140 Z",
       center: { x: 207.5, y: 112.5 }
     },
-    'right-forearms': { 
+    'forearms': { 
       path: "M 190,155 L 225,150 L 230,185 L 195,190 Z",
       center: { x: 212.5, y: 167.5 }
     },
-    'right-triceps': { 
+    'tricep': { 
       path: "M 195,100 L 235,95 L 240,140 L 200,145 Z",
       center: { x: 217.5, y: 122.5 }
     },
-    'right-quads': { 
+    'quads': { 
       path: "M 145,190 L 185,190 L 190,285 L 140,285 Z",
       center: { x: 162.5, y: 237.5 }
     },
-    'right-calves': { 
+    'calves': { 
       path: "M 145,285 L 185,285 L 180,345 L 150,345 Z",
       center: { x: 165, y: 315 }
     }
