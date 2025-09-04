@@ -27,7 +27,7 @@ const muscleAreas: Record<string, Record<string, { path: string; center: { x: nu
     },
     forearms: { 
       path: "M 70,160 L 100,165 L 95,200 L 65,195 Z",
-      center: { x: 82, y: 180 }
+      center: { x: 50, y: 180 }
     },
     triceps: { 
       path: "M 60,105 L 95,110 L 90,155 L 55,150 Z",
@@ -51,7 +51,7 @@ const muscleAreas: Record<string, Record<string, { path: string; center: { x: nu
     },
     'right-forearms': { 
       path: "M 200,165 L 235,160 L 240,195 L 205,200 Z",
-      center: { x: 220, y: 180 }
+      center: { x: 250, y: 180 }
     },
     'right-triceps': { 
       path: "M 205,110 L 245,105 L 250,150 L 210,155 Z",
