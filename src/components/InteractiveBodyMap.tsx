@@ -14,39 +14,111 @@ const bodyMaps = {
   'female-back': '/lovable-uploads/2ba581e5-8af8-4079-90a5-b3752b8d2395.png',
 };
 
-// Muscle group areas for highlighting with development level colors
-const muscleAreas: Record<string, Record<string, string>> = {
+// More precise muscle group areas for highlighting with development level colors
+const muscleAreas: Record<string, Record<string, { path: string; center: { x: number; y: number } }>> = {
   'male-front': {
-    chest: "M 130,80 L 170,80 L 175,110 L 165,130 L 135,130 L 125,110 Z",
-    biceps: "M 80,90 L 100,95 L 95,130 L 75,125 Z M 200,95 L 220,90 L 225,125 L 205,130 Z",
-    triceps: "M 70,100 L 90,105 L 85,135 L 65,130 Z M 210,105 L 230,100 L 235,130 L 215,135 Z",
-    abs: "M 135,130 L 165,130 L 165,180 L 135,180 Z",
-    quads: "M 125,200 L 145,200 L 150,270 L 120,270 Z M 155,200 L 175,200 L 180,270 L 150,270 Z",
-    calves: "M 125,290 L 145,290 L 140,330 L 130,330 Z M 155,290 L 175,290 L 170,330 L 160,330 Z"
+    chest: { 
+      path: "M 130,85 L 170,85 L 175,115 L 165,135 L 135,135 L 125,115 Z",
+      center: { x: 150, y: 110 }
+    },
+    biceps: { 
+      path: "M 85,95 L 105,100 L 100,130 L 80,125 Z M 195,100 L 215,95 L 220,125 L 200,130 Z",
+      center: { x: 92.5, y: 112.5 }
+    },
+    triceps: { 
+      path: "M 75,105 L 95,110 L 90,135 L 70,130 Z M 205,110 L 225,105 L 230,130 L 210,135 Z",
+      center: { x: 82.5, y: 122.5 }
+    },
+    abs: { 
+      path: "M 135,135 L 165,135 L 165,185 L 135,185 Z",
+      center: { x: 150, y: 160 }
+    },
+    quads: { 
+      path: "M 125,200 L 145,200 L 150,275 L 120,275 Z M 155,200 L 175,200 L 180,275 L 150,275 Z",
+      center: { x: 150, y: 237.5 }
+    },
+    calves: { 
+      path: "M 125,295 L 145,295 L 140,335 L 130,335 Z M 155,295 L 175,295 L 170,335 L 160,335 Z",
+      center: { x: 150, y: 315 }
+    }
   },
   'male-back': {
-    back: "M 115,70 L 185,70 L 180,140 L 120,140 Z",
-    lats: "M 95,90 L 115,95 L 120,140 L 100,135 Z M 185,95 L 205,90 L 200,135 L 180,140 Z",
-    triceps: "M 85,100 L 105,105 L 100,135 L 80,130 Z M 195,105 L 215,100 L 220,130 L 200,135 Z",
-    glutes: "M 125,140 L 175,140 L 175,180 L 125,180 Z",
-    hamstrings: "M 125,200 L 145,200 L 150,270 L 120,270 Z M 155,200 L 175,200 L 180,270 L 150,270 Z",
-    calves: "M 125,290 L 145,290 L 140,330 L 130,330 Z M 155,290 L 175,290 L 170,330 L 160,330 Z"
+    back: { 
+      path: "M 115,75 L 185,75 L 180,145 L 120,145 Z",
+      center: { x: 150, y: 110 }
+    },
+    lats: { 
+      path: "M 95,95 L 115,100 L 120,145 L 100,140 Z M 185,100 L 205,95 L 200,140 L 180,145 Z",
+      center: { x: 150, y: 120 }
+    },
+    triceps: { 
+      path: "M 85,105 L 105,110 L 100,140 L 80,135 Z M 195,110 L 215,105 L 220,135 L 200,140 Z",
+      center: { x: 150, y: 122.5 }
+    },
+    glutes: { 
+      path: "M 125,145 L 175,145 L 175,185 L 125,185 Z",
+      center: { x: 150, y: 165 }
+    },
+    hamstrings: { 
+      path: "M 125,200 L 145,200 L 150,275 L 120,275 Z M 155,200 L 175,200 L 180,275 L 150,275 Z",
+      center: { x: 150, y: 237.5 }
+    },
+    calves: { 
+      path: "M 125,295 L 145,295 L 140,335 L 130,335 Z M 155,295 L 175,295 L 170,335 L 160,335 Z",
+      center: { x: 150, y: 315 }
+    }
   },
   'female-front': {
-    chest: "M 130,80 L 170,80 L 175,110 L 165,130 L 135,130 L 125,110 Z",
-    biceps: "M 80,90 L 100,95 L 95,130 L 75,125 Z M 200,95 L 220,90 L 225,125 L 205,130 Z",
-    triceps: "M 70,100 L 90,105 L 85,135 L 65,130 Z M 210,105 L 230,100 L 235,130 L 215,135 Z",
-    abs: "M 135,130 L 165,130 L 165,180 L 135,180 Z",
-    quads: "M 125,200 L 145,200 L 150,270 L 120,270 Z M 155,200 L 175,200 L 180,270 L 150,270 Z",
-    calves: "M 125,290 L 145,290 L 140,330 L 130,330 Z M 155,290 L 175,290 L 170,330 L 160,330 Z"
+    chest: { 
+      path: "M 130,85 L 170,85 L 175,115 L 165,135 L 135,135 L 125,115 Z",
+      center: { x: 150, y: 110 }
+    },
+    biceps: { 
+      path: "M 85,95 L 105,100 L 100,130 L 80,125 Z M 195,100 L 215,95 L 220,125 L 200,130 Z",
+      center: { x: 92.5, y: 112.5 }
+    },
+    triceps: { 
+      path: "M 75,105 L 95,110 L 90,135 L 70,130 Z M 205,110 L 225,105 L 230,130 L 210,135 Z",
+      center: { x: 82.5, y: 122.5 }
+    },
+    abs: { 
+      path: "M 135,135 L 165,135 L 165,185 L 135,185 Z",
+      center: { x: 150, y: 160 }
+    },
+    quads: { 
+      path: "M 125,200 L 145,200 L 150,275 L 120,275 Z M 155,200 L 175,200 L 180,275 L 150,275 Z",
+      center: { x: 150, y: 237.5 }
+    },
+    calves: { 
+      path: "M 125,295 L 145,295 L 140,335 L 130,335 Z M 155,295 L 175,295 L 170,335 L 160,335 Z",
+      center: { x: 150, y: 315 }
+    }
   },
   'female-back': {
-    back: "M 115,70 L 185,70 L 180,140 L 120,140 Z",
-    lats: "M 95,90 L 115,95 L 120,140 L 100,135 Z M 185,95 L 205,90 L 200,135 L 180,140 Z",
-    triceps: "M 85,100 L 105,105 L 100,135 L 80,130 Z M 195,105 L 215,100 L 220,130 L 200,135 Z",
-    glutes: "M 125,140 L 175,140 L 175,180 L 125,180 Z",
-    hamstrings: "M 125,200 L 145,200 L 150,270 L 120,270 Z M 155,200 L 175,200 L 180,270 L 150,270 Z",
-    calves: "M 125,290 L 145,290 L 140,330 L 130,330 Z M 155,290 L 175,290 L 170,330 L 160,330 Z"
+    back: { 
+      path: "M 115,75 L 185,75 L 180,145 L 120,145 Z",
+      center: { x: 150, y: 110 }
+    },
+    lats: { 
+      path: "M 95,95 L 115,100 L 120,145 L 100,140 Z M 185,100 L 205,95 L 200,140 L 180,145 Z",
+      center: { x: 150, y: 120 }
+    },
+    triceps: { 
+      path: "M 85,105 L 105,110 L 100,140 L 80,135 Z M 195,110 L 215,105 L 220,135 L 200,140 Z",
+      center: { x: 150, y: 122.5 }
+    },
+    glutes: { 
+      path: "M 125,145 L 175,145 L 175,185 L 125,185 Z",
+      center: { x: 150, y: 165 }
+    },
+    hamstrings: { 
+      path: "M 125,200 L 145,200 L 150,275 L 120,275 Z M 155,200 L 175,200 L 180,275 L 150,275 Z",
+      center: { x: 150, y: 237.5 }
+    },
+    calves: { 
+      path: "M 125,295 L 145,295 L 140,335 L 130,335 Z M 155,295 L 175,295 L 170,335 L 160,335 Z",
+      center: { x: 150, y: 315 }
+    }
   }
 };
 
@@ -224,7 +296,8 @@ export function InteractiveBodyMap() {
   const handleMuscleClick = (muscle: string, view: 'front' | 'back') => {
     const muscleData = muscleAreas[`${selectedGender}-${view}`]?.[muscle];
     if (muscleData) {
-      const center = calculatePolygonCentroid(muscleData);
+      // Use predefined center for precise positioning
+      const center = muscleData.center;
       setMarkerPosition({ x: center.x, y: center.y, muscle: `${muscle}-${view}` });
       setSelectedMuscle(muscle);
     }
@@ -319,10 +392,10 @@ export function InteractiveBodyMap() {
                 viewBox="0 0 300 400"
                 preserveAspectRatio="xMidYMid meet"
               >
-                {muscleAreas[`${selectedGender}-front`] && Object.entries(muscleAreas[`${selectedGender}-front`]).map(([muscle, path]) => (
+                {muscleAreas[`${selectedGender}-front`] && Object.entries(muscleAreas[`${selectedGender}-front`]).map(([muscle, muscleData]) => (
                   <polygon
                     key={muscle}
-                    points={path.replace(/[MLZ]/g, '').replace(/\s+/g, ' ').trim()}
+                    points={muscleData.path.replace(/[MLZ]/g, '').replace(/\s+/g, ' ').trim()}
                     fill={getMuscleColor(getMuscleProgress(muscle))}
                     fillOpacity="0.6"
                     stroke="rgba(255,255,255,0.2)"
@@ -332,63 +405,58 @@ export function InteractiveBodyMap() {
                   />
                  ))}
                  
-                 {/* Interactive Marker for Front View */}
-                 {markerPosition && markerPosition.muscle.endsWith('-front') && (
-                   <circle
-                     cx={markerPosition.x}
-                     cy={markerPosition.y}
-                     r="8"
-                     fill="rgba(59, 130, 246, 0.9)"
-                     stroke="white"
-                     strokeWidth="2"
-                     className="animate-scale-in drop-shadow-lg"
-                   >
-                     <animate
-                       attributeName="r"
-                       values="0;8;12;8"
-                       dur="0.6s"
-                       begin="0s"
-                     />
-                     <animate
-                       attributeName="fill-opacity"
-                       values="0;0.9;0.9;0.9"
-                       dur="0.6s"
-                       begin="0s"
-                     />
-                   </circle>
-                 )}
+                  {/* Interactive Marker for Front View */}
+                  {markerPosition && markerPosition.muscle.endsWith('-front') && (
+                    <g>
+                      <circle
+                        cx={markerPosition.x}
+                        cy={markerPosition.y}
+                        r="6"
+                        fill="hsl(var(--primary))"
+                        stroke="white"
+                        strokeWidth="2"
+                        className="drop-shadow-lg"
+                      >
+                        <animate
+                          attributeName="r"
+                          values="0;6;8;6"
+                          dur="0.8s"
+                          begin="0s"
+                        />
+                        <animate
+                          attributeName="fill-opacity"
+                          values="0;1;1;1"
+                          dur="0.8s"
+                          begin="0s"
+                        />
+                      </circle>
+                      {/* Smooth pulse ring */}
+                      <circle
+                        cx={markerPosition.x}
+                        cy={markerPosition.y}
+                        r="6"
+                        fill="none"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth="2"
+                        opacity="0.6"
+                      >
+                        <animate
+                          attributeName="r"
+                          values="6;16;6"
+                          dur="2s"
+                          repeatCount="indefinite"
+                        />
+                        <animate
+                          attributeName="stroke-opacity"
+                          values="0.6;0;0.6"
+                          dur="2s"
+                          repeatCount="indefinite"
+                        />
+                      </circle>
+                    </g>
+                  )}
                </svg>
                
-               {/* Pulse ring animation */}
-               {markerPosition && markerPosition.muscle.endsWith('-front') && (
-                 <svg 
-                   className="absolute inset-0 w-full h-full pointer-events-none"
-                   viewBox="0 0 300 400"
-                   preserveAspectRatio="xMidYMid meet"
-                 >
-                   <circle
-                     cx={markerPosition.x}
-                     cy={markerPosition.y}
-                     r="8"
-                     fill="none"
-                     stroke="rgba(59, 130, 246, 0.4)"
-                     strokeWidth="2"
-                   >
-                     <animate
-                       attributeName="r"
-                       values="8;20;8"
-                       dur="1.5s"
-                       repeatCount="indefinite"
-                     />
-                     <animate
-                       attributeName="stroke-opacity"
-                       values="0.4;0;0.4"
-                       dur="1.5s"
-                       repeatCount="indefinite"
-                     />
-                   </circle>
-                 </svg>
-               )}
              </div>
            </CardContent>
          </Card>
@@ -410,10 +478,10 @@ export function InteractiveBodyMap() {
                 viewBox="0 0 300 400"
                 preserveAspectRatio="xMidYMid meet"
               >
-                {muscleAreas[`${selectedGender}-back`] && Object.entries(muscleAreas[`${selectedGender}-back`]).map(([muscle, path]) => (
+                {muscleAreas[`${selectedGender}-back`] && Object.entries(muscleAreas[`${selectedGender}-back`]).map(([muscle, muscleData]) => (
                   <polygon
                     key={muscle}
-                    points={path.replace(/[MLZ]/g, '').replace(/\s+/g, ' ').trim()}
+                    points={muscleData.path.replace(/[MLZ]/g, '').replace(/\s+/g, ' ').trim()}
                     fill={getMuscleColor(getMuscleProgress(muscle))}
                     fillOpacity="0.6"
                     stroke="rgba(255,255,255,0.2)"
@@ -423,63 +491,58 @@ export function InteractiveBodyMap() {
                   />
                  ))}
                  
-                 {/* Interactive Marker for Back View */}
-                 {markerPosition && markerPosition.muscle.endsWith('-back') && (
-                   <circle
-                     cx={markerPosition.x}
-                     cy={markerPosition.y}
-                     r="8"
-                     fill="rgba(59, 130, 246, 0.9)"
-                     stroke="white"
-                     strokeWidth="2"
-                     className="animate-scale-in drop-shadow-lg"
-                   >
-                     <animate
-                       attributeName="r"
-                       values="0;8;12;8"
-                       dur="0.6s"
-                       begin="0s"
-                     />
-                     <animate
-                       attributeName="fill-opacity"
-                       values="0;0.9;0.9;0.9"
-                       dur="0.6s"
-                       begin="0s"
-                     />
-                   </circle>
-                 )}
+                  {/* Interactive Marker for Back View */}
+                  {markerPosition && markerPosition.muscle.endsWith('-back') && (
+                    <g>
+                      <circle
+                        cx={markerPosition.x}
+                        cy={markerPosition.y}
+                        r="6"
+                        fill="hsl(var(--primary))"
+                        stroke="white"
+                        strokeWidth="2"
+                        className="drop-shadow-lg"
+                      >
+                        <animate
+                          attributeName="r"
+                          values="0;6;8;6"
+                          dur="0.8s"
+                          begin="0s"
+                        />
+                        <animate
+                          attributeName="fill-opacity"
+                          values="0;1;1;1"
+                          dur="0.8s"
+                          begin="0s"
+                        />
+                      </circle>
+                      {/* Smooth pulse ring */}
+                      <circle
+                        cx={markerPosition.x}
+                        cy={markerPosition.y}
+                        r="6"
+                        fill="none"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth="2"
+                        opacity="0.6"
+                      >
+                        <animate
+                          attributeName="r"
+                          values="6;16;6"
+                          dur="2s"
+                          repeatCount="indefinite"
+                        />
+                        <animate
+                          attributeName="stroke-opacity"
+                          values="0.6;0;0.6"
+                          dur="2s"
+                          repeatCount="indefinite"
+                        />
+                      </circle>
+                    </g>
+                  )}
                </svg>
                
-               {/* Pulse ring animation for back view */}
-               {markerPosition && markerPosition.muscle.endsWith('-back') && (
-                 <svg 
-                   className="absolute inset-0 w-full h-full pointer-events-none"
-                   viewBox="0 0 300 400"
-                   preserveAspectRatio="xMidYMid meet"
-                 >
-                   <circle
-                     cx={markerPosition.x}
-                     cy={markerPosition.y}
-                     r="8"
-                     fill="none"
-                     stroke="rgba(59, 130, 246, 0.4)"
-                     strokeWidth="2"
-                   >
-                     <animate
-                       attributeName="r"
-                       values="8;20;8"
-                       dur="1.5s"
-                       repeatCount="indefinite"
-                     />
-                     <animate
-                       attributeName="stroke-opacity"
-                       values="0.4;0;0.4"
-                       dur="1.5s"
-                       repeatCount="indefinite"
-                     />
-                   </circle>
-                 </svg>
-               )}
              </div>
            </CardContent>
          </Card>
