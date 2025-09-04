@@ -272,28 +272,6 @@ export function InteractiveBodyMap() {
                 className="w-full h-auto rounded-lg"
               />
               
-              {/* Muscle Click Points */}
-              <svg 
-                className="absolute inset-0 w-full h-full"
-                viewBox="0 0 300 400"
-                preserveAspectRatio="xMidYMid meet"
-              >
-                {muscleClickPoints[`${selectedGender}-front`] && Object.entries(muscleClickPoints[`${selectedGender}-front`]).map(([muscle, points]) => 
-                  points.map((point, index) => (
-                    <circle
-                      key={`${muscle}-${index}`}
-                      cx={point.x}
-                      cy={point.y}
-                      r="4"
-                      fill="#000000"
-                      stroke="white"
-                      strokeWidth="1"
-                      className="cursor-pointer transition-all duration-300 hover:r-6 hover:fill-gray-700"
-                      onClick={() => setSelectedMuscle(muscle)}
-                    />
-                  ))
-                )}
-              </svg>
             </div>
           </CardContent>
         </Card>
@@ -309,28 +287,6 @@ export function InteractiveBodyMap() {
                 className="w-full h-auto rounded-lg"
               />
               
-               {/* Muscle Click Points */}
-              <svg 
-                className="absolute inset-0 w-full h-full"
-                viewBox="0 0 300 400"
-                preserveAspectRatio="xMidYMid meet"
-              >
-                {muscleClickPoints[`${selectedGender}-back`] && Object.entries(muscleClickPoints[`${selectedGender}-back`]).map(([muscle, points]) => 
-                  points.map((point, index) => (
-                    <circle
-                      key={`${muscle}-${index}`}
-                      cx={point.x}
-                      cy={point.y}
-                      r="4"
-                      fill="#000000"
-                      stroke="white"
-                      strokeWidth="1"
-                      className="cursor-pointer transition-all duration-300 hover:r-6 hover:fill-gray-700"
-                      onClick={() => setSelectedMuscle(muscle)}
-                    />
-                  ))
-                )}
-              </svg>
             </div>
           </CardContent>
         </Card>
