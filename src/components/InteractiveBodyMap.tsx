@@ -14,39 +14,39 @@ const bodyMaps = {
   'female-back': '/lovable-uploads/2ba581e5-8af8-4079-90a5-b3752b8d2395.png',
 };
 
-// Precise muscle click points (black dots on muscles)
-const muscleClickPoints: Record<string, Record<string, { x: number; y: number }[]>> = {
+// Muscle group areas for highlighting with development level colors
+const muscleAreas: Record<string, Record<string, string>> = {
   'male-front': {
-    chest: [{ x: 150, y: 95 }],
-    biceps: [{ x: 85, y: 105 }],
-    triceps: [{ x: 215, y: 115 }],
-    abs: [{ x: 150, y: 150 }],
-    quads: [{ x: 150, y: 225 }],
-    calves: [{ x: 150, y: 300 }]
+    chest: "M 130,80 L 170,80 L 175,110 L 165,130 L 135,130 L 125,110 Z",
+    biceps: "M 80,90 L 100,95 L 95,130 L 75,125 Z M 200,95 L 220,90 L 225,125 L 205,130 Z",
+    triceps: "M 70,100 L 90,105 L 85,135 L 65,130 Z M 210,105 L 230,100 L 235,130 L 215,135 Z",
+    abs: "M 135,130 L 165,130 L 165,180 L 135,180 Z",
+    quads: "M 125,200 L 145,200 L 150,270 L 120,270 Z M 155,200 L 175,200 L 180,270 L 150,270 Z",
+    calves: "M 125,290 L 145,290 L 140,330 L 130,330 Z M 155,290 L 175,290 L 170,330 L 160,330 Z"
   },
   'male-back': {
-    back: [{ x: 150, y: 100 }],
-    lats: [{ x: 150, y: 110 }],
-    triceps: [{ x: 150, y: 115 }],
-    glutes: [{ x: 150, y: 155 }],
-    hamstrings: [{ x: 150, y: 225 }],
-    calves: [{ x: 150, y: 300 }]
+    back: "M 115,70 L 185,70 L 180,140 L 120,140 Z",
+    lats: "M 95,90 L 115,95 L 120,140 L 100,135 Z M 185,95 L 205,90 L 200,135 L 180,140 Z",
+    triceps: "M 85,100 L 105,105 L 100,135 L 80,130 Z M 195,105 L 215,100 L 220,130 L 200,135 Z",
+    glutes: "M 125,140 L 175,140 L 175,180 L 125,180 Z",
+    hamstrings: "M 125,200 L 145,200 L 150,270 L 120,270 Z M 155,200 L 175,200 L 180,270 L 150,270 Z",
+    calves: "M 125,290 L 145,290 L 140,330 L 130,330 Z M 155,290 L 175,290 L 170,330 L 160,330 Z"
   },
   'female-front': {
-    chest: [{ x: 150, y: 95 }],
-    biceps: [{ x: 85, y: 105 }],
-    triceps: [{ x: 215, y: 115 }],
-    abs: [{ x: 150, y: 150 }],
-    quads: [{ x: 150, y: 225 }],
-    calves: [{ x: 150, y: 300 }]
+    chest: "M 130,80 L 170,80 L 175,110 L 165,130 L 135,130 L 125,110 Z",
+    biceps: "M 80,90 L 100,95 L 95,130 L 75,125 Z M 200,95 L 220,90 L 225,125 L 205,130 Z",
+    triceps: "M 70,100 L 90,105 L 85,135 L 65,130 Z M 210,105 L 230,100 L 235,130 L 215,135 Z",
+    abs: "M 135,130 L 165,130 L 165,180 L 135,180 Z",
+    quads: "M 125,200 L 145,200 L 150,270 L 120,270 Z M 155,200 L 175,200 L 180,270 L 150,270 Z",
+    calves: "M 125,290 L 145,290 L 140,330 L 130,330 Z M 155,290 L 175,290 L 170,330 L 160,330 Z"
   },
   'female-back': {
-    back: [{ x: 150, y: 100 }],
-    lats: [{ x: 150, y: 110 }],
-    triceps: [{ x: 150, y: 115 }],
-    glutes: [{ x: 150, y: 155 }],
-    hamstrings: [{ x: 150, y: 225 }],
-    calves: [{ x: 150, y: 300 }]
+    back: "M 115,70 L 185,70 L 180,140 L 120,140 Z",
+    lats: "M 95,90 L 115,95 L 120,140 L 100,135 Z M 185,95 L 205,90 L 200,135 L 180,140 Z",
+    triceps: "M 85,100 L 105,105 L 100,135 L 80,130 Z M 195,105 L 215,100 L 220,130 L 200,135 Z",
+    glutes: "M 125,140 L 175,140 L 175,180 L 125,180 Z",
+    hamstrings: "M 125,200 L 145,200 L 150,270 L 120,270 Z M 155,200 L 175,200 L 180,270 L 150,270 Z",
+    calves: "M 125,290 L 145,290 L 140,330 L 130,330 Z M 155,290 L 175,290 L 170,330 L 160,330 Z"
   }
 };
 
@@ -272,6 +272,25 @@ export function InteractiveBodyMap() {
                 className="w-full h-auto rounded-lg"
               />
               
+              {/* Muscle Development Level Color Overlays */}
+              <svg 
+                className="absolute inset-0 w-full h-full"
+                viewBox="0 0 300 400"
+                preserveAspectRatio="xMidYMid meet"
+              >
+                {muscleAreas[`${selectedGender}-front`] && Object.entries(muscleAreas[`${selectedGender}-front`]).map(([muscle, path]) => (
+                  <polygon
+                    key={muscle}
+                    points={path.replace(/[MLZ]/g, '').replace(/\s+/g, ' ').trim()}
+                    fill={getMuscleColor(getMuscleProgress(muscle))}
+                    fillOpacity="0.6"
+                    stroke="rgba(255,255,255,0.2)"
+                    strokeWidth="1"
+                    className="cursor-pointer transition-all duration-300 hover:fill-opacity-80"
+                    onClick={() => setSelectedMuscle(muscle)}
+                  />
+                ))}
+              </svg>
             </div>
           </CardContent>
         </Card>
@@ -287,6 +306,25 @@ export function InteractiveBodyMap() {
                 className="w-full h-auto rounded-lg"
               />
               
+              {/* Muscle Development Level Color Overlays */}
+              <svg 
+                className="absolute inset-0 w-full h-full"
+                viewBox="0 0 300 400"
+                preserveAspectRatio="xMidYMid meet"
+              >
+                {muscleAreas[`${selectedGender}-back`] && Object.entries(muscleAreas[`${selectedGender}-back`]).map(([muscle, path]) => (
+                  <polygon
+                    key={muscle}
+                    points={path.replace(/[MLZ]/g, '').replace(/\s+/g, ' ').trim()}
+                    fill={getMuscleColor(getMuscleProgress(muscle))}
+                    fillOpacity="0.6"
+                    stroke="rgba(255,255,255,0.2)"
+                    strokeWidth="1"
+                    className="cursor-pointer transition-all duration-300 hover:fill-opacity-80"
+                    onClick={() => setSelectedMuscle(muscle)}
+                  />
+                ))}
+              </svg>
             </div>
           </CardContent>
         </Card>
