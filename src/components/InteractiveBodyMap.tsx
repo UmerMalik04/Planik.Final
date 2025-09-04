@@ -17,39 +17,43 @@ const bodyMaps = {
 // Precise muscle click points (black dots on muscles)
 const muscleClickPoints: Record<string, Record<string, { x: number; y: number }[]>> = {
   'male-front': {
-    chest: [{ x: 150, y: 105 }],
-    shoulders: [{ x: 112, y: 85 }, { x: 188, y: 85 }],
-    biceps: [{ x: 90, y: 110 }, { x: 210, y: 110 }],
-    abs: [{ x: 150, y: 155 }],
-    quads: [{ x: 135, y: 235 }, { x: 165, y: 235 }],
-    calves: [{ x: 135, y: 310 }, { x: 165, y: 310 }]
+    chest: [{ x: 140, y: 95 }, { x: 160, y: 95 }],
+    shoulders: [{ x: 110, y: 75 }, { x: 190, y: 75 }],
+    biceps: [{ x: 85, y: 105 }, { x: 215, y: 105 }],
+    triceps: [{ x: 80, y: 115 }, { x: 220, y: 115 }],
+    abs: [{ x: 145, y: 140 }, { x: 155, y: 140 }, { x: 150, y: 160 }],
+    quads: [{ x: 130, y: 220 }, { x: 150, y: 225 }, { x: 170, y: 220 }],
+    calves: [{ x: 132, y: 300 }, { x: 168, y: 300 }]
   },
   'male-back': {
-    back: [{ x: 150, y: 105 }],
-    lats: [{ x: 107, y: 115 }, { x: 193, y: 115 }],
-    glutes: [{ x: 150, y: 160 }],
-    hamstrings: [{ x: 135, y: 235 }, { x: 165, y: 235 }],
-    calves: [{ x: 135, y: 310 }, { x: 165, y: 310 }]
+    back: [{ x: 140, y: 90 }, { x: 160, y: 90 }, { x: 150, y: 110 }],
+    lats: [{ x: 105, y: 110 }, { x: 195, y: 110 }],
+    triceps: [{ x: 95, y: 115 }, { x: 205, y: 115 }],
+    glutes: [{ x: 140, y: 155 }, { x: 160, y: 155 }],
+    hamstrings: [{ x: 130, y: 220 }, { x: 150, y: 225 }, { x: 170, y: 220 }],
+    calves: [{ x: 132, y: 300 }, { x: 168, y: 300 }]
   },
   'female-front': {
-    chest: [{ x: 150, y: 105 }],
-    shoulders: [{ x: 112, y: 85 }, { x: 188, y: 85 }],
-    biceps: [{ x: 90, y: 110 }, { x: 210, y: 110 }],
-    abs: [{ x: 150, y: 155 }],
-    quads: [{ x: 135, y: 235 }, { x: 165, y: 235 }],
-    calves: [{ x: 135, y: 310 }, { x: 165, y: 310 }]
+    chest: [{ x: 140, y: 95 }, { x: 160, y: 95 }],
+    shoulders: [{ x: 110, y: 75 }, { x: 190, y: 75 }],
+    biceps: [{ x: 85, y: 105 }, { x: 215, y: 105 }],
+    triceps: [{ x: 80, y: 115 }, { x: 220, y: 115 }],
+    abs: [{ x: 145, y: 140 }, { x: 155, y: 140 }, { x: 150, y: 160 }],
+    quads: [{ x: 130, y: 220 }, { x: 150, y: 225 }, { x: 170, y: 220 }],
+    calves: [{ x: 132, y: 300 }, { x: 168, y: 300 }]
   },
   'female-back': {
-    back: [{ x: 150, y: 105 }],
-    lats: [{ x: 107, y: 115 }, { x: 193, y: 115 }],
-    glutes: [{ x: 150, y: 160 }],
-    hamstrings: [{ x: 135, y: 235 }, { x: 165, y: 235 }],
-    calves: [{ x: 135, y: 310 }, { x: 165, y: 310 }]
+    back: [{ x: 140, y: 90 }, { x: 160, y: 90 }, { x: 150, y: 110 }],
+    lats: [{ x: 105, y: 110 }, { x: 195, y: 110 }],
+    triceps: [{ x: 95, y: 115 }, { x: 205, y: 115 }],
+    glutes: [{ x: 140, y: 155 }, { x: 160, y: 155 }],
+    hamstrings: [{ x: 130, y: 220 }, { x: 150, y: 225 }, { x: 170, y: 220 }],
+    calves: [{ x: 132, y: 300 }, { x: 168, y: 300 }]
   }
 };
 
 // Muscle groups for tracking
-const muscleGroups = ['chest', 'shoulders', 'biceps', 'abs', 'back', 'lats', 'quads', 'hamstrings', 'glutes', 'calves'];
+const muscleGroups = ['chest', 'shoulders', 'biceps', 'triceps', 'abs', 'back', 'lats', 'quads', 'hamstrings', 'glutes', 'calves'];
 
 const fitnessLevels = [
   { name: 'Beginner', color: '#ef4444', range: '0-20%' },
@@ -84,6 +88,7 @@ function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
       chest: ['Push-ups', 'Bench Press', 'Incline Dumbbell Press', 'Chest Flyes'],
       shoulders: ['Shoulder Press', 'Lateral Raises', 'Front Raises', 'Rear Delt Flyes'],
       biceps: ['Bicep Curls', 'Hammer Curls', 'Chin-ups', 'Preacher Curls'],
+      triceps: ['Tricep Dips', 'Close-Grip Bench Press', 'Overhead Extension', 'Diamond Push-ups'],
       abs: ['Crunches', 'Planks', 'Russian Twists', 'Mountain Climbers'],
       back: ['Pull-ups', 'Rows', 'Lat Pulldowns', 'Deadlifts'],
       lats: ['Lat Pulldowns', 'Wide Grip Pull-ups', 'T-Bar Rows', 'Cable Rows'],
