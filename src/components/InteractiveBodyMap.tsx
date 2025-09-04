@@ -269,7 +269,7 @@ export function InteractiveBodyMap() {
               <img 
                 src={bodyMaps[`${selectedGender}-front`]}
                 alt={`${selectedGender} front view`}
-                className="w-full h-auto rounded-lg"
+                className="w-full h-auto rounded-lg grayscale contrast-125 brightness-110"
               />
               
               {/* Muscle Development Level Color Overlays */}
@@ -303,7 +303,7 @@ export function InteractiveBodyMap() {
               <img 
                 src={bodyMaps[`${selectedGender}-back`]}
                 alt={`${selectedGender} back view`}
-                className="w-full h-auto rounded-lg"
+                className="w-full h-auto rounded-lg grayscale contrast-125 brightness-110"
               />
               
               {/* Muscle Development Level Color Overlays */}
