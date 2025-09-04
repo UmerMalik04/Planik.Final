@@ -18,7 +18,6 @@ const bodyMaps = {
 const muscleClickPoints: Record<string, Record<string, { x: number; y: number }[]>> = {
   'male-front': {
     chest: [{ x: 140, y: 95 }, { x: 160, y: 95 }],
-    shoulders: [{ x: 110, y: 75 }, { x: 190, y: 75 }],
     biceps: [{ x: 85, y: 105 }, { x: 215, y: 105 }],
     triceps: [{ x: 80, y: 115 }, { x: 220, y: 115 }],
     abs: [{ x: 145, y: 140 }, { x: 155, y: 140 }, { x: 150, y: 160 }],
@@ -35,7 +34,6 @@ const muscleClickPoints: Record<string, Record<string, { x: number; y: number }[
   },
   'female-front': {
     chest: [{ x: 140, y: 95 }, { x: 160, y: 95 }],
-    shoulders: [{ x: 110, y: 75 }, { x: 190, y: 75 }],
     biceps: [{ x: 85, y: 105 }, { x: 215, y: 105 }],
     triceps: [{ x: 80, y: 115 }, { x: 220, y: 115 }],
     abs: [{ x: 145, y: 140 }, { x: 155, y: 140 }, { x: 150, y: 160 }],
@@ -53,7 +51,7 @@ const muscleClickPoints: Record<string, Record<string, { x: number; y: number }[
 };
 
 // Muscle groups for tracking
-const muscleGroups = ['chest', 'shoulders', 'biceps', 'triceps', 'abs', 'back', 'lats', 'quads', 'hamstrings', 'glutes', 'calves'];
+const muscleGroups = ['chest', 'biceps', 'triceps', 'abs', 'back', 'lats', 'quads', 'hamstrings', 'glutes', 'calves'];
 
 const fitnessLevels = [
   { name: 'Beginner', color: '#ef4444', range: '0-20%' },
