@@ -457,16 +457,14 @@ export function InteractiveBodyMap() {
                 preserveAspectRatio="xMidYMid meet"
               >
                 {muscleAreas[`${selectedGender}-front`] && Object.entries(muscleAreas[`${selectedGender}-front`]).map(([muscle, muscleData]) => (
-                  <polygon
-                    key={muscle}
-                    points={muscleData.path.replace(/[MLZ]/g, '').replace(/\s+/g, ' ').trim()}
-                    fill={getMuscleColor(getMuscleProgress(muscle))}
-                    fillOpacity="0.6"
-                    stroke="rgba(255,255,255,0.2)"
-                    strokeWidth="1"
-                    className="cursor-pointer transition-all duration-300 hover:fill-opacity-80"
-                    onClick={() => handleMuscleClick(muscle, 'front')}
-                  />
+                   <polygon
+                     key={muscle}
+                     points={muscleData.path.replace(/[MLZ]/g, '').replace(/\s+/g, ' ').trim()}
+                     fill="transparent"
+                     stroke="transparent"
+                     className="cursor-pointer hover:fill-primary/5 transition-all duration-200"
+                     onClick={() => handleMuscleClick(muscle, 'front')}
+                   />
                  ))}
                  
                   {/* Interactive Marker for Front View */}
@@ -543,16 +541,14 @@ export function InteractiveBodyMap() {
                 preserveAspectRatio="xMidYMid meet"
               >
                 {muscleAreas[`${selectedGender}-back`] && Object.entries(muscleAreas[`${selectedGender}-back`]).map(([muscle, muscleData]) => (
-                  <polygon
-                    key={muscle}
-                    points={muscleData.path.replace(/[MLZ]/g, '').replace(/\s+/g, ' ').trim()}
-                    fill={getMuscleColor(getMuscleProgress(muscle))}
-                    fillOpacity="0.6"
-                    stroke="rgba(255,255,255,0.2)"
-                    strokeWidth="1"
-                    className="cursor-pointer transition-all duration-300 hover:fill-opacity-80"
-                    onClick={() => handleMuscleClick(muscle, 'back')}
-                  />
+                   <polygon
+                     key={muscle}
+                     points={muscleData.path.replace(/[MLZ]/g, '').replace(/\s+/g, ' ').trim()}
+                     fill="transparent"
+                     stroke="transparent"
+                     className="cursor-pointer hover:fill-primary/5 transition-all duration-200"
+                     onClick={() => handleMuscleClick(muscle, 'back')}
+                   />
                  ))}
                  
                   {/* Interactive Marker for Back View */}
