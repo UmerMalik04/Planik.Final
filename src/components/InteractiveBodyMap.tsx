@@ -27,7 +27,7 @@ const muscleAreas: Record<string, Record<string, { path: string; center: { x: nu
     },
     forearms: { 
       path: "M 75,150 L 110,155 L 105,190 L 70,185 Z",
-      center: { x: 55, y: 167.5 }
+      center: { x: 87.5, y: 167.5 }
     },
     triceps: { 
       path: "M 65,95 L 105,100 L 100,145 L 60,140 Z",
@@ -45,23 +45,23 @@ const muscleAreas: Record<string, Record<string, { path: string; center: { x: nu
       path: "M 115,285 L 155,285 L 150,345 L 120,345 Z",
       center: { x: 135, y: 315 }
     },
-    'biceps': { 
+    'right-biceps': { 
       path: "M 185,90 L 225,85 L 230,135 L 190,140 Z",
       center: { x: 207.5, y: 112.5 }
     },
-    'forearms': { 
+    'right-forearms': { 
       path: "M 190,155 L 225,150 L 230,185 L 195,190 Z",
       center: { x: 212.5, y: 167.5 }
     },
-    'tricep': { 
+    'right-triceps': { 
       path: "M 195,100 L 235,95 L 240,140 L 200,145 Z",
       center: { x: 217.5, y: 122.5 }
     },
-    'quads': { 
+    'right-quads': { 
       path: "M 145,190 L 185,190 L 190,285 L 140,285 Z",
       center: { x: 162.5, y: 237.5 }
     },
-    'calves': { 
+    'right-calves': { 
       path: "M 145,285 L 185,285 L 180,345 L 150,345 Z",
       center: { x: 165, y: 315 }
     }
@@ -302,8 +302,8 @@ function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {muscleGroup}
+          <DialogTitle className="flex items-center gap-2 capitalize">
+            {muscleGroup.replace('right-', '')}
             {trend === 'up' && <TrendingUp className="w-4 h-4 text-green-500" />}
             {trend === 'down' && <TrendingDown className="w-4 h-4 text-red-500" />}
             {trend === 'stable' && <Minus className="w-4 h-4 text-yellow-500" />}
@@ -396,7 +396,9 @@ export function InteractiveBodyMap() {
       // Use predefined center for precise positioning
       const center = muscleData.center;
       setMarkerPosition({ x: center.x, y: center.y, muscle: `${muscle}-${view}` });
-      setSelectedMuscle(muscle);
+      // Remove "right-" prefix from muscle name for display
+      const displayMuscle = muscle.replace('right-', '');
+      setSelectedMuscle(displayMuscle);
     }
   };
 
