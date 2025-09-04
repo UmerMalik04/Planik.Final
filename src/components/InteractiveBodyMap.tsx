@@ -14,56 +14,56 @@ const bodyMaps = {
   'female-back': '/lovable-uploads/2ba581e5-8af8-4079-90a5-b3752b8d2395.png',
 };
 
-// More precise muscle group areas for highlighting with development level colors
+// More precise muscle group areas for highlighting with development level colors - coordinates adjusted for actual body image
 const muscleAreas: Record<string, Record<string, { path: string; center: { x: number; y: number } }>> = {
   'male-front': {
     chest: { 
-      path: "M 120,75 L 180,75 L 185,125 L 175,145 L 125,145 L 115,125 Z",
-      center: { x: 150, y: 110 }
+      path: "M 110,85 L 190,85 L 195,135 L 185,155 L 115,155 L 105,135 Z",
+      center: { x: 150, y: 120 }
     },
     biceps: { 
-      path: "M 75,85 L 115,90 L 110,140 L 70,135 Z",
-      center: { x: 92.5, y: 112.5 }
+      path: "M 70,95 L 105,100 L 100,150 L 65,145 Z",
+      center: { x: 85, y: 122 }
     },
     forearms: { 
-      path: "M 75,150 L 110,155 L 105,190 L 70,185 Z",
-      center: { x: 87.5, y: 167.5 }
+      path: "M 70,160 L 100,165 L 95,200 L 65,195 Z",
+      center: { x: 82, y: 180 }
     },
     triceps: { 
-      path: "M 65,95 L 105,100 L 100,145 L 60,140 Z",
-      center: { x: 82.5, y: 122.5 }
+      path: "M 60,105 L 95,110 L 90,155 L 55,150 Z",
+      center: { x: 75, y: 132 }
     },
     abs: { 
-      path: "M 125,135 L 175,135 L 175,195 L 125,195 Z",
-      center: { x: 150, y: 165 }
+      path: "M 115,145 L 185,145 L 185,205 L 115,205 Z",
+      center: { x: 150, y: 175 }
     },
     quads: { 
-      path: "M 115,190 L 155,190 L 160,285 L 110,285 Z",
-      center: { x: 137.5, y: 237.5 }
+      path: "M 105,200 L 145,200 L 150,295 L 100,295 Z",
+      center: { x: 125, y: 247 }
     },
     calves: { 
-      path: "M 115,285 L 155,285 L 150,345 L 120,345 Z",
-      center: { x: 135, y: 315 }
+      path: "M 105,295 L 145,295 L 140,355 L 110,355 Z",
+      center: { x: 125, y: 325 }
     },
     'right-biceps': { 
-      path: "M 185,90 L 225,85 L 230,135 L 190,140 Z",
-      center: { x: 207.5, y: 112.5 }
+      path: "M 195,100 L 235,95 L 240,145 L 200,150 Z",
+      center: { x: 215, y: 122 }
     },
     'right-forearms': { 
-      path: "M 190,155 L 225,150 L 230,185 L 195,190 Z",
-      center: { x: 212.5, y: 167.5 }
+      path: "M 200,165 L 235,160 L 240,195 L 205,200 Z",
+      center: { x: 220, y: 180 }
     },
     'right-triceps': { 
-      path: "M 195,100 L 235,95 L 240,140 L 200,145 Z",
-      center: { x: 217.5, y: 122.5 }
+      path: "M 205,110 L 245,105 L 250,150 L 210,155 Z",
+      center: { x: 227, y: 132 }
     },
     'right-quads': { 
-      path: "M 145,190 L 185,190 L 190,285 L 140,285 Z",
-      center: { x: 162.5, y: 237.5 }
+      path: "M 155,200 L 195,200 L 200,295 L 150,295 Z",
+      center: { x: 175, y: 247 }
     },
     'right-calves': { 
-      path: "M 145,285 L 185,285 L 180,345 L 150,345 Z",
-      center: { x: 165, y: 315 }
+      path: "M 155,295 L 195,295 L 190,355 L 160,355 Z",
+      center: { x: 175, y: 325 }
     }
   },
   'male-back': {
@@ -400,9 +400,14 @@ export function InteractiveBodyMap() {
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
         
+        // Get SVG viewBox dimensions
+        const viewBox = svg.getAttribute('viewBox')?.split(' ') || ['0', '0', '300', '400'];
+        const svgWidth = parseFloat(viewBox[2]);
+        const svgHeight = parseFloat(viewBox[3]);
+        
         // Convert to SVG coordinates
-        const svgX = (x / rect.width) * 300; // Assuming SVG viewBox width of 300
-        const svgY = (y / rect.height) * 400; // Assuming SVG viewBox height of 400
+        const svgX = (x / rect.width) * svgWidth;
+        const svgY = (y / rect.height) * svgHeight;
         
         setMarkerPosition({ x: svgX, y: svgY, muscle: `${muscle}-${view}` });
         // Remove "right-" prefix from muscle name for display
