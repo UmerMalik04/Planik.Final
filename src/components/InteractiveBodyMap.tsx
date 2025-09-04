@@ -26,8 +26,8 @@ const muscleAreas: Record<string, Record<string, { path: string; center: { x: nu
       center: { x: 92.5, y: 112.5 }
     },
     forearms: { 
-      path: "M 50,155 L 90,160 L 85,200 L 45,195 Z",
-      center: { x: 67.5, y: 177.5 }
+      path: "M 75,150 L 110,155 L 105,190 L 70,185 Z",
+      center: { x: 87.5, y: 167.5 }
     },
     triceps: { 
       path: "M 65,95 L 105,100 L 100,145 L 60,140 Z",
@@ -50,8 +50,8 @@ const muscleAreas: Record<string, Record<string, { path: string; center: { x: nu
       center: { x: 207.5, y: 112.5 }
     },
     'right-forearms': { 
-      path: "M 210,160 L 255,155 L 260,195 L 215,200 Z",
-      center: { x: 232.5, y: 177.5 }
+      path: "M 190,155 L 225,150 L 230,185 L 195,190 Z",
+      center: { x: 212.5, y: 167.5 }
     },
     'right-triceps': { 
       path: "M 195,100 L 235,95 L 240,140 L 200,145 Z",
@@ -80,8 +80,8 @@ const muscleAreas: Record<string, Record<string, { path: string; center: { x: nu
       center: { x: 92.5, y: 122.5 }
     },
     forearms: { 
-      path: "M 50,165 L 90,170 L 85,210 L 45,205 Z",
-      center: { x: 67.5, y: 187.5 }
+      path: "M 75,160 L 110,165 L 105,200 L 70,195 Z",
+      center: { x: 87.5, y: 177.5 }
     },
     glutes: { 
       path: "M 115,135 L 185,135 L 185,195 L 115,195 Z",
@@ -104,8 +104,8 @@ const muscleAreas: Record<string, Record<string, { path: string; center: { x: nu
       center: { x: 207.5, y: 122.5 }
     },
     'right-forearms': { 
-      path: "M 210,170 L 255,165 L 260,205 L 215,210 Z",
-      center: { x: 232.5, y: 187.5 }
+      path: "M 190,165 L 225,160 L 230,195 L 195,200 Z",
+      center: { x: 212.5, y: 177.5 }
     },
     'right-hamstrings': { 
       path: "M 145,190 L 185,190 L 190,285 L 140,285 Z",
@@ -126,8 +126,8 @@ const muscleAreas: Record<string, Record<string, { path: string; center: { x: nu
       center: { x: 92.5, y: 112.5 }
     },
     forearms: { 
-      path: "M 50,155 L 90,160 L 85,200 L 45,195 Z",
-      center: { x: 67.5, y: 177.5 }
+      path: "M 75,150 L 110,155 L 105,190 L 70,185 Z",
+      center: { x: 87.5, y: 167.5 }
     },
     triceps: { 
       path: "M 65,95 L 105,100 L 100,145 L 60,140 Z",
@@ -150,8 +150,8 @@ const muscleAreas: Record<string, Record<string, { path: string; center: { x: nu
       center: { x: 207.5, y: 112.5 }
     },
     'right-forearms': { 
-      path: "M 210,160 L 255,155 L 260,195 L 215,200 Z",
-      center: { x: 232.5, y: 177.5 }
+      path: "M 190,155 L 225,150 L 230,185 L 195,190 Z",
+      center: { x: 212.5, y: 167.5 }
     },
     'right-triceps': { 
       path: "M 195,100 L 235,95 L 240,140 L 200,145 Z",
@@ -180,8 +180,8 @@ const muscleAreas: Record<string, Record<string, { path: string; center: { x: nu
       center: { x: 92.5, y: 122.5 }
     },
     forearms: { 
-      path: "M 50,165 L 90,170 L 85,210 L 45,205 Z",
-      center: { x: 67.5, y: 187.5 }
+      path: "M 75,160 L 110,165 L 105,200 L 70,195 Z",
+      center: { x: 87.5, y: 177.5 }
     },
     glutes: { 
       path: "M 115,135 L 185,135 L 185,195 L 115,195 Z",
@@ -204,8 +204,8 @@ const muscleAreas: Record<string, Record<string, { path: string; center: { x: nu
       center: { x: 207.5, y: 122.5 }
     },
     'right-forearms': { 
-      path: "M 210,170 L 255,165 L 260,205 L 215,210 Z",
-      center: { x: 232.5, y: 187.5 }
+      path: "M 190,165 L 225,160 L 230,195 L 195,200 Z",
+      center: { x: 212.5, y: 177.5 }
     },
     'right-hamstrings': { 
       path: "M 145,190 L 185,190 L 190,285 L 140,285 Z",
