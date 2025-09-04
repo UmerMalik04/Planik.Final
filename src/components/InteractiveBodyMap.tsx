@@ -390,15 +390,25 @@ export function InteractiveBodyMap() {
     return { x: centroidX, y: centroidY };
   };
 
-  const handleMuscleClick = (muscle: string, view: 'front' | 'back') => {
+  const handleMuscleClick = (muscle: string, view: 'front' | 'back', event: React.MouseEvent<SVGPathElement>) => {
     const muscleData = muscleAreas[`${selectedGender}-${view}`]?.[muscle];
     if (muscleData) {
-      // Use predefined center for precise positioning
-      const center = muscleData.center;
-      setMarkerPosition({ x: center.x, y: center.y, muscle: `${muscle}-${view}` });
-      // Remove "right-" prefix from muscle name for display
-      const displayMuscle = muscle.replace('right-', '');
-      setSelectedMuscle(displayMuscle);
+      // Get the SVG element and its bounding rect
+      const svg = event.currentTarget.closest('svg');
+      if (svg) {
+        const rect = svg.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        
+        // Convert to SVG coordinates
+        const svgX = (x / rect.width) * 300; // Assuming SVG viewBox width of 300
+        const svgY = (y / rect.height) * 400; // Assuming SVG viewBox height of 400
+        
+        setMarkerPosition({ x: svgX, y: svgY, muscle: `${muscle}-${view}` });
+        // Remove "right-" prefix from muscle name for display
+        const displayMuscle = muscle.replace('right-', '');
+        setSelectedMuscle(displayMuscle);
+      }
     }
   };
 
@@ -498,7 +508,7 @@ export function InteractiveBodyMap() {
                      fill="transparent"
                      stroke="transparent"
                      className="cursor-pointer hover:fill-primary/5 transition-all duration-200"
-                     onClick={() => handleMuscleClick(muscle, 'front')}
+                     onClick={(e) => handleMuscleClick(muscle, 'front', e)}
                    />
                  ))}
                  
@@ -582,7 +592,7 @@ export function InteractiveBodyMap() {
                      fill="transparent"
                      stroke="transparent"
                      className="cursor-pointer hover:fill-primary/5 transition-all duration-200"
-                     onClick={() => handleMuscleClick(muscle, 'back')}
+                     onClick={(e) => handleMuscleClick(muscle, 'back', e)}
                    />
                  ))}
                  
