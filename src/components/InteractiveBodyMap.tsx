@@ -511,7 +511,9 @@ export function InteractiveBodyMap() {
                      key={muscle}
                      points={muscleData.path.replace(/[MLZ]/g, '').replace(/\s+/g, ' ').trim()}
                      fill="transparent"
-                     stroke="transparent"
+                     stroke={selectedGender === 'male' ? "#3b82f6" : "transparent"}
+                     strokeWidth={selectedGender === 'male' ? "1" : "0"}
+                     strokeOpacity={selectedGender === 'male' ? "0.7" : "0"}
                      className="cursor-pointer hover:fill-primary/5 transition-all duration-200"
                      onClick={(e) => handleMuscleClick(muscle, 'front', e)}
                    />
@@ -595,7 +597,9 @@ export function InteractiveBodyMap() {
                      key={muscle}
                      points={muscleData.path.replace(/[MLZ]/g, '').replace(/\s+/g, ' ').trim()}
                      fill="transparent"
-                     stroke="transparent"
+                     stroke={selectedGender === 'male' ? "#3b82f6" : "transparent"}
+                     strokeWidth={selectedGender === 'male' ? "1" : "0"}
+                     strokeOpacity={selectedGender === 'male' ? "0.7" : "0"}
                      className="cursor-pointer hover:fill-primary/5 transition-all duration-200"
                      onClick={(e) => handleMuscleClick(muscle, 'back', e)}
                    />
