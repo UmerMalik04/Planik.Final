@@ -477,6 +477,12 @@ export function InteractiveBodyMap() {
   const { workoutSessions } = useWorkoutStore();
   const [selectedGender, setSelectedGender] = useState<'male' | 'female'>('male');
   const [selectedMuscle, setSelectedMuscle] = useState<string | null>(null);
+  const [markerPosition, setMarkerPosition] = useState<{x: number, y: number, muscle: string} | null>(null);
+  
+  // Get muscle position (using default positions)
+  const getMusclePosition = (view: string, muscle: string) => {
+    return muscleAreas[`${selectedGender}-${view}`]?.[muscle]?.center || { x: 150, y: 200 };
+  };
 
   const getMuscleProgress = (muscleGroup: string) => {
     // Get actual workout data from recent sessions
@@ -563,6 +569,7 @@ export function InteractiveBodyMap() {
         <CardContent className="p-4">
           <Select value={selectedGender} onValueChange={(value) => {
             setSelectedGender(value as 'male' | 'female');
+            setMarkerPosition(null); // Clear marker when changing gender
             setSelectedMuscle(null);
           }}>
             <SelectTrigger className="w-full">
@@ -573,7 +580,7 @@ export function InteractiveBodyMap() {
               <SelectItem value="female">Female</SelectItem>
             </SelectContent>
           </Select>
-          <div className="mt-4">
+          <div className="flex items-center justify-between mt-4">
             <p className="text-sm text-muted-foreground">Click bullet points to see muscle progress</p>
           </div>
         </CardContent>
@@ -602,12 +609,13 @@ export function InteractiveBodyMap() {
                 {Object.entries(muscleAreas[`${selectedGender}-front`] || {}).map(([muscle, area]) => {
                   const progress = getMuscleProgress(muscle.replace('right-', ''));
                   const level = getMuscleLevel(progress);
+                  const position = getMusclePosition('front', muscle);
                   return (
                     <g key={`front-${muscle}`}>
                       {/* Muscle bullet point */}
                       <circle
-                        cx={area.center.x}
-                        cy={area.center.y}
+                        cx={position.x}
+                        cy={position.y}
                         r="8"
                         fill={level.color}
                         stroke="white"
@@ -651,12 +659,13 @@ export function InteractiveBodyMap() {
                 {Object.entries(muscleAreas[`${selectedGender}-back`] || {}).map(([muscle, area]) => {
                   const progress = getMuscleProgress(muscle.replace('right-', ''));
                   const level = getMuscleLevel(progress);
+                  const position = getMusclePosition('back', muscle);
                   return (
                     <g key={`back-${muscle}`}>
                       {/* Muscle bullet point */}
                       <circle
-                        cx={area.center.x}
-                        cy={area.center.y}
+                        cx={position.x}
+                        cy={position.y}
                         r="8"
                         fill={level.color}
                         stroke="white"
@@ -716,8 +725,8 @@ export function InteractiveBodyMap() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs font-medium block">{level.name}</span>
-                    <span className="text-xs text-muted-foreground">{Math.round(progress)}%</span>
+                    <div className="text-xs font-medium text-foreground">{progress}%</div>
+                    <div className="text-xs text-muted-foreground">{level.name}</div>
                   </div>
                 </div>
               );
@@ -726,16 +735,16 @@ export function InteractiveBodyMap() {
         </CardContent>
       </Card>
 
-      {/* Fitness Level Progression */}
+      {/* Overall Fitness Level */}
       <Card>
-        <CardContent className="p-4">
-          <h3 className="font-medium mb-3">Fitness Level Progression</h3>
-          <div className="flex flex-wrap gap-2 justify-center">
+        <CardContent className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Overall Fitness Level</h3>
+          <div className="flex flex-wrap gap-2">
             {fitnessLevels.map((level, index) => (
               <div 
                 key={level.name}
-                className={`px-3 py-1 rounded-full text-white text-xs font-medium transition-all duration-300 ${
-                  level.name === currentLevel.name ? 'scale-110 ring-2 ring-white ring-offset-2' : 'opacity-70'
+                className={`px-3 py-2 rounded-full text-white text-sm font-medium border-2 ${
+                  currentLevel.name === level.name ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-60'
                 }`}
                 style={{ backgroundColor: level.color }}
               >
