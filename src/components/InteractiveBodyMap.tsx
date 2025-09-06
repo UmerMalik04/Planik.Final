@@ -674,6 +674,19 @@ export function InteractiveBodyMap() {
                   className="cursor-pointer"
                   onClick={(e) => handleBodyClick('front', e)}
                 />
+                
+                {/* Visible hitboxes for debugging */}
+                {Object.entries(muscleAreas[`${selectedGender}-front`] || {}).map(([muscle, area]) => (
+                  <path
+                    key={`hitbox-${muscle}`}
+                    d={area.path}
+                    fill="transparent"
+                    stroke="#ff0000"
+                    strokeWidth="2"
+                    strokeDasharray="4,2"
+                    pointerEvents="none"
+                  />
+                ))}
                  
                   {/* Interactive Marker for Front View */}
                   {markerPosition && markerPosition.muscle.endsWith('-front') && (
@@ -758,6 +771,19 @@ export function InteractiveBodyMap() {
                   className="cursor-pointer"
                   onClick={(e) => handleBodyClick('back', e)}
                 />
+                
+                {/* Visible hitboxes for debugging */}
+                {Object.entries(muscleAreas[`${selectedGender}-back`] || {}).map(([muscle, area]) => (
+                  <path
+                    key={`hitbox-${muscle}`}
+                    d={area.path}
+                    fill="transparent"
+                    stroke="#ff0000"
+                    strokeWidth="2"
+                    strokeDasharray="4,2"
+                    pointerEvents="none"
+                  />
+                ))}
                  
                   {/* Interactive Marker for Back View */}
                   {markerPosition && markerPosition.muscle.endsWith('-back') && (
