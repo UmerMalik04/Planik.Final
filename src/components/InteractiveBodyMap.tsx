@@ -664,17 +664,14 @@ export function InteractiveBodyMap() {
                 viewBox="0 0 300 400"
                 preserveAspectRatio="xMidYMid meet"
               >
-                {/* Single large clickable area for the entire body */}
+                {/* Single large clickable area covering the entire image */}
                 <rect
-                  x="50"
-                  y="50"
-                  width="200"
-                  height="320"
+                  x="0"
+                  y="0"
+                  width="300"
+                  height="400"
                   fill="transparent"
-                  stroke={selectedGender === 'male' ? "#3b82f6" : "transparent"}
-                  strokeWidth={selectedGender === 'male' ? "2" : "0"}
-                  strokeOpacity={selectedGender === 'male' ? "0.5" : "0"}
-                  className="cursor-pointer hover:fill-primary/5 transition-all duration-200"
+                  className="cursor-pointer"
                   onClick={(e) => handleBodyClick('front', e)}
                 />
                  
@@ -751,17 +748,14 @@ export function InteractiveBodyMap() {
                 viewBox="0 0 300 400"
                 preserveAspectRatio="xMidYMid meet"
               >
-                {/* Single large clickable area for the entire body */}
+                {/* Single large clickable area covering the entire image */}
                 <rect
-                  x="50"
-                  y="50"
-                  width="200"
-                  height="320"
+                  x="0"
+                  y="0"
+                  width="300"
+                  height="400"
                   fill="transparent"
-                  stroke={selectedGender === 'male' ? "#3b82f6" : "transparent"}
-                  strokeWidth={selectedGender === 'male' ? "2" : "0"}
-                  strokeOpacity={selectedGender === 'male' ? "0.5" : "0"}
-                  className="cursor-pointer hover:fill-primary/5 transition-all duration-200"
+                  className="cursor-pointer"
                   onClick={(e) => handleBodyClick('back', e)}
                 />
                  
