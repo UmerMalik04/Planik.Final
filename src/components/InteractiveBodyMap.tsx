@@ -442,6 +442,7 @@ function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
 }
 
 export function InteractiveBodyMap() {
+  const { workoutSessions } = useWorkoutStore();
   const [selectedGender, setSelectedGender] = useState<'male' | 'female'>('male');
   const [selectedMuscle, setSelectedMuscle] = useState<string | null>(null);
   const [markerPosition, setMarkerPosition] = useState<{x: number, y: number, muscle: string} | null>(null);
@@ -474,119 +475,22 @@ export function InteractiveBodyMap() {
       const viewBox = svg.getAttribute('viewBox')?.split(' ') || ['0', '0', '300', '400'];
       const svgWidth = parseFloat(viewBox[2]);
       const svgHeight = parseFloat(viewBox[3]);
+      
       const svgX = (x / rect.width) * svgWidth;
       const svgY = (y / rect.height) * svgHeight;
       
+      // Update custom position
       const key = `${selectedGender}-${view}-${draggedMuscle}`;
       setCustomPositions(prev => ({
         ...prev,
         [key]: { x: svgX, y: svgY }
       }));
     }
-  const { workoutSessions } = useWorkoutStore();
+  };
 
   // Handle drag end
   const handleDragEnd = () => {
     setDraggedMuscle(null);
-  };
-
-  // Calculate the centroid of a polygon path
-  const calculatePolygonCentroid = (pathString: string) => {
-    // Parse the path string to get coordinate pairs
-    const coords = pathString
-      .replace(/[MLZ]/g, '')
-      .trim()
-      .split(/\s+/)
-      .map(Number)
-      .filter(n => !isNaN(n));
-    
-    // Group coordinates into [x, y] pairs
-    const points = [];
-    for (let i = 0; i < coords.length; i += 2) {
-      if (coords[i + 1] !== undefined) {
-        points.push([coords[i], coords[i + 1]]);
-      }
-    }
-    
-    if (points.length === 0) return { x: 150, y: 200 }; // fallback center
-    
-    // Calculate centroid
-    const centroidX = points.reduce((sum, point) => sum + point[0], 0) / points.length;
-    const centroidY = points.reduce((sum, point) => sum + point[1], 0) / points.length;
-    
-    return { x: centroidX, y: centroidY };
-  };
-
-  const detectMuscleFromCoordinates = (x: number, y: number, view: 'front' | 'back', gender: 'male' | 'female') => {
-    // Define coordinate ranges for each muscle group based on the body image
-    const muscleCoordinates = {
-      'male-front': {
-        chest: { minX: 110, maxX: 190, minY: 85, maxY: 155 },
-        biceps: { minX: 70, maxX: 105, minY: 95, maxY: 165 },
-        'right-biceps': { minX: 195, maxX: 235, minY: 95, maxY: 165 },
-        forearms: { minX: 80, maxX: 110, minY: 160, maxY: 200 },
-        'right-forearms': { minX: 190, maxX: 220, minY: 160, maxY: 200 },
-        abs: { minX: 115, maxX: 185, minY: 145, maxY: 205 },
-        quads: { minX: 115, maxX: 155, minY: 200, maxY: 295 },
-        'right-quads': { minX: 145, maxX: 185, minY: 200, maxY: 295 },
-        calves: { minX: 115, maxX: 155, minY: 295, maxY: 355 },
-        'right-calves': { minX: 145, maxX: 185, minY: 295, maxY: 355 }
-      },
-      'male-back': {
-        back: { minX: 105, maxX: 195, minY: 65, maxY: 155 },
-        lats: { minX: 85, maxX: 125, minY: 85, maxY: 155 },
-        'right-lats': { minX: 175, maxX: 215, minY: 85, maxY: 155 },
-        triceps: { minX: 75, maxX: 115, minY: 95, maxY: 150 },
-        'right-triceps': { minX: 185, maxX: 225, minY: 95, maxY: 150 },
-        forearms: { minX: 85, maxX: 120, minY: 160, maxY: 200 },
-        'right-forearms': { minX: 180, maxX: 215, minY: 160, maxY: 200 },
-        glutes: { minX: 115, maxX: 185, minY: 135, maxY: 195 },
-        hamstrings: { minX: 115, maxX: 155, minY: 190, maxY: 285 },
-        'right-hamstrings': { minX: 145, maxX: 185, minY: 190, maxY: 285 },
-        calves: { minX: 125, maxX: 165, minY: 285, maxY: 345 },
-        'right-calves': { minX: 135, maxX: 175, minY: 285, maxY: 345 }
-      }
-    };
-
-    const coordinates = muscleCoordinates[`${gender}-${view}` as keyof typeof muscleCoordinates];
-    
-    // Check each muscle group to see if the click falls within its bounds
-    for (const [muscle, bounds] of Object.entries(coordinates)) {
-      if (x >= bounds.minX && x <= bounds.maxX && y >= bounds.minY && y <= bounds.maxY) {
-        return muscle;
-      }
-    }
-    
-    return null;
-  };
-
-  const handleBodyClick = (view: 'front' | 'back', event: React.MouseEvent<SVGRectElement>) => {
-    // Get the SVG element and its bounding rect
-    const svg = event.currentTarget.closest('svg');
-    if (svg) {
-      const rect = svg.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      
-      // Get SVG viewBox dimensions
-      const viewBox = svg.getAttribute('viewBox')?.split(' ') || ['0', '0', '300', '400'];
-      const svgWidth = parseFloat(viewBox[2]);
-      const svgHeight = parseFloat(viewBox[3]);
-      
-      // Convert to SVG coordinates
-      const svgX = (x / rect.width) * svgWidth;
-      const svgY = (y / rect.height) * svgHeight;
-      
-      // Detect which muscle was clicked
-      const detectedMuscle = detectMuscleFromCoordinates(svgX, svgY, view, selectedGender);
-      
-      if (detectedMuscle) {
-        setMarkerPosition({ x: svgX, y: svgY, muscle: `${detectedMuscle}-${view}` });
-        // Remove "right-" prefix from muscle name for display
-        const displayMuscle = detectedMuscle.replace('right-', '');
-        setSelectedMuscle(displayMuscle);
-      }
-    }
   };
 
   const getMuscleProgress = (muscleGroup: string) => {
@@ -678,23 +582,17 @@ export function InteractiveBodyMap() {
             setSelectedMuscle(null);
           }}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select body type" />
+              <SelectValue placeholder="Select gender" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="male">Male</SelectItem>
               <SelectItem value="female">Female</SelectItem>
             </SelectContent>
           </Select>
-        </CardContent>
-      </Card>
-
-      {/* Edit Mode Toggle */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Edit Circle Positions</span>
+          <div className="flex items-center justify-between mt-4">
+            <p className="text-sm text-muted-foreground">Click bullet points to see muscle progress</p>
             <Button
-              variant={isEditMode ? "default" : "outline"}
+              variant="outline"
               size="sm"
               onClick={() => setIsEditMode(!isEditMode)}
             >
@@ -747,33 +645,25 @@ export function InteractiveBodyMap() {
                         stroke="white"
                         strokeWidth="2"
                         className={`${isEditMode ? 'cursor-move' : 'cursor-pointer'} hover:r-10 transition-all drop-shadow-lg`}
-                        onClick={() => !isEditMode && setSelectedMuscle(muscle.replace('right-', ''))}
+                        onClick={() => {
+                          if (!isEditMode) {
+                            const displayMuscle = muscle.replace('right-', '');
+                            setSelectedMuscle(displayMuscle);
+                          }
+                        }}
                         onMouseDown={() => handleDragStart(muscle)}
-                      />
-                      {/* Progress ring */}
-                      <circle
-                        cx={position.x}
-                        cy={position.y}
-                        r="12"
-                        fill="none"
-                        stroke={level.color}
-                        strokeWidth="2"
-                        strokeDasharray={`${(progress / 100) * 75.4} 75.4`}
-                        strokeLinecap="round"
-                        opacity="0.6"
-                        transform={`rotate(-90 ${position.x} ${position.y})`}
-                        pointerEvents="none"
+                        style={{
+                          cursor: isEditMode ? 'move' : 'pointer',
+                          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+                        }}
                       />
                     </g>
                   );
                 })}
-                 
-                {/* No marker animation needed anymore */}
-               </svg>
-               
-             </div>
-           </CardContent>
-         </Card>
+              </svg>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Back View */}
         <Card className="overflow-hidden">
@@ -811,52 +701,28 @@ export function InteractiveBodyMap() {
                         stroke="white"
                         strokeWidth="2"
                         className={`${isEditMode ? 'cursor-move' : 'cursor-pointer'} hover:r-10 transition-all drop-shadow-lg`}
-                        onClick={() => !isEditMode && setSelectedMuscle(muscle.replace('right-', ''))}
+                        onClick={() => {
+                          if (!isEditMode) {
+                            const displayMuscle = muscle.replace('right-', '');
+                            setSelectedMuscle(displayMuscle);
+                          }
+                        }}
                         onMouseDown={() => handleDragStart(muscle)}
-                      />
-                      {/* Progress ring */}
-                      <circle
-                        cx={position.x}
-                        cy={position.y}
-                        r="12"
-                        fill="none"
-                        stroke={level.color}
-                        strokeWidth="2"
-                        strokeDasharray={`${(progress / 100) * 75.4} 75.4`}
-                        strokeLinecap="round"
-                        opacity="0.6"
-                        transform={`rotate(-90 ${position.x} ${position.y})`}
-                        pointerEvents="none"
+                        style={{
+                          cursor: isEditMode ? 'move' : 'pointer',
+                          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+                        }}
                       />
                     </g>
                   );
                 })}
-                 
-                {/* No marker animation needed anymore */}
-               </svg>
-               
-             </div>
-           </CardContent>
-         </Card>
-       </div>
+              </svg>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Current Fitness Level */}
-      <Card>
-        <CardContent className="p-4 text-center">
-          <h3 className="font-medium mb-3">Your Current Level</h3>
-          <div 
-            className="inline-block px-6 py-2 rounded-full text-white font-medium text-lg"
-            style={{ backgroundColor: currentLevel.color }}
-          >
-            {currentLevel.name}
-          </div>
-          <p className="text-sm text-muted-foreground mt-2">
-            Progress Range: {currentLevel.range}
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Muscle Development */}
+      {/* Muscle Development Summary */}
       <Card>
         <CardContent className="p-6">
           <h3 className="text-lg font-semibold mb-4">Muscle Development</h3>
@@ -876,23 +742,17 @@ export function InteractiveBodyMap() {
                 >
                   <div className="flex items-center gap-3">
                     <div 
-                      className="w-4 h-4 rounded-full"
+                      className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: level.color }}
                     />
                     <div>
-                      <span className="text-sm font-medium capitalize block">{muscle}</span>
+                      <span className="text-sm font-medium capitalize">{muscle}</span>
                       <div className="flex items-center gap-1 mt-1">
                         {trend === 'up' && <TrendingUp className="w-3 h-3 text-green-500" />}
                         {trend === 'down' && <TrendingDown className="w-3 h-3 text-red-500" />}
                         {trend === 'stable' && <Minus className="w-3 h-3 text-yellow-500" />}
-                        <span className={`text-xs font-medium ${
-                          trend === 'up' ? 'text-green-500' : 
-                          trend === 'down' ? 'text-red-500' : 
-                          'text-yellow-500'
-                        }`}>
-                          {trend === 'up' ? `+${trendPercentage}%` : 
-                           trend === 'down' ? `-${trendPercentage}%` : 
-                           'No change'}
+                        <span className="text-xs text-muted-foreground">
+                          {trend === 'up' ? '+' : trend === 'down' ? '-' : ''}{trendPercentage}%
                         </span>
                       </div>
                     </div>
