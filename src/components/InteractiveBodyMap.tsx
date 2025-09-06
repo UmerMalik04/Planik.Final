@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useWorkoutStore } from '@/stores/useWorkoutStore';
+import { useSettings } from '@/contexts/SettingsContext';
 import { Activity, TrendingUp, TrendingDown, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import useEmblaCarousel from 'embla-carousel-react';
@@ -281,6 +282,7 @@ interface MuscleGroupOverlayProps {
 
 function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
   const { getExerciseHistory, workoutSessions } = useWorkoutStore();
+  const { formatWeight } = useSettings();
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
   const [currentSlide, setCurrentSlide] = useState(0);
   
@@ -452,7 +454,7 @@ function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
                         <p className="font-medium text-sm">{exercise.name}</p>
                         <p className="text-xs text-muted-foreground">
                           {exercise.sets} sets × {exercise.reps} reps
-                          {exercise.weight > 0 && ` @ ${exercise.weight}lbs`}
+                          {exercise.weight > 0 && ` @ ${formatWeight(exercise.weight)}`}
                         </p>
                       </div>
                     </div>
