@@ -94,21 +94,36 @@ export default function Exercises() {
       {/* Filter Buttons */}
       <Card className="border-2 border-[hsl(var(--widget-border))]">
         <CardContent className="p-4">
-          <ScrollArea className="w-full">
-            <div className="flex gap-2 pb-2">
+          <div className="overflow-x-auto scrollbar-hide">
+            <div className="flex gap-2 pb-2 min-w-max">
               {muscleGroups.map((group) => (
                 <Button
                   key={group}
                   variant={selectedMuscleGroup === group ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedMuscleGroup(group)}
-                  className="whitespace-nowrap"
+                  className="whitespace-nowrap flex-shrink-0 animate-fade-in hover-scale"
                 >
                   {group}
                 </Button>
               ))}
             </div>
-          </ScrollArea>
+          </div>
+          {/* Mobile swipe indicator */}
+          <div className="flex justify-center mt-2 md:hidden">
+            <div className="flex gap-1">
+              {muscleGroups.map((_, index) => (
+                <div 
+                  key={index}
+                  className={`h-1 w-1 rounded-full transition-colors ${
+                    index === muscleGroups.findIndex(g => g === selectedMuscleGroup) 
+                      ? 'bg-primary' 
+                      : 'bg-muted-foreground/30'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
         </CardContent>
       </Card>
 

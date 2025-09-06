@@ -122,4 +122,14 @@ All colors MUST be HSL.
   .border-b-widget {
     border-bottom-color: hsl(var(--widget-border));
   }
+  
+  /* Hide scrollbars for mobile swiping */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
