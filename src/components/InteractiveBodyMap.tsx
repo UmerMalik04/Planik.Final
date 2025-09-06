@@ -477,65 +477,6 @@ export function InteractiveBodyMap() {
   const { workoutSessions } = useWorkoutStore();
   const [selectedGender, setSelectedGender] = useState<'male' | 'female'>('male');
   const [selectedMuscle, setSelectedMuscle] = useState<string | null>(null);
-  const [markerPosition, setMarkerPosition] = useState<{x: number, y: number, muscle: string} | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [draggedMuscle, setDraggedMuscle] = useState<string | null>(null);
-  const [customPositions, setCustomPositions] = useState<Record<string, { x: number; y: number }>>({});
-  const [savedPositions, setSavedPositions] = useState<Record<string, { x: number; y: number }>>({});
-  
-  // Save positions permanently
-  const savePositionsPermanently = () => {
-    // Save current custom positions as the new default positions
-    setSavedPositions(prev => ({
-      ...prev,
-      ...customPositions
-    }));
-    setCustomPositions({});
-    setIsEditMode(false);
-  };
-
-  // Get muscle position (custom, saved, or default)
-  const getMusclePosition = (view: string, muscle: string) => {
-    const key = `${selectedGender}-${view}-${muscle}`;
-    return customPositions[key] || savedPositions[key] || muscleAreas[`${selectedGender}-${view}`]?.[muscle]?.center || { x: 150, y: 200 };
-  };
-
-  // Handle drag start
-  const handleDragStart = (muscle: string) => {
-    if (isEditMode) {
-      setDraggedMuscle(muscle);
-    }
-  };
-
-  // Handle drag move
-  const handleDragMove = (event: React.MouseEvent<SVGElement>, view: 'front' | 'back') => {
-    if (isEditMode && draggedMuscle) {
-      const svg = event.currentTarget;
-      const rect = svg.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      
-      // Convert to SVG coordinates
-      const viewBox = svg.getAttribute('viewBox')?.split(' ') || ['0', '0', '300', '400'];
-      const svgWidth = parseFloat(viewBox[2]);
-      const svgHeight = parseFloat(viewBox[3]);
-      
-      const svgX = (x / rect.width) * svgWidth;
-      const svgY = (y / rect.height) * svgHeight;
-      
-      // Update custom position
-      const key = `${selectedGender}-${view}-${draggedMuscle}`;
-      setCustomPositions(prev => ({
-        ...prev,
-        [key]: { x: svgX, y: svgY }
-      }));
-    }
-  };
-
-  // Handle drag end
-  const handleDragEnd = () => {
-    setDraggedMuscle(null);
-  };
 
   const getMuscleProgress = (muscleGroup: string) => {
     // Get actual workout data from recent sessions
@@ -622,7 +563,6 @@ export function InteractiveBodyMap() {
         <CardContent className="p-4">
           <Select value={selectedGender} onValueChange={(value) => {
             setSelectedGender(value as 'male' | 'female');
-            setMarkerPosition(null); // Clear marker when changing gender
             setSelectedMuscle(null);
           }}>
             <SelectTrigger className="w-full">
@@ -633,31 +573,9 @@ export function InteractiveBodyMap() {
               <SelectItem value="female">Female</SelectItem>
             </SelectContent>
           </Select>
-          <div className="flex items-center justify-between mt-4">
+          <div className="mt-4">
             <p className="text-sm text-muted-foreground">Click bullet points to see muscle progress</p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsEditMode(!isEditMode)}
-              >
-                {isEditMode ? "Cancel" : "Edit Positions"}
-              </Button>
-              {isEditMode && Object.keys(customPositions).length > 0 && (
-                <Button
-                  size="sm"
-                  onClick={savePositionsPermanently}
-                >
-                  Save Positions
-                </Button>
-              )}
-            </div>
           </div>
-          {isEditMode && (
-            <p className="text-xs text-muted-foreground mt-2">
-              Click and drag the circles to reposition them on the body images.
-            </p>
-          )}
         </CardContent>
       </Card>
 
@@ -679,35 +597,28 @@ export function InteractiveBodyMap() {
                 className="absolute inset-0 w-full h-full"
                 viewBox="0 0 300 400"
                 preserveAspectRatio="xMidYMid meet"
-                onMouseMove={(e) => handleDragMove(e, 'front')}
-                onMouseUp={handleDragEnd}
-                onMouseLeave={handleDragEnd}
               >
                 {/* Muscle group bullet points */}
                 {Object.entries(muscleAreas[`${selectedGender}-front`] || {}).map(([muscle, area]) => {
                   const progress = getMuscleProgress(muscle.replace('right-', ''));
                   const level = getMuscleLevel(progress);
-                  const position = getMusclePosition('front', muscle);
                   return (
                     <g key={`front-${muscle}`}>
                       {/* Muscle bullet point */}
                       <circle
-                        cx={position.x}
-                        cy={position.y}
+                        cx={area.center.x}
+                        cy={area.center.y}
                         r="8"
                         fill={level.color}
                         stroke="white"
                         strokeWidth="2"
-                        className={`${isEditMode ? 'cursor-move' : 'cursor-pointer'} hover:r-10 transition-all drop-shadow-lg`}
+                        className="cursor-pointer hover:r-10 transition-all drop-shadow-lg"
                         onClick={() => {
-                          if (!isEditMode) {
-                            const displayMuscle = muscle.replace('right-', '');
-                            setSelectedMuscle(displayMuscle);
-                          }
+                          const displayMuscle = muscle.replace('right-', '');
+                          setSelectedMuscle(displayMuscle);
                         }}
-                        onMouseDown={() => handleDragStart(muscle)}
                         style={{
-                          cursor: isEditMode ? 'move' : 'pointer',
+                          cursor: 'pointer',
                           filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
                         }}
                       />
@@ -735,35 +646,28 @@ export function InteractiveBodyMap() {
                 className="absolute inset-0 w-full h-full"
                 viewBox="0 0 300 400"
                 preserveAspectRatio="xMidYMid meet"
-                onMouseMove={(e) => handleDragMove(e, 'back')}
-                onMouseUp={handleDragEnd}
-                onMouseLeave={handleDragEnd}
               >
                 {/* Muscle group bullet points */}
                 {Object.entries(muscleAreas[`${selectedGender}-back`] || {}).map(([muscle, area]) => {
                   const progress = getMuscleProgress(muscle.replace('right-', ''));
                   const level = getMuscleLevel(progress);
-                  const position = getMusclePosition('back', muscle);
                   return (
                     <g key={`back-${muscle}`}>
                       {/* Muscle bullet point */}
                       <circle
-                        cx={position.x}
-                        cy={position.y}
+                        cx={area.center.x}
+                        cy={area.center.y}
                         r="8"
                         fill={level.color}
                         stroke="white"
                         strokeWidth="2"
-                        className={`${isEditMode ? 'cursor-move' : 'cursor-pointer'} hover:r-10 transition-all drop-shadow-lg`}
+                        className="cursor-pointer hover:r-10 transition-all drop-shadow-lg"
                         onClick={() => {
-                          if (!isEditMode) {
-                            const displayMuscle = muscle.replace('right-', '');
-                            setSelectedMuscle(displayMuscle);
-                          }
+                          const displayMuscle = muscle.replace('right-', '');
+                          setSelectedMuscle(displayMuscle);
                         }}
-                        onMouseDown={() => handleDragStart(muscle)}
                         style={{
-                          cursor: isEditMode ? 'move' : 'pointer',
+                          cursor: 'pointer',
                           filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
                         }}
                       />
