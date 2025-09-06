@@ -10,7 +10,7 @@ import useEmblaCarousel from 'embla-carousel-react';
 
 // Import the body map images - we'll use CSS filters to change muscle colors
 const bodyMaps = {
-  'male-front': '/lovable-uploads/0731170e-4d41-4a25-b381-49191ff2c5c5.png',
+  'male-front': '/lovable-uploads/408b67c7-466a-4d89-988c-27e596577bc0.png',
   'male-back': '/lovable-uploads/4b27650a-3252-4401-83f7-14699ced6400.png',
   'female-front': '/lovable-uploads/c73da54d-0b40-456b-bef3-c852df323dcf.png',
   'female-back': '/lovable-uploads/2ba581e5-8af8-4079-90a5-b3752b8d2395.png',
@@ -664,46 +664,79 @@ export function InteractiveBodyMap() {
                 viewBox="0 0 300 400"
                 preserveAspectRatio="xMidYMid meet"
               >
-                {/* Multiple hitboxes matching the layout in the image */}
-                {/* Chest area */}
+                {/* Hitboxes matching the red rectangles in the new image */}
+                {/* Upper chest/shoulders */}
                 <rect
-                  x="75"
-                  y="60"
-                  width="150"
+                  x="70"
+                  y="45"
+                  width="160"
+                  height="70"
+                  fill="transparent"
+                  className="cursor-pointer"
+                  onClick={(e) => handleBodyClick('front', e)}
+                />
+                
+                {/* Left upper arm */}
+                <rect
+                  x="25"
+                  y="45"
+                  width="50"
                   height="80"
                   fill="transparent"
                   className="cursor-pointer"
                   onClick={(e) => handleBodyClick('front', e)}
                 />
                 
-                {/* Abs/Core area */}
+                {/* Right upper arm */}
+                <rect
+                  x="225"
+                  y="45"
+                  width="50"
+                  height="80"
+                  fill="transparent"
+                  className="cursor-pointer"
+                  onClick={(e) => handleBodyClick('front', e)}
+                />
+                
+                {/* Left lower arm */}
+                <rect
+                  x="15"
+                  y="125"
+                  width="45"
+                  height="85"
+                  fill="transparent"
+                  className="cursor-pointer"
+                  onClick={(e) => handleBodyClick('front', e)}
+                />
+                
+                {/* Right lower arm */}
+                <rect
+                  x="240"
+                  y="125"
+                  width="45"
+                  height="85"
+                  fill="transparent"
+                  className="cursor-pointer"
+                  onClick={(e) => handleBodyClick('front', e)}
+                />
+                
+                {/* Core/Abs area */}
                 <rect
                   x="85"
-                  y="140"
+                  y="115"
                   width="130"
-                  height="100"
+                  height="90"
                   fill="transparent"
                   className="cursor-pointer"
                   onClick={(e) => handleBodyClick('front', e)}
                 />
                 
-                {/* Left arm */}
+                {/* Hip/Groin area */}
                 <rect
-                  x="35"
-                  y="60"
-                  width="45"
-                  height="140"
-                  fill="transparent"
-                  className="cursor-pointer"
-                  onClick={(e) => handleBodyClick('front', e)}
-                />
-                
-                {/* Right arm */}
-                <rect
-                  x="220"
-                  y="60"
-                  width="45"
-                  height="140"
+                  x="100"
+                  y="205"
+                  width="100"
+                  height="45"
                   fill="transparent"
                   className="cursor-pointer"
                   onClick={(e) => handleBodyClick('front', e)}
@@ -711,10 +744,10 @@ export function InteractiveBodyMap() {
                 
                 {/* Left thigh */}
                 <rect
-                  x="85"
-                  y="240"
-                  width="55"
-                  height="100"
+                  x="75"
+                  y="250"
+                  width="65"
+                  height="120"
                   fill="transparent"
                   className="cursor-pointer"
                   onClick={(e) => handleBodyClick('front', e)}
@@ -723,9 +756,9 @@ export function InteractiveBodyMap() {
                 {/* Right thigh */}
                 <rect
                   x="160"
-                  y="240"
-                  width="55"
-                  height="100"
+                  y="250"
+                  width="65"
+                  height="120"
                   fill="transparent"
                   className="cursor-pointer"
                   onClick={(e) => handleBodyClick('front', e)}
@@ -733,10 +766,10 @@ export function InteractiveBodyMap() {
                 
                 {/* Left calf */}
                 <rect
-                  x="85"
-                  y="340"
-                  width="50"
-                  height="55"
+                  x="80"
+                  y="370"
+                  width="55"
+                  height="90"
                   fill="transparent"
                   className="cursor-pointer"
                   onClick={(e) => handleBodyClick('front', e)}
@@ -745,9 +778,9 @@ export function InteractiveBodyMap() {
                 {/* Right calf */}
                 <rect
                   x="165"
-                  y="340"
-                  width="50"
-                  height="55"
+                  y="370"
+                  width="55"
+                  height="90"
                   fill="transparent"
                   className="cursor-pointer"
                   onClick={(e) => handleBodyClick('front', e)}
