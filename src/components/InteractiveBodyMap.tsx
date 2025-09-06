@@ -272,28 +272,99 @@ export function InteractiveBodyMap() {
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
     
-    // Scale coordinates to image dimensions
-    const scaleX = event.currentTarget.naturalWidth / rect.width;
-    const scaleY = event.currentTarget.naturalHeight / rect.height;
-    
-    const imageX = x * scaleX;
-    const imageY = y * scaleY;
+    // Convert to percentage-based coordinates for consistency
+    const xPercent = (x / rect.width) * 100;
+    const yPercent = (y / rect.height) * 100;
 
-    // Determine muscle group based on click position
     let clickedMuscle = 'chest'; // Default fallback
     
-    // Simple region detection based on Y coordinate ranges
-    if (imageY < 120) clickedMuscle = 'shoulders';
-    else if (imageY < 160) clickedMuscle = 'chest';
-    else if (imageY < 210) clickedMuscle = currentView === 'back' ? 'back' : 'abs';
-    else if (imageY < 300) clickedMuscle = currentView === 'back' ? 'hamstrings' : 'quads';
-    else clickedMuscle = 'calves';
-    
-    // Also consider X coordinate for arms
-    if (x < rect.width * 0.35 && imageY > 80 && imageY < 200) {
-      clickedMuscle = currentView === 'back' ? 'triceps' : 'biceps';
-    } else if (x > rect.width * 0.65 && imageY > 80 && imageY < 200) {
-      clickedMuscle = currentView === 'back' ? 'right-triceps' : 'right-biceps';
+    // More accurate muscle detection based on anatomical positions
+    if (currentView === 'front') {
+      // Front view muscle detection
+      if (yPercent < 25) {
+        // Head/neck area - shoulders
+        clickedMuscle = 'shoulders';
+      } else if (yPercent < 40) {
+        // Upper torso
+        if (xPercent < 25) {
+          clickedMuscle = 'biceps';
+        } else if (xPercent > 75) {
+          clickedMuscle = 'right-biceps';
+        } else {
+          clickedMuscle = 'chest';
+        }
+      } else if (yPercent < 50) {
+        // Mid torso / arms
+        if (xPercent < 20) {
+          clickedMuscle = 'forearms';
+        } else if (xPercent > 80) {
+          clickedMuscle = 'right-forearms';
+        } else {
+          clickedMuscle = 'abs';
+        }
+      } else if (yPercent < 75) {
+        // Upper legs
+        if (xPercent < 35) {
+          clickedMuscle = 'quads';
+        } else if (xPercent > 65) {
+          clickedMuscle = 'right-quads';
+        } else {
+          clickedMuscle = 'quads';
+        }
+      } else {
+        // Lower legs
+        if (xPercent < 35) {
+          clickedMuscle = 'calves';
+        } else if (xPercent > 65) {
+          clickedMuscle = 'right-calves';
+        } else {
+          clickedMuscle = 'calves';
+        }
+      }
+    } else {
+      // Back view muscle detection
+      if (yPercent < 25) {
+        // Head/neck area - shoulders
+        clickedMuscle = 'shoulders';
+      } else if (yPercent < 40) {
+        // Upper back
+        if (xPercent < 25) {
+          clickedMuscle = 'triceps';
+        } else if (xPercent > 75) {
+          clickedMuscle = 'right-triceps';
+        } else if (xPercent < 35 || xPercent > 65) {
+          clickedMuscle = 'lats';
+        } else {
+          clickedMuscle = 'back';
+        }
+      } else if (yPercent < 50) {
+        // Mid back / arms
+        if (xPercent < 20) {
+          clickedMuscle = 'forearms';
+        } else if (xPercent > 80) {
+          clickedMuscle = 'right-forearms';
+        } else {
+          clickedMuscle = 'glutes';
+        }
+      } else if (yPercent < 75) {
+        // Upper legs
+        if (xPercent < 35) {
+          clickedMuscle = 'hamstrings';
+        } else if (xPercent > 65) {
+          clickedMuscle = 'right-hamstrings';
+        } else {
+          clickedMuscle = 'hamstrings';
+        }
+      } else {
+        // Lower legs
+        if (xPercent < 35) {
+          clickedMuscle = 'calves';
+        } else if (xPercent > 65) {
+          clickedMuscle = 'right-calves';
+        } else {
+          clickedMuscle = 'calves';
+        }
+      }
     }
 
     setMarkerPosition({ x, y, muscle: clickedMuscle });
