@@ -664,80 +664,41 @@ export function InteractiveBodyMap() {
                 viewBox="0 0 300 400"
                 preserveAspectRatio="xMidYMid meet"
               >
-                {/* Single large clickable area covering the entire image */}
-                <rect
-                  x="0"
-                  y="0"
-                  width="300"
-                  height="400"
-                  fill="transparent"
-                  className="cursor-pointer"
-                  onClick={(e) => handleBodyClick('front', e)}
-                />
-                
-                {/* Visible hitboxes for debugging */}
-                {Object.entries(muscleAreas[`${selectedGender}-front`] || {}).map(([muscle, area]) => (
-                  <path
-                    key={`hitbox-${muscle}`}
-                    d={area.path}
-                    fill="transparent"
-                    stroke="#ff0000"
-                    strokeWidth="2"
-                    strokeDasharray="4,2"
-                    pointerEvents="none"
-                  />
-                ))}
-                 
-                  {/* Interactive Marker for Front View */}
-                  {markerPosition && markerPosition.muscle.endsWith('-front') && (
-                    <g>
+                {/* Muscle group bullet points */}
+                {Object.entries(muscleAreas[`${selectedGender}-front`] || {}).map(([muscle, area]) => {
+                  const progress = getMuscleProgress(muscle.replace('right-', ''));
+                  const level = getMuscleLevel(progress);
+                  return (
+                    <g key={`front-${muscle}`}>
+                      {/* Muscle bullet point */}
                       <circle
-                        cx={markerPosition.x}
-                        cy={markerPosition.y}
-                        r="6"
-                        fill="hsl(var(--primary))"
+                        cx={area.center.x}
+                        cy={area.center.y}
+                        r="8"
+                        fill={level.color}
                         stroke="white"
                         strokeWidth="2"
-                        className="drop-shadow-lg"
-                      >
-                        <animate
-                          attributeName="r"
-                          values="0;6;8;6"
-                          dur="0.8s"
-                          begin="0s"
-                        />
-                        <animate
-                          attributeName="fill-opacity"
-                          values="0;1;1;1"
-                          dur="0.8s"
-                          begin="0s"
-                        />
-                      </circle>
-                      {/* Smooth pulse ring */}
+                        className="cursor-pointer hover:r-10 transition-all drop-shadow-lg"
+                        onClick={() => setSelectedMuscle(muscle.replace('right-', ''))}
+                      />
+                      {/* Progress ring */}
                       <circle
-                        cx={markerPosition.x}
-                        cy={markerPosition.y}
-                        r="6"
+                        cx={area.center.x}
+                        cy={area.center.y}
+                        r="12"
                         fill="none"
-                        stroke="hsl(var(--primary))"
+                        stroke={level.color}
                         strokeWidth="2"
+                        strokeDasharray={`${(progress / 100) * 75.4} 75.4`}
+                        strokeLinecap="round"
                         opacity="0.6"
-                      >
-                        <animate
-                          attributeName="r"
-                          values="6;16;6"
-                          dur="2s"
-                          repeatCount="indefinite"
-                        />
-                        <animate
-                          attributeName="stroke-opacity"
-                          values="0.6;0;0.6"
-                          dur="2s"
-                          repeatCount="indefinite"
-                        />
-                      </circle>
+                        transform={`rotate(-90 ${area.center.x} ${area.center.y})`}
+                      />
                     </g>
-                  )}
+                  );
+                })}
+                 
+                {/* No marker animation needed anymore */}
                </svg>
                
              </div>
@@ -761,80 +722,41 @@ export function InteractiveBodyMap() {
                 viewBox="0 0 300 400"
                 preserveAspectRatio="xMidYMid meet"
               >
-                {/* Single large clickable area covering the entire image */}
-                <rect
-                  x="0"
-                  y="0"
-                  width="300"
-                  height="400"
-                  fill="transparent"
-                  className="cursor-pointer"
-                  onClick={(e) => handleBodyClick('back', e)}
-                />
-                
-                {/* Visible hitboxes for debugging */}
-                {Object.entries(muscleAreas[`${selectedGender}-back`] || {}).map(([muscle, area]) => (
-                  <path
-                    key={`hitbox-${muscle}`}
-                    d={area.path}
-                    fill="transparent"
-                    stroke="#ff0000"
-                    strokeWidth="2"
-                    strokeDasharray="4,2"
-                    pointerEvents="none"
-                  />
-                ))}
-                 
-                  {/* Interactive Marker for Back View */}
-                  {markerPosition && markerPosition.muscle.endsWith('-back') && (
-                    <g>
+                {/* Muscle group bullet points */}
+                {Object.entries(muscleAreas[`${selectedGender}-back`] || {}).map(([muscle, area]) => {
+                  const progress = getMuscleProgress(muscle.replace('right-', ''));
+                  const level = getMuscleLevel(progress);
+                  return (
+                    <g key={`back-${muscle}`}>
+                      {/* Muscle bullet point */}
                       <circle
-                        cx={markerPosition.x}
-                        cy={markerPosition.y}
-                        r="6"
-                        fill="hsl(var(--primary))"
+                        cx={area.center.x}
+                        cy={area.center.y}
+                        r="8"
+                        fill={level.color}
                         stroke="white"
                         strokeWidth="2"
-                        className="drop-shadow-lg"
-                      >
-                        <animate
-                          attributeName="r"
-                          values="0;6;8;6"
-                          dur="0.8s"
-                          begin="0s"
-                        />
-                        <animate
-                          attributeName="fill-opacity"
-                          values="0;1;1;1"
-                          dur="0.8s"
-                          begin="0s"
-                        />
-                      </circle>
-                      {/* Smooth pulse ring */}
+                        className="cursor-pointer hover:r-10 transition-all drop-shadow-lg"
+                        onClick={() => setSelectedMuscle(muscle.replace('right-', ''))}
+                      />
+                      {/* Progress ring */}
                       <circle
-                        cx={markerPosition.x}
-                        cy={markerPosition.y}
-                        r="6"
+                        cx={area.center.x}
+                        cy={area.center.y}
+                        r="12"
                         fill="none"
-                        stroke="hsl(var(--primary))"
+                        stroke={level.color}
                         strokeWidth="2"
+                        strokeDasharray={`${(progress / 100) * 75.4} 75.4`}
+                        strokeLinecap="round"
                         opacity="0.6"
-                      >
-                        <animate
-                          attributeName="r"
-                          values="6;16;6"
-                          dur="2s"
-                          repeatCount="indefinite"
-                        />
-                        <animate
-                          attributeName="stroke-opacity"
-                          values="0.6;0;0.6"
-                          dur="2s"
-                          repeatCount="indefinite"
-                        />
-                      </circle>
+                        transform={`rotate(-90 ${area.center.x} ${area.center.y})`}
+                      />
                     </g>
-                  )}
+                  );
+                })}
+                 
+                {/* No marker animation needed anymore */}
                </svg>
                
              </div>
