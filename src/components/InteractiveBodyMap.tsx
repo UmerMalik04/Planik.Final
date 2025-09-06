@@ -450,6 +450,20 @@ export function InteractiveBodyMap() {
   const [draggedMuscle, setDraggedMuscle] = useState<string | null>(null);
   const [customPositions, setCustomPositions] = useState<Record<string, { x: number; y: number }>>({});
   
+  // Save positions permanently
+  const savePositionsPermanently = () => {
+    // Update the muscleAreas object with current custom positions
+    Object.entries(customPositions).forEach(([key, position]) => {
+      const [gender, view, muscle] = key.split('-');
+      const areaKey = `${gender}-${view}`;
+      if (muscleAreas[areaKey] && muscleAreas[areaKey][muscle]) {
+        muscleAreas[areaKey][muscle].center = position;
+      }
+    });
+    setCustomPositions({});
+    setIsEditMode(false);
+  };
+
   // Get muscle position (custom or default)
   const getMusclePosition = (view: string, muscle: string) => {
     const key = `${selectedGender}-${view}-${muscle}`;
@@ -591,13 +605,23 @@ export function InteractiveBodyMap() {
           </Select>
           <div className="flex items-center justify-between mt-4">
             <p className="text-sm text-muted-foreground">Click bullet points to see muscle progress</p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditMode(!isEditMode)}
-            >
-              {isEditMode ? "Done Editing" : "Edit Positions"}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditMode(!isEditMode)}
+              >
+                {isEditMode ? "Cancel" : "Edit Positions"}
+              </Button>
+              {isEditMode && Object.keys(customPositions).length > 0 && (
+                <Button
+                  size="sm"
+                  onClick={savePositionsPermanently}
+                >
+                  Save Positions
+                </Button>
+              )}
+            </div>
           </div>
           {isEditMode && (
             <p className="text-xs text-muted-foreground mt-2">
