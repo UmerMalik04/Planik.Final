@@ -678,20 +678,55 @@ export function InteractiveBodyMap() {
         </CardContent>
       </Card>
 
-      {/* Muscle Tier Legend */}
+      {/* Muscle Development */}
       <Card>
-        <CardContent className="p-4">
-          <h3 className="font-medium mb-3">Muscle Development Levels</h3>
-          <div className="flex flex-wrap gap-2 justify-center">
-            {muscleTiers.map((tier) => (
-              <div 
-                key={tier.name}
-                className="px-3 py-1 rounded-full text-white text-xs font-medium transition-all duration-300"
-                style={{ backgroundColor: tier.color }}
-              >
-                {tier.name}
-              </div>
-            ))}
+        <CardContent className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Muscle Development</h3>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {muscleGroups.map((muscle) => {
+              const progress = getMuscleProgress(muscle);
+              const level = getMuscleLevel(progress);
+              const trend = Math.random() > 0.5 ? 'up' : Math.random() > 0.5 ? 'down' : 'stable';
+              const trendPercentage = Math.floor(Math.random() * 15) + 1;
+              
+              return (
+                <div 
+                  key={muscle}
+                  className="flex items-center justify-between p-4 rounded-lg bg-muted hover:bg-muted/80 cursor-pointer transition-colors border-l-4"
+                  style={{ borderLeftColor: level.color }}
+                  onClick={() => setSelectedMuscle(muscle)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: level.color }}
+                    />
+                    <div>
+                      <span className="text-sm font-medium capitalize block">{muscle}</span>
+                      <div className="flex items-center gap-1 mt-1">
+                        {trend === 'up' && <TrendingUp className="w-3 h-3 text-green-500" />}
+                        {trend === 'down' && <TrendingDown className="w-3 h-3 text-red-500" />}
+                        {trend === 'stable' && <Minus className="w-3 h-3 text-yellow-500" />}
+                        <span className={`text-xs font-medium ${
+                          trend === 'up' ? 'text-green-500' : 
+                          trend === 'down' ? 'text-red-500' : 
+                          'text-yellow-500'
+                        }`}>
+                          {trend === 'up' ? `+${trendPercentage}%` : 
+                           trend === 'down' ? `-${trendPercentage}%` : 
+                           'No change'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-medium block">{level.name}</span>
+                    <span className="text-xs text-muted-foreground">{Math.round(progress)}%</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
