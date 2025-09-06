@@ -21,201 +21,201 @@ const muscleAreas: Record<string, Record<string, { path: string; center: { x: nu
   'male-front': {
     chest: { 
       path: "M 110,85 L 190,85 L 195,135 L 185,155 L 115,155 L 105,135 Z",
-      center: { x: 150, y: 120 }
+      center: { x: 150, y: 110 }
     },
     biceps: { 
       path: "M 70,95 L 105,100 L 100,150 L 65,145 Z",
-      center: { x: 85, y: 122 }
+      center: { x: 85, y: 125 }
     },
     forearms: { 
       path: "M 80,160 L 110,165 L 105,200 L 75,195 Z",
-      center: { x: 92, y: 180 }
+      center: { x: 92, y: 175 }
     },
     triceps: { 
       path: "M 60,105 L 95,110 L 90,155 L 55,150 Z",
-      center: { x: 75, y: 132 }
+      center: { x: 75, y: 130 }
     },
     abs: { 
       path: "M 115,145 L 185,145 L 185,205 L 115,205 Z",
-      center: { x: 150, y: 175 }
+      center: { x: 150, y: 170 }
     },
     quads: { 
       path: "M 115,200 L 155,200 L 160,295 L 110,295 Z",
-      center: { x: 135, y: 247 }
+      center: { x: 125, y: 250 }
     },
     calves: { 
       path: "M 115,295 L 155,295 L 150,355 L 120,355 Z",
-      center: { x: 135, y: 325 }
+      center: { x: 125, y: 320 }
     },
     'right-biceps': { 
       path: "M 195,100 L 235,95 L 240,145 L 200,150 Z",
-      center: { x: 215, y: 122 }
+      center: { x: 215, y: 125 }
     },
     'right-forearms': { 
       path: "M 190,165 L 220,160 L 225,195 L 195,200 Z",
-      center: { x: 207, y: 180 }
+      center: { x: 208, y: 175 }
     },
     'right-triceps': { 
       path: "M 205,110 L 245,105 L 250,150 L 210,155 Z",
-      center: { x: 227, y: 132 }
+      center: { x: 225, y: 130 }
     },
     'right-quads': { 
       path: "M 145,200 L 185,200 L 190,295 L 140,295 Z",
-      center: { x: 165, y: 247 }
+      center: { x: 175, y: 250 }
     },
     'right-calves': { 
       path: "M 145,295 L 185,295 L 180,355 L 150,355 Z",
-      center: { x: 165, y: 325 }
+      center: { x: 175, y: 320 }
     }
   },
   'male-back': {
     back: { 
       path: "M 105,65 L 195,65 L 190,155 L 110,155 Z",
-      center: { x: 150, y: 110 }
+      center: { x: 150, y: 95 }
     },
     lats: { 
       path: "M 85,85 L 125,90 L 130,155 L 90,150 Z",
-      center: { x: 107.5, y: 120 }
+      center: { x: 107, y: 130 }
     },
     triceps: { 
       path: "M 75,95 L 115,100 L 110,150 L 70,145 Z",
-      center: { x: 92.5, y: 122.5 }
+      center: { x: 92, y: 125 }
     },
     forearms: { 
       path: "M 85,160 L 120,165 L 115,200 L 80,195 Z",
-      center: { x: 100, y: 177.5 }
+      center: { x: 100, y: 175 }
     },
     glutes: { 
       path: "M 115,135 L 185,135 L 185,195 L 115,195 Z",
-      center: { x: 150, y: 165 }
+      center: { x: 150, y: 160 }
     },
     hamstrings: { 
       path: "M 115,190 L 155,190 L 160,285 L 110,285 Z",
-      center: { x: 137.5, y: 237.5 }
+      center: { x: 125, y: 240 }
     },
     calves: { 
       path: "M 125,285 L 165,285 L 160,345 L 130,345 Z",
-      center: { x: 147, y: 315 }
+      center: { x: 125, y: 310 }
     },
     'right-lats': { 
       path: "M 175,90 L 215,85 L 210,150 L 170,155 Z",
-      center: { x: 192.5, y: 120 }
+      center: { x: 193, y: 130 }
     },
     'right-triceps': { 
       path: "M 185,100 L 225,95 L 230,145 L 190,150 Z",
-      center: { x: 207.5, y: 122.5 }
+      center: { x: 208, y: 125 }
     },
     'right-forearms': { 
       path: "M 180,165 L 215,160 L 220,195 L 185,200 Z",
-      center: { x: 200, y: 177.5 }
+      center: { x: 200, y: 175 }
     },
     'right-hamstrings': { 
       path: "M 145,190 L 185,190 L 190,285 L 140,285 Z",
-      center: { x: 162.5, y: 237.5 }
+      center: { x: 175, y: 240 }
     },
     'right-calves': { 
       path: "M 135,285 L 175,285 L 170,345 L 140,345 Z",
-      center: { x: 152, y: 315 }
+      center: { x: 175, y: 310 }
     }
   },
   'female-front': {
     chest: { 
       path: "M 120,75 L 180,75 L 185,125 L 175,145 L 125,145 L 115,125 Z",
-      center: { x: 150, y: 110 }
+      center: { x: 150, y: 105 }
     },
     biceps: { 
       path: "M 75,85 L 115,90 L 110,140 L 70,135 Z",
-      center: { x: 92.5, y: 112.5 }
+      center: { x: 90, y: 115 }
     },
     forearms: { 
       path: "M 75,150 L 110,155 L 105,190 L 70,185 Z",
-      center: { x: 87.5, y: 167.5 }
+      center: { x: 87, y: 170 }
     },
     triceps: { 
       path: "M 65,95 L 105,100 L 100,145 L 60,140 Z",
-      center: { x: 82.5, y: 122.5 }
+      center: { x: 80, y: 120 }
     },
     abs: { 
       path: "M 125,135 L 175,135 L 175,195 L 125,195 Z",
-      center: { x: 150, y: 165 }
+      center: { x: 150, y: 160 }
     },
     quads: { 
       path: "M 115,190 L 155,190 L 160,285 L 110,285 Z",
-      center: { x: 137.5, y: 237.5 }
+      center: { x: 125, y: 240 }
     },
     calves: { 
       path: "M 115,285 L 155,285 L 150,345 L 120,345 Z",
-      center: { x: 135, y: 315 }
+      center: { x: 125, y: 310 }
     },
     'right-biceps': { 
       path: "M 185,90 L 225,85 L 230,135 L 190,140 Z",
-      center: { x: 207.5, y: 112.5 }
+      center: { x: 210, y: 115 }
     },
     'right-forearms': { 
       path: "M 190,155 L 225,150 L 230,185 L 195,190 Z",
-      center: { x: 212.5, y: 167.5 }
+      center: { x: 213, y: 170 }
     },
     'right-triceps': { 
       path: "M 195,100 L 235,95 L 240,140 L 200,145 Z",
-      center: { x: 217.5, y: 122.5 }
+      center: { x: 220, y: 120 }
     },
     'right-quads': { 
       path: "M 145,190 L 185,190 L 190,285 L 140,285 Z",
-      center: { x: 162.5, y: 237.5 }
+      center: { x: 175, y: 240 }
     },
     'right-calves': { 
       path: "M 145,285 L 185,285 L 180,345 L 150,345 Z",
-      center: { x: 165, y: 315 }
+      center: { x: 175, y: 310 }
     }
   },
   'female-back': {
     back: { 
       path: "M 105,65 L 195,65 L 190,155 L 110,155 Z",
-      center: { x: 150, y: 110 }
+      center: { x: 150, y: 90 }
     },
     lats: { 
       path: "M 85,85 L 125,90 L 130,155 L 90,150 Z",
-      center: { x: 107.5, y: 120 }
+      center: { x: 105, y: 125 }
     },
     triceps: { 
       path: "M 75,95 L 115,100 L 110,150 L 70,145 Z",
-      center: { x: 92.5, y: 122.5 }
+      center: { x: 90, y: 120 }
     },
     forearms: { 
       path: "M 75,160 L 110,165 L 105,200 L 70,195 Z",
-      center: { x: 87.5, y: 177.5 }
+      center: { x: 85, y: 175 }
     },
     glutes: { 
       path: "M 115,135 L 185,135 L 185,195 L 115,195 Z",
-      center: { x: 150, y: 165 }
+      center: { x: 150, y: 160 }
     },
     hamstrings: { 
       path: "M 115,190 L 155,190 L 160,285 L 110,285 Z",
-      center: { x: 137.5, y: 237.5 }
+      center: { x: 125, y: 235 }
     },
     calves: { 
       path: "M 115,285 L 155,285 L 150,345 L 120,345 Z",
-      center: { x: 135, y: 315 }
+      center: { x: 125, y: 305 }
     },
     'right-lats': { 
       path: "M 175,90 L 215,85 L 210,150 L 170,155 Z",
-      center: { x: 192.5, y: 120 }
+      center: { x: 195, y: 125 }
     },
     'right-triceps': { 
       path: "M 185,100 L 225,95 L 230,145 L 190,150 Z",
-      center: { x: 207.5, y: 122.5 }
+      center: { x: 210, y: 120 }
     },
     'right-forearms': { 
       path: "M 190,165 L 225,160 L 230,195 L 195,200 Z",
-      center: { x: 212.5, y: 177.5 }
+      center: { x: 215, y: 175 }
     },
     'right-hamstrings': { 
       path: "M 145,190 L 185,190 L 190,285 L 140,285 Z",
-      center: { x: 162.5, y: 237.5 }
+      center: { x: 175, y: 235 }
     },
     'right-calves': { 
       path: "M 145,285 L 185,285 L 180,345 L 150,345 Z",
-      center: { x: 165, y: 315 }
+      center: { x: 175, y: 305 }
     }
   }
 };
