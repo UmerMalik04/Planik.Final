@@ -481,25 +481,23 @@ export function InteractiveBodyMap() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [draggedMuscle, setDraggedMuscle] = useState<string | null>(null);
   const [customPositions, setCustomPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const [savedPositions, setSavedPositions] = useState<Record<string, { x: number; y: number }>>({});
   
   // Save positions permanently
   const savePositionsPermanently = () => {
-    // Update the muscleAreas object with current custom positions
-    Object.entries(customPositions).forEach(([key, position]) => {
-      const [gender, view, muscle] = key.split('-');
-      const areaKey = `${gender}-${view}`;
-      if (muscleAreas[areaKey] && muscleAreas[areaKey][muscle]) {
-        muscleAreas[areaKey][muscle].center = position;
-      }
-    });
+    // Save current custom positions as the new default positions
+    setSavedPositions(prev => ({
+      ...prev,
+      ...customPositions
+    }));
     setCustomPositions({});
     setIsEditMode(false);
   };
 
-  // Get muscle position (custom or default)
+  // Get muscle position (custom, saved, or default)
   const getMusclePosition = (view: string, muscle: string) => {
     const key = `${selectedGender}-${view}-${muscle}`;
-    return customPositions[key] || muscleAreas[`${selectedGender}-${view}`]?.[muscle]?.center || { x: 150, y: 200 };
+    return customPositions[key] || savedPositions[key] || muscleAreas[`${selectedGender}-${view}`]?.[muscle]?.center || { x: 150, y: 200 };
   };
 
   // Handle drag start
