@@ -474,28 +474,73 @@ export function InteractiveBodyMap() {
     return { x: centroidX, y: centroidY };
   };
 
-  const handleMuscleClick = (muscle: string, view: 'front' | 'back', event: React.MouseEvent<SVGPathElement>) => {
-    const muscleData = muscleAreas[`${selectedGender}-${view}`]?.[muscle];
-    if (muscleData) {
-      // Get the SVG element and its bounding rect
-      const svg = event.currentTarget.closest('svg');
-      if (svg) {
-        const rect = svg.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        
-        // Get SVG viewBox dimensions
-        const viewBox = svg.getAttribute('viewBox')?.split(' ') || ['0', '0', '300', '400'];
-        const svgWidth = parseFloat(viewBox[2]);
-        const svgHeight = parseFloat(viewBox[3]);
-        
-        // Convert to SVG coordinates
-        const svgX = (x / rect.width) * svgWidth;
-        const svgY = (y / rect.height) * svgHeight;
-        
-        setMarkerPosition({ x: svgX, y: svgY, muscle: `${muscle}-${view}` });
+  const detectMuscleFromCoordinates = (x: number, y: number, view: 'front' | 'back', gender: 'male' | 'female') => {
+    // Define coordinate ranges for each muscle group based on the body image
+    const muscleCoordinates = {
+      'male-front': {
+        chest: { minX: 110, maxX: 190, minY: 85, maxY: 155 },
+        biceps: { minX: 70, maxX: 105, minY: 95, maxY: 165 },
+        'right-biceps': { minX: 195, maxX: 235, minY: 95, maxY: 165 },
+        forearms: { minX: 80, maxX: 110, minY: 160, maxY: 200 },
+        'right-forearms': { minX: 190, maxX: 220, minY: 160, maxY: 200 },
+        abs: { minX: 115, maxX: 185, minY: 145, maxY: 205 },
+        quads: { minX: 115, maxX: 155, minY: 200, maxY: 295 },
+        'right-quads': { minX: 145, maxX: 185, minY: 200, maxY: 295 },
+        calves: { minX: 115, maxX: 155, minY: 295, maxY: 355 },
+        'right-calves': { minX: 145, maxX: 185, minY: 295, maxY: 355 }
+      },
+      'male-back': {
+        back: { minX: 105, maxX: 195, minY: 65, maxY: 155 },
+        lats: { minX: 85, maxX: 125, minY: 85, maxY: 155 },
+        'right-lats': { minX: 175, maxX: 215, minY: 85, maxY: 155 },
+        triceps: { minX: 75, maxX: 115, minY: 95, maxY: 150 },
+        'right-triceps': { minX: 185, maxX: 225, minY: 95, maxY: 150 },
+        forearms: { minX: 85, maxX: 120, minY: 160, maxY: 200 },
+        'right-forearms': { minX: 180, maxX: 215, minY: 160, maxY: 200 },
+        glutes: { minX: 115, maxX: 185, minY: 135, maxY: 195 },
+        hamstrings: { minX: 115, maxX: 155, minY: 190, maxY: 285 },
+        'right-hamstrings': { minX: 145, maxX: 185, minY: 190, maxY: 285 },
+        calves: { minX: 125, maxX: 165, minY: 285, maxY: 345 },
+        'right-calves': { minX: 135, maxX: 175, minY: 285, maxY: 345 }
+      }
+    };
+
+    const coordinates = muscleCoordinates[`${gender}-${view}` as keyof typeof muscleCoordinates];
+    
+    // Check each muscle group to see if the click falls within its bounds
+    for (const [muscle, bounds] of Object.entries(coordinates)) {
+      if (x >= bounds.minX && x <= bounds.maxX && y >= bounds.minY && y <= bounds.maxY) {
+        return muscle;
+      }
+    }
+    
+    return null;
+  };
+
+  const handleBodyClick = (view: 'front' | 'back', event: React.MouseEvent<SVGRectElement>) => {
+    // Get the SVG element and its bounding rect
+    const svg = event.currentTarget.closest('svg');
+    if (svg) {
+      const rect = svg.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      
+      // Get SVG viewBox dimensions
+      const viewBox = svg.getAttribute('viewBox')?.split(' ') || ['0', '0', '300', '400'];
+      const svgWidth = parseFloat(viewBox[2]);
+      const svgHeight = parseFloat(viewBox[3]);
+      
+      // Convert to SVG coordinates
+      const svgX = (x / rect.width) * svgWidth;
+      const svgY = (y / rect.height) * svgHeight;
+      
+      // Detect which muscle was clicked
+      const detectedMuscle = detectMuscleFromCoordinates(svgX, svgY, view, selectedGender);
+      
+      if (detectedMuscle) {
+        setMarkerPosition({ x: svgX, y: svgY, muscle: `${detectedMuscle}-${view}` });
         // Remove "right-" prefix from muscle name for display
-        const displayMuscle = muscle.replace('right-', '');
+        const displayMuscle = detectedMuscle.replace('right-', '');
         setSelectedMuscle(displayMuscle);
       }
     }
@@ -619,18 +664,19 @@ export function InteractiveBodyMap() {
                 viewBox="0 0 300 400"
                 preserveAspectRatio="xMidYMid meet"
               >
-                {muscleAreas[`${selectedGender}-front`] && Object.entries(muscleAreas[`${selectedGender}-front`]).map(([muscle, muscleData]) => (
-                   <polygon
-                     key={muscle}
-                     points={muscleData.path.replace(/[MLZ]/g, '').replace(/\s+/g, ' ').trim()}
-                     fill="transparent"
-                     stroke={selectedGender === 'male' ? "#3b82f6" : "transparent"}
-                     strokeWidth={selectedGender === 'male' ? "1" : "0"}
-                     strokeOpacity={selectedGender === 'male' ? "0.7" : "0"}
-                     className="cursor-pointer hover:fill-primary/5 transition-all duration-200"
-                     onClick={(e) => handleMuscleClick(muscle, 'front', e)}
-                   />
-                 ))}
+                {/* Single large clickable area for the entire body */}
+                <rect
+                  x="50"
+                  y="50"
+                  width="200"
+                  height="320"
+                  fill="transparent"
+                  stroke={selectedGender === 'male' ? "#3b82f6" : "transparent"}
+                  strokeWidth={selectedGender === 'male' ? "2" : "0"}
+                  strokeOpacity={selectedGender === 'male' ? "0.5" : "0"}
+                  className="cursor-pointer hover:fill-primary/5 transition-all duration-200"
+                  onClick={(e) => handleBodyClick('front', e)}
+                />
                  
                   {/* Interactive Marker for Front View */}
                   {markerPosition && markerPosition.muscle.endsWith('-front') && (
@@ -705,18 +751,19 @@ export function InteractiveBodyMap() {
                 viewBox="0 0 300 400"
                 preserveAspectRatio="xMidYMid meet"
               >
-                {muscleAreas[`${selectedGender}-back`] && Object.entries(muscleAreas[`${selectedGender}-back`]).map(([muscle, muscleData]) => (
-                   <polygon
-                     key={muscle}
-                     points={muscleData.path.replace(/[MLZ]/g, '').replace(/\s+/g, ' ').trim()}
-                     fill="transparent"
-                     stroke={selectedGender === 'male' ? "#3b82f6" : "transparent"}
-                     strokeWidth={selectedGender === 'male' ? "1" : "0"}
-                     strokeOpacity={selectedGender === 'male' ? "0.7" : "0"}
-                     className="cursor-pointer hover:fill-primary/5 transition-all duration-200"
-                     onClick={(e) => handleMuscleClick(muscle, 'back', e)}
-                   />
-                 ))}
+                {/* Single large clickable area for the entire body */}
+                <rect
+                  x="50"
+                  y="50"
+                  width="200"
+                  height="320"
+                  fill="transparent"
+                  stroke={selectedGender === 'male' ? "#3b82f6" : "transparent"}
+                  strokeWidth={selectedGender === 'male' ? "2" : "0"}
+                  strokeOpacity={selectedGender === 'male' ? "0.5" : "0"}
+                  className="cursor-pointer hover:fill-primary/5 transition-all duration-200"
+                  onClick={(e) => handleBodyClick('back', e)}
+                />
                  
                   {/* Interactive Marker for Back View */}
                   {markerPosition && markerPosition.muscle.endsWith('-back') && (
