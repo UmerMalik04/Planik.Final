@@ -445,7 +445,50 @@ export function InteractiveBodyMap() {
   const [selectedGender, setSelectedGender] = useState<'male' | 'female'>('male');
   const [selectedMuscle, setSelectedMuscle] = useState<string | null>(null);
   const [markerPosition, setMarkerPosition] = useState<{x: number, y: number, muscle: string} | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [draggedMuscle, setDraggedMuscle] = useState<string | null>(null);
+  const [customPositions, setCustomPositions] = useState<Record<string, { x: number; y: number }>>({});
+  
+  // Get muscle position (custom or default)
+  const getMusclePosition = (view: string, muscle: string) => {
+    const key = `${selectedGender}-${view}-${muscle}`;
+    return customPositions[key] || muscleAreas[`${selectedGender}-${view}`]?.[muscle]?.center || { x: 150, y: 200 };
+  };
+
+  // Handle drag start
+  const handleDragStart = (muscle: string) => {
+    if (isEditMode) {
+      setDraggedMuscle(muscle);
+    }
+  };
+
+  // Handle drag move
+  const handleDragMove = (event: React.MouseEvent<SVGElement>, view: 'front' | 'back') => {
+    if (isEditMode && draggedMuscle) {
+      const svg = event.currentTarget;
+      const rect = svg.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      
+      // Convert to SVG coordinates
+      const viewBox = svg.getAttribute('viewBox')?.split(' ') || ['0', '0', '300', '400'];
+      const svgWidth = parseFloat(viewBox[2]);
+      const svgHeight = parseFloat(viewBox[3]);
+      const svgX = (x / rect.width) * svgWidth;
+      const svgY = (y / rect.height) * svgHeight;
+      
+      const key = `${selectedGender}-${view}-${draggedMuscle}`;
+      setCustomPositions(prev => ({
+        ...prev,
+        [key]: { x: svgX, y: svgY }
+      }));
+    }
   const { workoutSessions } = useWorkoutStore();
+
+  // Handle drag end
+  const handleDragEnd = () => {
+    setDraggedMuscle(null);
+  };
 
   // Calculate the centroid of a polygon path
   const calculatePolygonCentroid = (pathString: string) => {
@@ -645,6 +688,27 @@ export function InteractiveBodyMap() {
         </CardContent>
       </Card>
 
+      {/* Edit Mode Toggle */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Edit Circle Positions</span>
+            <Button
+              variant={isEditMode ? "default" : "outline"}
+              size="sm"
+              onClick={() => setIsEditMode(!isEditMode)}
+            >
+              {isEditMode ? "Done Editing" : "Edit Positions"}
+            </Button>
+          </div>
+          {isEditMode && (
+            <p className="text-xs text-muted-foreground mt-2">
+              Click and drag the circles to reposition them on the body images.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Side by Side Body Maps */}
       <div className="grid grid-cols-2 gap-4">
         {/* Front View */}
@@ -663,28 +727,33 @@ export function InteractiveBodyMap() {
                 className="absolute inset-0 w-full h-full"
                 viewBox="0 0 300 400"
                 preserveAspectRatio="xMidYMid meet"
+                onMouseMove={(e) => handleDragMove(e, 'front')}
+                onMouseUp={handleDragEnd}
+                onMouseLeave={handleDragEnd}
               >
                 {/* Muscle group bullet points */}
                 {Object.entries(muscleAreas[`${selectedGender}-front`] || {}).map(([muscle, area]) => {
                   const progress = getMuscleProgress(muscle.replace('right-', ''));
                   const level = getMuscleLevel(progress);
+                  const position = getMusclePosition('front', muscle);
                   return (
                     <g key={`front-${muscle}`}>
                       {/* Muscle bullet point */}
                       <circle
-                        cx={area.center.x}
-                        cy={area.center.y}
+                        cx={position.x}
+                        cy={position.y}
                         r="8"
                         fill={level.color}
                         stroke="white"
                         strokeWidth="2"
-                        className="cursor-pointer hover:r-10 transition-all drop-shadow-lg"
-                        onClick={() => setSelectedMuscle(muscle.replace('right-', ''))}
+                        className={`${isEditMode ? 'cursor-move' : 'cursor-pointer'} hover:r-10 transition-all drop-shadow-lg`}
+                        onClick={() => !isEditMode && setSelectedMuscle(muscle.replace('right-', ''))}
+                        onMouseDown={() => handleDragStart(muscle)}
                       />
                       {/* Progress ring */}
                       <circle
-                        cx={area.center.x}
-                        cy={area.center.y}
+                        cx={position.x}
+                        cy={position.y}
                         r="12"
                         fill="none"
                         stroke={level.color}
@@ -692,7 +761,8 @@ export function InteractiveBodyMap() {
                         strokeDasharray={`${(progress / 100) * 75.4} 75.4`}
                         strokeLinecap="round"
                         opacity="0.6"
-                        transform={`rotate(-90 ${area.center.x} ${area.center.y})`}
+                        transform={`rotate(-90 ${position.x} ${position.y})`}
+                        pointerEvents="none"
                       />
                     </g>
                   );
@@ -721,28 +791,33 @@ export function InteractiveBodyMap() {
                 className="absolute inset-0 w-full h-full"
                 viewBox="0 0 300 400"
                 preserveAspectRatio="xMidYMid meet"
+                onMouseMove={(e) => handleDragMove(e, 'back')}
+                onMouseUp={handleDragEnd}
+                onMouseLeave={handleDragEnd}
               >
                 {/* Muscle group bullet points */}
                 {Object.entries(muscleAreas[`${selectedGender}-back`] || {}).map(([muscle, area]) => {
                   const progress = getMuscleProgress(muscle.replace('right-', ''));
                   const level = getMuscleLevel(progress);
+                  const position = getMusclePosition('back', muscle);
                   return (
                     <g key={`back-${muscle}`}>
                       {/* Muscle bullet point */}
                       <circle
-                        cx={area.center.x}
-                        cy={area.center.y}
+                        cx={position.x}
+                        cy={position.y}
                         r="8"
                         fill={level.color}
                         stroke="white"
                         strokeWidth="2"
-                        className="cursor-pointer hover:r-10 transition-all drop-shadow-lg"
-                        onClick={() => setSelectedMuscle(muscle.replace('right-', ''))}
+                        className={`${isEditMode ? 'cursor-move' : 'cursor-pointer'} hover:r-10 transition-all drop-shadow-lg`}
+                        onClick={() => !isEditMode && setSelectedMuscle(muscle.replace('right-', ''))}
+                        onMouseDown={() => handleDragStart(muscle)}
                       />
                       {/* Progress ring */}
                       <circle
-                        cx={area.center.x}
-                        cy={area.center.y}
+                        cx={position.x}
+                        cy={position.y}
                         r="12"
                         fill="none"
                         stroke={level.color}
@@ -750,7 +825,8 @@ export function InteractiveBodyMap() {
                         strokeDasharray={`${(progress / 100) * 75.4} 75.4`}
                         strokeLinecap="round"
                         opacity="0.6"
-                        transform={`rotate(-90 ${area.center.x} ${area.center.y})`}
+                        transform={`rotate(-90 ${position.x} ${position.y})`}
+                        pointerEvents="none"
                       />
                     </g>
                   );
