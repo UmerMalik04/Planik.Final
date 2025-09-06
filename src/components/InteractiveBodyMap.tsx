@@ -23,6 +23,14 @@ const muscleAreas: Record<string, Record<string, { path: string; center: { x: nu
       path: "M 110,85 L 190,85 L 195,135 L 185,155 L 115,155 L 105,135 Z",
       center: { x: 150, y: 110 }
     },
+    shoulders: {
+      path: "M 85,65 L 125,70 L 120,110 L 80,105 Z",
+      center: { x: 102, y: 87 }
+    },
+    'right-shoulders': {
+      path: "M 175,70 L 215,65 L 220,105 L 180,110 Z",
+      center: { x: 198, y: 87 }
+    },
     biceps: { 
       path: "M 70,95 L 105,100 L 100,150 L 65,145 Z",
       center: { x: 85, y: 125 }
@@ -72,6 +80,14 @@ const muscleAreas: Record<string, Record<string, { path: string; center: { x: nu
     back: { 
       path: "M 105,65 L 195,65 L 190,155 L 110,155 Z",
       center: { x: 150, y: 95 }
+    },
+    shoulders: {
+      path: "M 85,65 L 125,70 L 120,110 L 80,105 Z",
+      center: { x: 102, y: 87 }
+    },
+    'right-shoulders': {
+      path: "M 175,70 L 215,65 L 220,105 L 180,110 Z",
+      center: { x: 198, y: 87 }
     },
     lats: { 
       path: "M 85,85 L 125,90 L 130,155 L 90,150 Z",
@@ -123,6 +139,14 @@ const muscleAreas: Record<string, Record<string, { path: string; center: { x: nu
       path: "M 120,75 L 180,75 L 185,125 L 175,145 L 125,145 L 115,125 Z",
       center: { x: 150, y: 105 }
     },
+    shoulders: {
+      path: "M 85,65 L 125,70 L 120,110 L 80,105 Z",
+      center: { x: 102, y: 87 }
+    },
+    'right-shoulders': {
+      path: "M 175,70 L 215,65 L 220,105 L 180,110 Z",
+      center: { x: 198, y: 87 }
+    },
     biceps: { 
       path: "M 75,85 L 115,90 L 110,140 L 70,135 Z",
       center: { x: 90, y: 115 }
@@ -173,6 +197,14 @@ const muscleAreas: Record<string, Record<string, { path: string; center: { x: nu
       path: "M 105,65 L 195,65 L 190,155 L 110,155 Z",
       center: { x: 150, y: 90 }
     },
+    shoulders: {
+      path: "M 85,65 L 125,70 L 120,110 L 80,105 Z",
+      center: { x: 102, y: 87 }
+    },
+    'right-shoulders': {
+      path: "M 175,70 L 215,65 L 220,105 L 180,110 Z",
+      center: { x: 198, y: 87 }
+    },
     lats: { 
       path: "M 85,85 L 125,90 L 130,155 L 90,150 Z",
       center: { x: 105, y: 125 }
@@ -221,7 +253,7 @@ const muscleAreas: Record<string, Record<string, { path: string; center: { x: nu
 };
 
 // Muscle groups for tracking
-const muscleGroups = ['chest', 'biceps', 'triceps', 'forearms', 'abs', 'back', 'lats', 'quads', 'hamstrings', 'glutes', 'calves'];
+const muscleGroups = ['chest', 'shoulders', 'biceps', 'triceps', 'forearms', 'abs', 'back', 'lats', 'quads', 'hamstrings', 'glutes', 'calves'];
 
 const fitnessLevels = [
   { name: 'Beginner', color: '#ef4444', range: '0-20%' },
