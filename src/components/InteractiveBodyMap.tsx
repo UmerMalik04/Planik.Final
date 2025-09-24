@@ -182,9 +182,20 @@ function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
       };
     }
     
+    // Special case for chest - use dedicated image
+    if (muscleKey === 'chest') {
+      return {
+        backgroundImage: `url(/assets/chest.png)`,
+        backgroundPosition: 'center',
+        backgroundSize: 'contain',
+        width: '100%',
+        height: '200px',
+        backgroundRepeat: 'no-repeat'
+      };
+    }
+    
     const crops = {
       forearms: { x: 90, y: 0, width: 10, height: 50 }, // Top right
-      chest: { x: 0, y: 50, width: 10, height: 50 }, // Bottom left
       shoulders: { x: 20, y: 50, width: 10, height: 50 }, // Bottom row 2nd
       arms: { x: 40, y: 50, width: 10, height: 50 }, // Bottom row 3rd (arms)
       abs: { x: 70, y: 50, width: 10, height: 50 }, // Bottom row 8th
