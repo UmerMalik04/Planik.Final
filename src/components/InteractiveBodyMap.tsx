@@ -185,7 +185,7 @@ function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
     // Special case for chest - use dedicated image
     if (muscleKey === 'chest') {
       return {
-        backgroundImage: `url(/assets/chest.png)`,
+        backgroundImage: `url(/assets/chest-2.png)`,
         backgroundPosition: 'center',
         backgroundSize: 'contain',
         width: '100%',
