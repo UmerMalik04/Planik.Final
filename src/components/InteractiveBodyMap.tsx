@@ -146,8 +146,19 @@ function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
 
   // Image cropping coordinates for each muscle group from the reference image
   const getImageStyle = (muscleKey: string) => {
+    // Special case for calves - use dedicated image
+    if (muscleKey === 'calves') {
+      return {
+        backgroundImage: `url(/assets/calves.png)`,
+        backgroundPosition: 'center',
+        backgroundSize: 'contain',
+        width: '100%',
+        height: '200px',
+        backgroundRepeat: 'no-repeat'
+      };
+    }
+    
     const crops = {
-      calves: { x: 0, y: 0, width: 10, height: 50 }, // Top left
       glutes: { x: 70, y: 0, width: 10, height: 50 }, // Top row 8th
       back: { x: 70, y: 0, width: 10, height: 50 }, // Top row 8th
       forearms: { x: 90, y: 0, width: 10, height: 50 }, // Top right
