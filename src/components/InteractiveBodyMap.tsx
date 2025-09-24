@@ -242,8 +242,19 @@ function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
       };
     }
     
+    // Special case for quads - use dedicated image
+    if (muscleKey === 'quads') {
+      return {
+        backgroundImage: `url(/assets/quads.png)`,
+        backgroundPosition: 'center',
+        backgroundSize: 'contain',
+        width: '100%',
+        height: '200px',
+        backgroundRepeat: 'no-repeat'
+      };
+    }
+    
     const crops = {
-      quads: { x: 90, y: 50, width: 10, height: 50 }, // Bottom right
     };
 
     const crop = crops[muscleKey as keyof typeof crops] || { x: 0, y: 0, width: 10, height: 50 };
