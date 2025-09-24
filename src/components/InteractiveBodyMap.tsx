@@ -11,7 +11,6 @@ import useEmblaCarousel from 'embla-carousel-react';
 const muscleGroups = [
   { key: 'calves', name: 'Calves' },
   { key: 'glutes', name: 'Glutes' },
-  { key: 'hamstrings', name: 'Hamstrings' },
   { key: 'back', name: 'Back' },
   { key: 'forearms', name: 'Forearms' },
   { key: 'chest', name: 'Chest' },
@@ -95,12 +94,6 @@ function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
         { name: 'Lunges', sets: 3, reps: 12, weight: 30 },
         { name: 'Leg Extensions', sets: 3, reps: 12, weight: 60 }
       ],
-      hamstrings: [
-        { name: 'Romanian Deadlifts', sets: 3, reps: 10, weight: 115 },
-        { name: 'Leg Curls', sets: 3, reps: 12, weight: 50 },
-        { name: 'Stiff Leg Deadlifts', sets: 3, reps: 10, weight: 95 },
-        { name: 'Good Mornings', sets: 3, reps: 12, weight: 65 }
-      ],
       glutes: [
         { name: 'Hip Thrusts', sets: 3, reps: 12, weight: 135 },
         { name: 'Bulgarian Split Squats', sets: 3, reps: 10, weight: 25 },
@@ -156,7 +149,6 @@ function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
     const crops = {
       calves: { x: 0, y: 0, width: 10, height: 50 }, // Top left
       glutes: { x: 70, y: 0, width: 10, height: 50 }, // Top row 8th
-      hamstrings: { x: 40, y: 0, width: 10, height: 50 }, // Top row 5th 
       back: { x: 70, y: 0, width: 10, height: 50 }, // Top row 8th
       forearms: { x: 90, y: 0, width: 10, height: 50 }, // Top right
       chest: { x: 0, y: 50, width: 10, height: 50 }, // Bottom left
@@ -283,7 +275,6 @@ export function InteractiveBodyMap() {
           abs: ['crunch', 'plank', 'sit-up', 'ab', 'core', 'mountain'],
           back: ['pull', 'row', 'deadlift', 'lat'],
           quads: ['squat', 'lunge', 'leg press', 'quad'],
-          hamstrings: ['deadlift', 'curl', 'hamstring', 'romanian'],
           glutes: ['hip thrust', 'glute', 'bridge', 'bulgarian'],
           calves: ['calf', 'raise', 'jump']
         };
