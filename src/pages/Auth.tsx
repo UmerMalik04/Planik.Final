@@ -8,8 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { BiometricService } from '@/services/BiometricService';
-import { Mail, Lock, User, Calendar, Users, Chrome, Fingerprint, Phone } from 'lucide-react';
+import { Mail, Lock, User, Calendar, Users, Chrome, Phone } from 'lucide-react';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -154,18 +153,6 @@ export default function Auth() {
       }
 
       if (data.user) {
-        // Check if biometric is enabled and save credentials
-        try {
-          const isBiometricEnabled = await BiometricService.isBiometricEnabled();
-          if (isBiometricEnabled) {
-            await BiometricService.saveCredentials(
-              loginCredential,
-              loginForm.password
-            );
-          }
-        } catch (error) {
-          console.error('Failed to save credentials for biometric login:', error);
-        }
 
         toast({
           title: "Welcome back!",
@@ -187,54 +174,6 @@ export default function Auth() {
     }
   };
 
-  const handleBiometricLogin = async () => {
-    setLoading(true);
-    
-    try {
-      const result = await BiometricService.biometricLogin();
-      
-      if (!result.success) {
-        toast({
-          title: "Biometric Login Failed",
-          description: result.error,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (result.credentials) {
-        // Use the stored credentials to login
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: result.credentials.email,
-          password: result.credentials.password,
-        });
-
-        if (error) {
-          toast({
-            title: "Login Failed",
-            description: "Stored credentials are invalid. Please login manually and re-enable biometric login.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        toast({
-          title: "Biometric Login Successful!",
-          description: "Welcome back! You've been authenticated using biometrics.",
-        });
-
-        navigate('/');
-      }
-    } catch (error) {
-      toast({
-        title: "Biometric Login Failed",
-        description: "An unexpected error occurred during biometric login.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -661,30 +600,6 @@ export default function Auth() {
                         </Button>
                       </form>
 
-                      {/* Biometric Login Button */}
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-background px-2 text-muted-foreground">Or</span>
-                        </div>
-                      </div>
-
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleBiometricLogin}
-                        className="w-full"
-                        disabled={loading}
-                      >
-                        <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M12 1C5.925 1 1 5.925 1 12s4.925 11 11 11 11-4.925 11-11S18.075 1 12 1zm0 20c-4.963 0-9-4.037-9-9s4.037-9 9-9 9 4.037 9 9-4.037 9-9 9z"/>
-                          <path d="M12 6c-3.309 0-6 2.691-6 6s2.691 6 6 6 6-2.691 6-6-2.691-6-6-6zm0 10c-2.206 0-4-1.794-4-4s1.794-4 4-4 4 1.794 4 4-1.794 4-4 4z"/>
-                          <circle cx="12" cy="12" r="2"/>
-                        </svg>
-                        {loading ? 'Authenticating...' : 'Login with Face ID'}
-                      </Button>
 
                       {/* Forgot Password Link */}
                       <div className="text-center">
