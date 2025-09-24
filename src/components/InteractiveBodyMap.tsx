@@ -158,8 +158,19 @@ function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
       };
     }
     
+    // Special case for glutes - use dedicated image
+    if (muscleKey === 'glutes') {
+      return {
+        backgroundImage: `url(/assets/glutes.png)`,
+        backgroundPosition: 'center',
+        backgroundSize: 'contain',
+        width: '100%',
+        height: '200px',
+        backgroundRepeat: 'no-repeat'
+      };
+    }
+    
     const crops = {
-      glutes: { x: 70, y: 0, width: 10, height: 50 }, // Top row 8th
       back: { x: 70, y: 0, width: 10, height: 50 }, // Top row 8th
       forearms: { x: 90, y: 0, width: 10, height: 50 }, // Top right
       chest: { x: 0, y: 50, width: 10, height: 50 }, // Bottom left
