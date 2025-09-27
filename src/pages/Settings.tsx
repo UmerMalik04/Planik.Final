@@ -21,7 +21,7 @@ import {
   Palette, 
   Calendar,
   Lock,
-  Fingerprint,
+  
   Trash2,
   Cloud,
   Download,
@@ -34,9 +34,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { BiometricService } from '@/services/BiometricService';
 import { NotificationService } from '@/services/NotificationService';
-import BiometricSettings from '@/components/BiometricSettings';
 
 const languages = [
   { code: 'en', name: 'English' },
@@ -61,14 +59,12 @@ export default function Settings() {
   const [feedback, setFeedback] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [biometricEnabled, setBiometricEnabled] = useState(false);
-  const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [customReminderTime, setCustomReminderTime] = useState('19:00');
   const [notificationPermission, setNotificationPermission] = useState('default');
   const { toast } = useToast();
 
   useEffect(() => {
-    checkBiometricAvailability();
+    
     checkNotificationPermission();
     
     // Start reminder checker for web platform when component mounts
@@ -85,41 +81,9 @@ export default function Settings() {
     };
   }, [settings.notifications]);
 
-  const checkBiometricAvailability = async () => {
-    const result = await BiometricService.isAvailable();
-    setBiometricAvailable(result.isAvailable);
-    
-    // Check if biometric is already enabled
-    const saved = localStorage.getItem('biometric-enabled');
-    setBiometricEnabled(saved === 'true');
-  };
-
   const checkNotificationPermission = async () => {
     const permission = await NotificationService.getNotificationPermissionStatus();
     setNotificationPermission(permission);
-  };
-
-  const handleBiometricToggle = async (enabled: boolean) => {
-    if (enabled) {
-      const success = await BiometricService.promptForBiometricSetup();
-      if (success) {
-        setBiometricEnabled(true);
-        localStorage.setItem('biometric-enabled', 'true');
-        updateSetting('biometricLogin', true);
-        toast({
-          title: "Biometric Login Enabled",
-          description: "You can now use biometric authentication to login.",
-        });
-      }
-    } else {
-      setBiometricEnabled(false);
-      localStorage.setItem('biometric-enabled', 'false');
-      updateSetting('biometricLogin', false);
-      toast({
-        title: "Biometric Login Disabled",
-        description: "Biometric authentication has been turned off.",
-      });
-    }
   };
 
   const handleNotificationToggle = async (enabled: boolean) => {
@@ -555,31 +519,6 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Biometric Authentication */}
-        {biometricAvailable && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Fingerprint className="h-5 w-5" />
-                {getText('biometric_login')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>{getText('face_id_fingerprint')}</Label>
-                  <p className="text-sm text-muted-foreground">
-                    {getText('use_biometric_quick_login')}
-                  </p>
-                </div>
-                <Switch
-                  checked={biometricEnabled}
-                  onCheckedChange={handleBiometricToggle}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Security */}
         <Card>
