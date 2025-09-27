@@ -254,10 +254,11 @@ function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
       };
     }
     
-    const crops = {
+    const crops: Record<string, { x: number; y: number; width: number; height: number }> = {
+      // Other muscle groups can be added here if needed
     };
 
-    const crop = crops[muscleKey as keyof typeof crops] || { x: 0, y: 0, width: 10, height: 50 };
+    const crop = crops[muscleKey] || { x: 0, y: 0, width: 10, height: 50 };
     
     return {
       backgroundImage: `url(/lovable-uploads/bb665430-4ad6-4640-b01c-96cdd7a186be.png)`,
