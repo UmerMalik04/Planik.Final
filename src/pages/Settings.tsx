@@ -704,40 +704,6 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Feedback */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              {getText('send_feedback')}
-            </CardTitle>
-            <CardDescription>
-              {getText('help_improve_app')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Textarea
-              placeholder={getText('feedback_placeholder')}
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              rows={4}
-              maxLength={2000}
-              disabled={isSendingFeedback}
-            />
-            <div className="text-xs text-muted-foreground text-right">
-              {feedback.length}/2000
-            </div>
-            <Button 
-              onClick={handleFeedback} 
-              className="w-full"
-              disabled={isSendingFeedback}
-            >
-              <Mail className="h-4 w-4 mr-2" />
-              {isSendingFeedback ? 'Sending...' : getText('send_feedback')}
-            </Button>
-          </CardContent>
-        </Card>
-
         {/* App Info & Support */}
         <Card>
           <CardHeader>
