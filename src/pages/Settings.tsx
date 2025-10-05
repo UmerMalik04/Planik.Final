@@ -33,7 +33,8 @@ import {
   Bug,
   Mail,
   Info,
-  ArrowLeft
+  ArrowLeft,
+  Send
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { NotificationService } from '@/services/NotificationService';
@@ -67,6 +68,8 @@ export default function Settings() {
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
   const [supportDialogOpen, setSupportDialogOpen] = useState(false);
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
+  const [supportMessage, setSupportMessage] = useState("");
+  const [isSendingSupport, setIsSendingSupport] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -273,6 +276,47 @@ export default function Settings() {
       });
     } finally {
       setIsSendingFeedback(false);
+    }
+  };
+
+  const handleSupportMessage = async () => {
+    if (!supportMessage.trim()) {
+      toast({
+        title: "Empty Message",
+        description: "Please enter a message before sending.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSendingSupport(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const { error } = await supabase.functions.invoke("send-feedback", {
+        body: {
+          feedback: supportMessage,
+          userEmail: user?.email,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Message Sent",
+        description: "Your message has been sent to support successfully.",
+      });
+      setSupportMessage("");
+      setSupportDialogOpen(false);
+    } catch (error) {
+      console.error("Error sending support message:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingSupport(false);
     }
   };
 
@@ -839,47 +883,27 @@ export default function Settings() {
 
       {/* Contact Support Dialog */}
       <Dialog open={supportDialogOpen} onOpenChange={setSupportDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Contact Support</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Need help? We're here for you! Choose how you'd like to reach us:
-            </p>
-
-            <div className="space-y-3">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => {
-                  window.open('mailto:support@planik.com', '_blank');
-                  toast({
-                    title: "Opening Email",
-                    description: "Contact us at support@planik.com",
-                  });
-                }}
+          <div className="space-y-4 py-4">
+            <Textarea
+              placeholder="Type your message here..."
+              value={supportMessage}
+              onChange={(e) => setSupportMessage(e.target.value)}
+              className="min-h-[150px] resize-none"
+              disabled={isSendingSupport}
+            />
+            <div className="flex justify-end">
+              <Button
+                onClick={handleSupportMessage}
+                disabled={isSendingSupport || !supportMessage.trim()}
+                size="icon"
+                className="rounded-full"
               >
-                <Mail className="h-4 w-4 mr-2" />
-                Email: support@planik.com
+                <Send className="h-4 w-4" />
               </Button>
-
-              <div className="p-4 rounded-lg bg-muted">
-                <h4 className="font-semibold text-sm mb-2">Common Issues:</h4>
-                <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                  <li>Workout not saving? Check your internet connection</li>
-                  <li>Login issues? Try resetting your password</li>
-                  <li>Syncing problems? Enable cloud sync in settings</li>
-                  <li>Camera not working? Check app permissions</li>
-                </ul>
-              </div>
-
-              <div className="p-4 rounded-lg bg-muted">
-                <h4 className="font-semibold text-sm mb-2">Response Time:</h4>
-                <p className="text-sm text-muted-foreground">
-                  We typically respond within 24-48 hours during business days.
-                </p>
-              </div>
             </div>
           </div>
         </DialogContent>
