@@ -46,7 +46,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send({
       from: "Planik Feedback <onboarding@resend.dev>",
-      to: ["support@planik.com"],
+      to: ["u.malik3104@gmail.com"],
       replyTo: userEmail || undefined,
       subject: "New Feedback from Planik App",
       html: `
