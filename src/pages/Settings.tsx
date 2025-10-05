@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -65,6 +66,7 @@ export default function Settings() {
   const [termsDialogOpen, setTermsDialogOpen] = useState(false);
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
   const [supportDialogOpen, setSupportDialogOpen] = useState(false);
+  const [isSendingFeedback, setIsSendingFeedback] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -223,7 +225,7 @@ export default function Settings() {
     });
   };
 
-  const handleFeedback = () => {
+  const handleFeedback = async () => {
     if (!feedback.trim()) {
       toast({
         title: "Feedback Required",
@@ -233,16 +235,45 @@ export default function Settings() {
       return;
     }
 
-    // Mock sending feedback
-    const subject = encodeURIComponent('Planik App Feedback');
-    const body = encodeURIComponent(feedback);
-    window.open(`mailto:developers@planik.com?subject=${subject}&body=${body}`);
-    
-    setFeedback('');
-    toast({
-      title: "Feedback Sent",
-      description: "Thank you for your feedback! We'll get back to you soon.",
-    });
+    if (feedback.length > 2000) {
+      toast({
+        title: "Feedback Too Long",
+        description: "Please keep your feedback under 2000 characters.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSendingFeedback(true);
+
+    try {
+      // Get current user's email if available
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const { error } = await supabase.functions.invoke('send-feedback', {
+        body: {
+          feedback: feedback.trim(),
+          userEmail: user?.email,
+        },
+      });
+
+      if (error) throw error;
+
+      setFeedback('');
+      toast({
+        title: "Feedback Sent!",
+        description: "Thank you for your feedback! We'll review it shortly.",
+      });
+    } catch (error) {
+      console.error('Error sending feedback:', error);
+      toast({
+        title: "Failed to Send",
+        description: "There was an error sending your feedback. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingFeedback(false);
+    }
   };
 
   const handleExportData = (format: 'csv' | 'pdf') => {
@@ -646,10 +677,19 @@ export default function Settings() {
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
               rows={4}
+              maxLength={2000}
+              disabled={isSendingFeedback}
             />
-            <Button onClick={handleFeedback} className="w-full">
+            <div className="text-xs text-muted-foreground text-right">
+              {feedback.length}/2000
+            </div>
+            <Button 
+              onClick={handleFeedback} 
+              className="w-full"
+              disabled={isSendingFeedback}
+            >
               <Mail className="h-4 w-4 mr-2" />
-              {getText('send_feedback')}
+              {isSendingFeedback ? 'Sending...' : getText('send_feedback')}
             </Button>
           </CardContent>
         </Card>
