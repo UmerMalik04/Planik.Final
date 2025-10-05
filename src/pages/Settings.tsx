@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { 
@@ -61,6 +62,9 @@ export default function Settings() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [customReminderTime, setCustomReminderTime] = useState('19:00');
   const [notificationPermission, setNotificationPermission] = useState('default');
+  const [termsDialogOpen, setTermsDialogOpen] = useState(false);
+  const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
+  const [supportDialogOpen, setSupportDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -670,14 +674,7 @@ export default function Settings() {
               <Button 
                 variant="ghost" 
                 className="w-full justify-start text-foreground hover:bg-accent"
-                onClick={() => {
-                  const url = 'https://planik.com/terms';
-                  window.open(url, '_blank');
-                  toast({
-                    title: "Opening Terms of Service",
-                    description: "Redirecting to our terms page...",
-                  });
-                }}
+                onClick={() => setTermsDialogOpen(true)}
               >
                 <Shield className="h-4 w-4 mr-2" />
                 {getText('terms_service')}
@@ -685,14 +682,7 @@ export default function Settings() {
               <Button 
                 variant="ghost" 
                 className="w-full justify-start text-foreground hover:bg-accent"
-                onClick={() => {
-                  const url = 'https://planik.com/privacy';
-                  window.open(url, '_blank');
-                  toast({
-                    title: "Opening Privacy Policy",
-                    description: "Redirecting to our privacy page...",
-                  });
-                }}
+                onClick={() => setPrivacyDialogOpen(true)}
               >
                 <Shield className="h-4 w-4 mr-2" />
                 {getText('privacy_policy')}
@@ -700,41 +690,160 @@ export default function Settings() {
               <Button 
                 variant="ghost" 
                 className="w-full justify-start text-foreground hover:bg-accent"
-                onClick={() => {
-                  const email = 'support@planik.com';
-                  const subject = 'Support Request';
-                  const body = 'Hello, I need help with...';
-                  window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
-                  toast({
-                    title: "Opening Email Client",
-                    description: "Creating support email...",
-                  });
-                }}
+                onClick={() => setSupportDialogOpen(true)}
               >
                 <HelpCircle className="h-4 w-4 mr-2" />
                 {getText('contact_support')}
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-foreground hover:bg-accent"
-                onClick={() => {
-                  const email = 'bugs@planik.com';
-                  const subject = 'Bug Report';
-                  const body = 'Bug Description:\n\nSteps to Reproduce:\n1. \n2. \n3. \n\nExpected Result:\n\nActual Result:\n\nDevice/Browser Info:\n';
-                  window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
-                  toast({
-                    title: "Opening Email Client",
-                    description: "Creating bug report email...",
-                  });
-                }}
-              >
-                <Bug className="h-4 w-4 mr-2" />
-                {getText('report_bug')}
               </Button>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Terms of Service Dialog */}
+      <Dialog open={termsDialogOpen} onOpenChange={setTermsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Terms of Service</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <section>
+              <h3 className="font-semibold mb-2">1. Acceptance of Terms</h3>
+              <p className="text-muted-foreground">
+                By accessing and using Planik Fitness App, you accept and agree to be bound by the terms and provision of this agreement.
+              </p>
+            </section>
+            
+            <section>
+              <h3 className="font-semibold mb-2">2. Use License</h3>
+              <p className="text-muted-foreground">
+                Permission is granted to temporarily use Planik for personal, non-commercial fitness tracking purposes. This license shall automatically terminate if you violate any of these restrictions.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-2">3. User Account</h3>
+              <p className="text-muted-foreground">
+                You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-2">4. Health Disclaimer</h3>
+              <p className="text-muted-foreground">
+                Planik provides fitness tracking and guidance. Always consult with a healthcare professional before beginning any exercise program. We are not liable for any injuries or health issues.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-2">5. Modifications</h3>
+              <p className="text-muted-foreground">
+                We reserve the right to modify these terms at any time. Continued use of the app constitutes acceptance of modified terms.
+              </p>
+            </section>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Privacy Policy Dialog */}
+      <Dialog open={privacyDialogOpen} onOpenChange={setPrivacyDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Privacy Policy</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <section>
+              <h3 className="font-semibold mb-2">1. Information We Collect</h3>
+              <p className="text-muted-foreground">
+                We collect information you provide directly, including your name, email, workout data, nutrition logs, progress photos, and health metrics.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-2">2. How We Use Your Information</h3>
+              <p className="text-muted-foreground">
+                Your data is used to provide personalized workout recommendations, track your fitness progress, and improve our services. We never sell your personal information.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-2">3. Data Storage & Security</h3>
+              <p className="text-muted-foreground">
+                All data is encrypted and stored securely using industry-standard protocols. We implement appropriate technical and organizational measures to protect your information.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-2">4. Third-Party Services</h3>
+              <p className="text-muted-foreground">
+                We may use third-party services for authentication (Google OAuth) and analytics. These services have their own privacy policies.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-2">5. Your Rights</h3>
+              <p className="text-muted-foreground">
+                You have the right to access, modify, or delete your personal data at any time. You can export your data or request account deletion from the settings.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-2">6. Contact Us</h3>
+              <p className="text-muted-foreground">
+                For privacy concerns or questions, contact us at privacy@planik.com
+              </p>
+            </section>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Contact Support Dialog */}
+      <Dialog open={supportDialogOpen} onOpenChange={setSupportDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Contact Support</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Need help? We're here for you! Choose how you'd like to reach us:
+            </p>
+
+            <div className="space-y-3">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => {
+                  window.open('mailto:support@planik.com', '_blank');
+                  toast({
+                    title: "Opening Email",
+                    description: "Contact us at support@planik.com",
+                  });
+                }}
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Email: support@planik.com
+              </Button>
+
+              <div className="p-4 rounded-lg bg-muted">
+                <h4 className="font-semibold text-sm mb-2">Common Issues:</h4>
+                <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>Workout not saving? Check your internet connection</li>
+                  <li>Login issues? Try resetting your password</li>
+                  <li>Syncing problems? Enable cloud sync in settings</li>
+                  <li>Camera not working? Check app permissions</li>
+                </ul>
+              </div>
+
+              <div className="p-4 rounded-lg bg-muted">
+                <h4 className="font-semibold text-sm mb-2">Response Time:</h4>
+                <p className="text-sm text-muted-foreground">
+                  We typically respond within 24-48 hours during business days.
+                </p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
