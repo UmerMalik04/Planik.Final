@@ -644,65 +644,6 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Backup & Sync */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Cloud className="h-5 w-5" />
-              {getText('backup_sync')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Auto Sync */}
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>{getText('auto_sync')}</Label>
-                <p className="text-sm text-muted-foreground">
-                  {getText('automatically_sync_data')}
-                </p>
-              </div>
-              <Switch
-                checked={settings.autoSync}
-                onCheckedChange={(value) => updateSetting('autoSync', value)}
-              />
-            </div>
-
-            <Separator />
-
-            {/* Manual Sync */}
-            <Button 
-              variant="outline" 
-              className="w-full justify-start"
-              onClick={() => toast({ title: "Sync Complete", description: "Your data has been synced successfully." })}
-            >
-              <Cloud className="h-4 w-4 mr-2" />
-              {getText('manual_sync_now')}
-            </Button>
-
-            {/* Export Data */}
-            <div className="space-y-2">
-              <Label>{getText('export_data')}</Label>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => handleExportData('csv')}
-                  className="flex-1"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  CSV
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => handleExportData('pdf')}
-                  className="flex-1"
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  PDF
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* App Info & Support */}
         <Card>
