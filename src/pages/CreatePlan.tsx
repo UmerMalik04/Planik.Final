@@ -14,14 +14,14 @@ export default function CreatePlan() {
   const { addWorkoutPlan } = useWorkoutStore();
 
   const [planName, setPlanName] = useState(`My ${workoutType} Plan`);
-  const [sets, setSets] = useState(3);
+  const [sets, setSets] = useState("");
 
   const handleCreatePlan = () => {
     const newPlan = {
       name: planName,
       type: workoutType as "Push" | "Pull" | "Leg" | "Arm",
       exercises: [],
-      sets: sets
+      sets: Number(sets) || 3
     };
 
     addWorkoutPlan(newPlan);
@@ -77,9 +77,10 @@ export default function CreatePlan() {
               id="sets"
               type="number"
               value={sets}
-              onChange={(e) => setSets(Number(e.target.value))}
+              onChange={(e) => setSets(e.target.value)}
               min="1"
               max="10"
+              placeholder="Enter number of sets"
               className="mt-1"
             />
           </div>
@@ -91,7 +92,7 @@ export default function CreatePlan() {
         <Button
           onClick={handleCreatePlan}
           className="w-full h-12 text-lg"
-          disabled={!planName.trim()}
+          disabled={!planName.trim() || !sets}
         >
           <Plus className="w-5 h-5 mr-2" />
           Create Plan & Add Exercises
