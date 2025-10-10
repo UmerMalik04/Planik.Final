@@ -20,19 +20,37 @@ export class FoodRecognitionService {
   }
 
   static async recognizeFood(imageFile: File): Promise<FoodItem> {
-    console.log('Starting food recognition with image analysis...');
-    
-    const apiKey = await this.getApiKey();
-    if (apiKey) {
-      try {
-        return await this.recognizeWithSpoonacular(imageFile, apiKey);
-      } catch (error) {
-        console.warn('Spoonacular failed, using visual analysis:', error);
-      }
-    }
+    try {
+      console.log('Starting food recognition with AI...');
+      
+      // Convert image to base64
+      const base64Image = await this.fileToBase64(imageFile);
+      
+      // Call the edge function for AI recognition
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      
+      const response = await fetch(`${supabaseUrl}/functions/v1/recognize-food`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+        body: JSON.stringify({ imageBase64: base64Image }),
+      });
 
-    // Use visual analysis as primary method
-    return await this.analyzeImageVisually(imageFile);
+      if (!response.ok) {
+        throw new Error(`Recognition failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('AI recognition result:', result);
+      
+      return result.fallback || result;
+    } catch (error) {
+      console.error('Error recognizing food:', error);
+      return this.getFallbackFood();
+    }
   }
 
   static async recognizeWithSpoonacular(imageFile: File, apiKey: string): Promise<FoodItem> {
