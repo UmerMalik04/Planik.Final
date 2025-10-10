@@ -1,9 +1,13 @@
+import { useEffect } from 'react';
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AuthGuard from "@/components/AuthGuard";
+import { useWorkoutStore } from "./stores/useWorkoutStore";
+import { useDietStore } from "./stores/useDietStore";
+import { supabase } from "./integrations/supabase/client";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import CreatePlan from "./pages/CreatePlan";
@@ -26,12 +30,41 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+function DataInitializer() {
+  const initWorkout = useWorkoutStore(state => state.initializeUserData);
+  const initDiet = useDietStore(state => state.initializeDietData);
+
+  useEffect(() => {
+    const initData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await Promise.all([initWorkout(), initDiet()]);
+      }
+    };
+
+    initData();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        setTimeout(() => {
+          initData();
+        }, 0);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [initWorkout, initDiet]);
+
+  return null;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <DataInitializer />
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
