@@ -6,6 +6,7 @@ import { useWorkoutStore } from "@/stores/useWorkoutStore";
 import { Plus, Minus, TrendingUp, TrendingDown, Utensils, Activity } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
+import { HealthService } from "@/services/HealthService";
 import muscularBodyDiagram from "@/assets/muscular-body-diagram.png";
 
 
@@ -30,41 +31,62 @@ export default function Home() {
   const [customWorkoutName, setCustomWorkoutName] = useState("");
   const [steps, setSteps] = useState(0);
   const [stepGoal] = useState(10000);
+  const [permissionGranted, setPermissionGranted] = useState(false);
 
   useEffect(() => {
     calculateProgress();
+    initializeStepCounter();
+  }, [workoutSessions]);
+
+  const initializeStepCounter = async () => {
+    // Request permissions for native step counter
+    const granted = await HealthService.requestPermissions();
+    setPermissionGranted(granted);
     
-    // Load steps from localStorage
-    const savedSteps = localStorage.getItem('daily-steps');
-    const today = new Date().toDateString();
-    const savedStepsData = savedSteps ? JSON.parse(savedSteps) : {};
-    
-    if (savedStepsData.date === today) {
-      setSteps(savedStepsData.steps || 0);
+    if (granted) {
+      // Get today's steps from native plugin
+      const todaySteps = await HealthService.getStepsToday();
+      setSteps(todaySteps);
+      
+      // Update steps every minute
+      const stepInterval = setInterval(async () => {
+        const currentSteps = await HealthService.getStepsToday();
+        setSteps(currentSteps);
+      }, 60000); // Update every 60 seconds
+      
+      return () => clearInterval(stepInterval);
     } else {
-      // New day, reset steps
-      setSteps(0);
-      localStorage.setItem('daily-steps', JSON.stringify({
-        date: today,
-        steps: 0
-      }));
-    }
-    
-    // Simulate step counting (in a real app, this would come from device sensors)
-    const stepInterval = setInterval(() => {
-      setSteps(prev => {
-        const newSteps = prev + Math.floor(Math.random() * 3); // Random steps simulation
-        const today = new Date().toDateString();
+      // Fallback to simulated steps for web/demo
+      const savedSteps = localStorage.getItem('daily-steps');
+      const today = new Date().toDateString();
+      const savedStepsData = savedSteps ? JSON.parse(savedSteps) : {};
+      
+      if (savedStepsData.date === today) {
+        setSteps(savedStepsData.steps || 0);
+      } else {
+        setSteps(0);
         localStorage.setItem('daily-steps', JSON.stringify({
           date: today,
-          steps: newSteps
+          steps: 0
         }));
-        return newSteps;
-      });
-    }, 30000); // Update every 30 seconds
-    
-    return () => clearInterval(stepInterval);
-  }, [workoutSessions]);
+      }
+      
+      // Simulate step counting for demo
+      const stepInterval = setInterval(() => {
+        setSteps(prev => {
+          const newSteps = prev + Math.floor(Math.random() * 3);
+          const today = new Date().toDateString();
+          localStorage.setItem('daily-steps', JSON.stringify({
+            date: today,
+            steps: newSteps
+          }));
+          return newSteps;
+        });
+      }, 30000);
+      
+      return () => clearInterval(stepInterval);
+    }
+  };
 
   const getWorkoutSummary = () => {
     const oneMonthAgo = new Date();
