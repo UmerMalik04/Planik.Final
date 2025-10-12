@@ -8,8 +8,8 @@ import { useState, useEffect } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useDietStore } from "@/stores/useDietStore";
 import { HealthService } from "@/services/HealthService";
+import GoalProgress from "@/components/GoalProgress";
 import { WaterTracker } from "@/components/WaterTracker";
-import { FitnessGoalsWidget } from "@/components/FitnessGoalsWidget";
 import { DraggableWidget } from "@/components/DraggableWidget";
 import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -43,20 +43,11 @@ export default function Home() {
   const [widgetOrder, setWidgetOrder] = useState<string[]>([
     'stats',
     'steps',
-    'fitness-goals',
+    'goals',
     'water',
     'workouts',
     'diet'
   ]);
-  
-  const widgetNames: Record<string, string> = {
-    'stats': 'Stats',
-    'steps': 'Daily Steps',
-    'fitness-goals': 'Fitness Goals',
-    'water': 'Water Tracker',
-    'workouts': 'Workouts',
-    'diet': 'Diet Tracker'
-  };
   const [hiddenWidgets, setHiddenWidgets] = useState<string[]>([]);
 
   useEffect(() => {
@@ -69,13 +60,10 @@ export default function Home() {
       setWidgetOrder(JSON.parse(savedOrder));
     }
 
-    // Load hidden widgets and ensure fitness-goals is visible
+    // Load hidden widgets
     const savedHidden = localStorage.getItem('homepage-hidden-widgets');
     if (savedHidden) {
-      const hidden = JSON.parse(savedHidden);
-      const filteredHidden = hidden.filter((id: string) => id !== 'fitness-goals');
-      setHiddenWidgets(filteredHidden);
-      localStorage.setItem('homepage-hidden-widgets', JSON.stringify(filteredHidden));
+      setHiddenWidgets(JSON.parse(savedHidden));
     }
   }, [workoutSessions]);
 
@@ -315,8 +303,8 @@ export default function Home() {
         </CardContent>
       </Card>
     ),
-    'fitness-goals': (
-      <FitnessGoalsWidget 
+    goals: (
+      <GoalProgress 
         workoutSessionsThisWeek={getWorkoutSessionsThisWeek()}
         totalCaloriesToday={getTodayNutrition().totalCalories}
         totalProteinToday={getTodayNutrition().totalProtein}
@@ -442,16 +430,21 @@ export default function Home() {
           <p className="text-sm sm:text-base text-muted-foreground mt-1">{getText('gym_companion')}</p>
         </div>
         <Button
-          variant={isEditMode ? "default" : "ghost"}
-          size="icon"
+          variant={isEditMode ? "default" : "outline"}
+          size="sm"
           onClick={() => setIsEditMode(!isEditMode)}
-          className="shrink-0"
-          title={isEditMode ? "Done editing" : "Edit Layout"}
+          className="flex items-center gap-2 shrink-0"
         >
           {isEditMode ? (
-            <Check className="w-4 h-4" />
+            <>
+              <Check className="w-4 h-4" />
+              Done
+            </>
           ) : (
-            <Edit3 className="w-4 h-4" />
+            <>
+              <Edit3 className="w-4 h-4" />
+              Edit Layout
+            </>
           )}
         </Button>
       </div>
@@ -465,7 +458,7 @@ export default function Home() {
 
           {availableWidgets.length > 0 && (
             <div className="bg-muted/50 border border-muted rounded-lg p-3">
-              <p className="text-sm font-medium mb-2">Add Widgets</p>
+              <p className="text-sm font-medium mb-2">Hidden Widgets</p>
               <div className="flex flex-wrap gap-2">
                 {availableWidgets.map(widgetId => (
                   <Button
@@ -476,7 +469,7 @@ export default function Home() {
                     className="text-xs"
                   >
                     <Plus className="w-3 h-3 mr-1" />
-                    {widgetNames[widgetId] || widgetId}
+                    Show {widgetId}
                   </Button>
                 ))}
               </div>
