@@ -186,6 +186,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_goals: {
+        Row: {
+          created_at: string
+          daily_calorie_target: number | null
+          daily_protein_target: number | null
+          id: string
+          start_date: string
+          target_date: string | null
+          target_weight: number | null
+          updated_at: string
+          user_id: string
+          weekly_workout_frequency: number | null
+        }
+        Insert: {
+          created_at?: string
+          daily_calorie_target?: number | null
+          daily_protein_target?: number | null
+          id?: string
+          start_date?: string
+          target_date?: string | null
+          target_weight?: number | null
+          updated_at?: string
+          user_id: string
+          weekly_workout_frequency?: number | null
+        }
+        Update: {
+          created_at?: string
+          daily_calorie_target?: number | null
+          daily_protein_target?: number | null
+          id?: string
+          start_date?: string
+          target_date?: string | null
+          target_weight?: number | null
+          updated_at?: string
+          user_id?: string
+          weekly_workout_frequency?: number | null
+        }
+        Relationships: []
+      }
       user_stats: {
         Row: {
           current_streak: number | null

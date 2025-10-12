@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { NotificationService } from '@/services/NotificationService';
+import GoalsSettings from '@/components/GoalsSettings';
 
 const languages = [
   { code: 'en', name: 'English' },
@@ -598,6 +599,8 @@ export default function Settings() {
           </CardContent>
         </Card>
 
+        {/* Goals Settings */}
+        <GoalsSettings />
 
         {/* Security */}
         <Card>

@@ -6,13 +6,16 @@ import { useWorkoutStore } from "@/stores/useWorkoutStore";
 import { Plus, Minus, TrendingUp, TrendingDown, Utensils, Activity } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useDietStore } from "@/stores/useDietStore";
 import { HealthService } from "@/services/HealthService";
+import GoalProgress from "@/components/GoalProgress";
 import muscularBodyDiagram from "@/assets/muscular-body-diagram.png";
 
 
 export default function Home() {
   const navigate = useNavigate();
   const { getText } = useSettings();
+  const { getDailyNutrition } = useDietStore();
   const { 
     workoutPlans, 
     workoutSessions, 
@@ -86,6 +89,22 @@ export default function Home() {
       
       return () => clearInterval(stepInterval);
     }
+  };
+
+  const getWorkoutSessionsThisWeek = () => {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay()); // Sunday
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    return workoutSessions.filter(session => 
+      new Date(session.date) >= startOfWeek
+    ).length;
+  };
+
+  const getTodayNutrition = () => {
+    const today = new Date().toISOString().split('T')[0];
+    return getDailyNutrition(today);
   };
 
   const getWorkoutSummary = () => {
@@ -237,6 +256,12 @@ export default function Home() {
         </CardContent>
       </Card>
 
+      {/* Goals Progress */}
+      <GoalProgress 
+        workoutSessionsThisWeek={getWorkoutSessionsThisWeek()}
+        totalCaloriesToday={getTodayNutrition().totalCalories}
+        totalProteinToday={getTodayNutrition().totalProtein}
+      />
 
       {/* Workout Type Buttons */}
       <div className="space-y-4">
