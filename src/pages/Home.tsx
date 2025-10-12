@@ -9,6 +9,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useDietStore } from "@/stores/useDietStore";
 import { HealthService } from "@/services/HealthService";
 import GoalProgress from "@/components/GoalProgress";
+import { WaterTracker } from "@/components/WaterTracker";
 import muscularBodyDiagram from "@/assets/muscular-body-diagram.png";
 
 
@@ -262,6 +263,9 @@ export default function Home() {
         totalCaloriesToday={getTodayNutrition().totalCalories}
         totalProteinToday={getTodayNutrition().totalProtein}
       />
+
+      {/* Water Tracker */}
+      <WaterTracker />
 
       {/* Workout Type Buttons */}
       <div className="space-y-4">

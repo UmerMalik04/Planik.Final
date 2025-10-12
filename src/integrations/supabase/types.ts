@@ -191,6 +191,7 @@ export type Database = {
           created_at: string
           daily_calorie_target: number | null
           daily_protein_target: number | null
+          daily_water_target: number | null
           id: string
           start_date: string
           target_date: string | null
@@ -203,6 +204,7 @@ export type Database = {
           created_at?: string
           daily_calorie_target?: number | null
           daily_protein_target?: number | null
+          daily_water_target?: number | null
           id?: string
           start_date?: string
           target_date?: string | null
@@ -215,6 +217,7 @@ export type Database = {
           created_at?: string
           daily_calorie_target?: number | null
           daily_protein_target?: number | null
+          daily_water_target?: number | null
           id?: string
           start_date?: string
           target_date?: string | null
@@ -248,6 +251,30 @@ export type Database = {
           last_workout_date?: string | null
           progress_kg?: number | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      water_intake: {
+        Row: {
+          amount_ml: number
+          created_at: string
+          date: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          amount_ml: number
+          created_at?: string
+          date?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          amount_ml?: number
+          created_at?: string
+          date?: string
+          id?: string
           user_id?: string
         }
         Relationships: []

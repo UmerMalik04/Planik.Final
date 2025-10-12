@@ -13,6 +13,7 @@ interface UserGoals {
   weekly_workout_frequency?: number;
   daily_calorie_target?: number;
   daily_protein_target?: number;
+  daily_water_target?: number;
   target_date?: string;
 }
 
@@ -24,6 +25,7 @@ export default function GoalsSettings() {
     weekly_workout_frequency: 4,
     daily_calorie_target: 2000,
     daily_protein_target: 150,
+    daily_water_target: 2000,
     target_date: '',
   });
 
@@ -51,6 +53,7 @@ export default function GoalsSettings() {
           weekly_workout_frequency: data.weekly_workout_frequency,
           daily_calorie_target: data.daily_calorie_target,
           daily_protein_target: data.daily_protein_target,
+          daily_water_target: data.daily_water_target,
           target_date: data.target_date || '',
         });
       }
@@ -71,6 +74,7 @@ export default function GoalsSettings() {
         weekly_workout_frequency: goals.weekly_workout_frequency || null,
         daily_calorie_target: goals.daily_calorie_target || null,
         daily_protein_target: goals.daily_protein_target || null,
+        daily_water_target: goals.daily_water_target || null,
         target_date: goals.target_date || null,
       };
 
@@ -180,6 +184,21 @@ export default function GoalsSettings() {
             placeholder="e.g., 150"
             value={goals.daily_protein_target || ''}
             onChange={(e) => setGoals({ ...goals, daily_protein_target: parseFloat(e.target.value) || undefined })}
+          />
+        </div>
+
+        {/* Daily Water Target */}
+        <div className="space-y-2">
+          <Label htmlFor="water-target" className="flex items-center gap-2">
+            <Utensils className="w-4 h-4 text-primary" />
+            Daily Water Target (ml)
+          </Label>
+          <Input
+            id="water-target"
+            type="number"
+            placeholder="e.g., 2000"
+            value={goals.daily_water_target || ''}
+            onChange={(e) => setGoals({ ...goals, daily_water_target: parseInt(e.target.value) || undefined })}
           />
         </div>
 
