@@ -69,10 +69,13 @@ export default function Home() {
       setWidgetOrder(JSON.parse(savedOrder));
     }
 
-    // Load hidden widgets
+    // Load hidden widgets and ensure fitness-goals is visible
     const savedHidden = localStorage.getItem('homepage-hidden-widgets');
     if (savedHidden) {
-      setHiddenWidgets(JSON.parse(savedHidden));
+      const hidden = JSON.parse(savedHidden);
+      const filteredHidden = hidden.filter((id: string) => id !== 'fitness-goals');
+      setHiddenWidgets(filteredHidden);
+      localStorage.setItem('homepage-hidden-widgets', JSON.stringify(filteredHidden));
     }
   }, [workoutSessions]);
 
