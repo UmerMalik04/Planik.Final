@@ -9,9 +9,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useDietStore } from "@/stores/useDietStore";
 import { HealthService } from "@/services/HealthService";
 import { WaterTracker } from "@/components/WaterTracker";
-import { WeeklyWorkoutsWidget } from "@/components/WeeklyWorkoutsWidget";
-import { DailyCaloriesWidget } from "@/components/DailyCaloriesWidget";
-import { DailyProteinWidget } from "@/components/DailyProteinWidget";
+import { FitnessGoalsWidget } from "@/components/FitnessGoalsWidget";
 import { DraggableWidget } from "@/components/DraggableWidget";
 import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -45,9 +43,7 @@ export default function Home() {
   const [widgetOrder, setWidgetOrder] = useState<string[]>([
     'stats',
     'steps',
-    'weekly-workouts',
-    'daily-calories',
-    'daily-protein',
+    'fitness-goals',
     'water',
     'workouts',
     'diet'
@@ -307,9 +303,13 @@ export default function Home() {
         </CardContent>
       </Card>
     ),
-    'weekly-workouts': <WeeklyWorkoutsWidget workoutSessionsThisWeek={getWorkoutSessionsThisWeek()} />,
-    'daily-calories': <DailyCaloriesWidget totalCaloriesToday={getTodayNutrition().totalCalories} />,
-    'daily-protein': <DailyProteinWidget totalProteinToday={getTodayNutrition().totalProtein} />,
+    'fitness-goals': (
+      <FitnessGoalsWidget 
+        workoutSessionsThisWeek={getWorkoutSessionsThisWeek()}
+        totalCaloriesToday={getTodayNutrition().totalCalories}
+        totalProteinToday={getTodayNutrition().totalProtein}
+      />
+    ),
     water: <WaterTracker />,
     workouts: (
       <div className="space-y-4">
