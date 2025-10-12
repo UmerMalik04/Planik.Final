@@ -431,20 +431,14 @@ export default function Home() {
         </div>
         <Button
           variant={isEditMode ? "default" : "outline"}
-          size="sm"
+          size="icon"
           onClick={() => setIsEditMode(!isEditMode)}
-          className="flex items-center gap-2 shrink-0"
+          className="shrink-0"
         >
           {isEditMode ? (
-            <>
-              <Check className="w-4 h-4" />
-              Done
-            </>
+            <Check className="w-4 h-4" />
           ) : (
-            <>
-              <Edit3 className="w-4 h-4" />
-              Edit Layout
-            </>
+            <Edit3 className="w-4 h-4" />
           )}
         </Button>
       </div>
