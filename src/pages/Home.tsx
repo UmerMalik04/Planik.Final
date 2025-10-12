@@ -8,8 +8,10 @@ import { useState, useEffect } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useDietStore } from "@/stores/useDietStore";
 import { HealthService } from "@/services/HealthService";
-import GoalProgress from "@/components/GoalProgress";
 import { WaterTracker } from "@/components/WaterTracker";
+import { WeeklyWorkoutsWidget } from "@/components/WeeklyWorkoutsWidget";
+import { DailyCaloriesWidget } from "@/components/DailyCaloriesWidget";
+import { DailyProteinWidget } from "@/components/DailyProteinWidget";
 import { DraggableWidget } from "@/components/DraggableWidget";
 import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -43,7 +45,9 @@ export default function Home() {
   const [widgetOrder, setWidgetOrder] = useState<string[]>([
     'stats',
     'steps',
-    'goals',
+    'weekly-workouts',
+    'daily-calories',
+    'daily-protein',
     'water',
     'workouts',
     'diet'
@@ -303,13 +307,9 @@ export default function Home() {
         </CardContent>
       </Card>
     ),
-    goals: (
-      <GoalProgress 
-        workoutSessionsThisWeek={getWorkoutSessionsThisWeek()}
-        totalCaloriesToday={getTodayNutrition().totalCalories}
-        totalProteinToday={getTodayNutrition().totalProtein}
-      />
-    ),
+    'weekly-workouts': <WeeklyWorkoutsWidget workoutSessionsThisWeek={getWorkoutSessionsThisWeek()} />,
+    'daily-calories': <DailyCaloriesWidget totalCaloriesToday={getTodayNutrition().totalCalories} />,
+    'daily-protein': <DailyProteinWidget totalProteinToday={getTodayNutrition().totalProtein} />,
     water: <WaterTracker />,
     workouts: (
       <div className="space-y-4">
@@ -430,21 +430,16 @@ export default function Home() {
           <p className="text-sm sm:text-base text-muted-foreground mt-1">{getText('gym_companion')}</p>
         </div>
         <Button
-          variant={isEditMode ? "default" : "outline"}
-          size="sm"
+          variant={isEditMode ? "default" : "ghost"}
+          size="icon"
           onClick={() => setIsEditMode(!isEditMode)}
-          className="flex items-center gap-2 shrink-0"
+          className="shrink-0"
+          title={isEditMode ? "Done editing" : "Edit Layout"}
         >
           {isEditMode ? (
-            <>
-              <Check className="w-4 h-4" />
-              Done
-            </>
+            <Check className="w-4 h-4" />
           ) : (
-            <>
-              <Edit3 className="w-4 h-4" />
-              Edit Layout
-            </>
+            <Edit3 className="w-4 h-4" />
           )}
         </Button>
       </div>
