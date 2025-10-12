@@ -95,7 +95,7 @@ export default function ExerciseDetail() {
   };
 
   return (
-    <div className="min-h-screen p-6 space-y-6 pb-24">
+    <div className="min-h-screen p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button
@@ -160,16 +160,6 @@ export default function ExerciseDetail() {
         </CardContent>
       </Card>
 
-      {/* Add to Workout Button */}
-      <div className="fixed bottom-6 left-6 right-6 z-10">
-        <Button 
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-          size="lg"
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Add to Workout
-        </Button>
-      </div>
     </div>
   );
 }
