@@ -398,7 +398,6 @@ export default function Home() {
       </Card>
     )
   };
-  };
 
   return (
     <div className="min-h-screen p-6 space-y-6">
