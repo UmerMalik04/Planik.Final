@@ -79,29 +79,29 @@ export const WaterTracker = () => {
   const percentage = Math.min(Math.round((todayIntake / dailyGoal) * 100), 100);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Droplets className="h-5 w-5 text-blue-500" />
+    <Card className="border-2 border-[hsl(var(--widget-border))]">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Droplets className="h-4 w-4 text-blue-500" />
           Water Intake
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
+      <CardContent className="space-y-3">
+        <div className="space-y-1.5">
+          <div className="flex justify-between text-xs">
             <span className="text-muted-foreground">Today's Progress</span>
             <span className="font-medium">{todayIntake}ml / {dailyGoal}ml</span>
           </div>
-          <Progress value={percentage} className="h-2" />
-          <p className="text-xs text-muted-foreground text-center">{percentage}% of daily goal</p>
+          <Progress value={percentage} className="h-1.5" />
+          <p className="text-xs text-muted-foreground text-center">{percentage}%</p>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-1.5">
           <Button
             variant="outline"
             size="sm"
             onClick={() => addWater(250)}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 h-8 text-xs px-2"
           >
             <Plus className="h-3 w-3" />
             250ml
@@ -110,7 +110,7 @@ export const WaterTracker = () => {
             variant="outline"
             size="sm"
             onClick={() => addWater(500)}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 h-8 text-xs px-2"
           >
             <Plus className="h-3 w-3" />
             500ml
@@ -119,7 +119,7 @@ export const WaterTracker = () => {
             variant="outline"
             size="sm"
             onClick={() => addWater(750)}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 h-8 text-xs px-2"
           >
             <Plus className="h-3 w-3" />
             750ml
