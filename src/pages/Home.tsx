@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useDietStore } from "@/stores/useDietStore";
 import { HealthService } from "@/services/HealthService";
-import GoalProgress from "@/components/GoalProgress";
+import FitnessGoalsWidget from "@/components/FitnessGoalsWidget";
 import { WaterTracker } from "@/components/WaterTracker";
 import { DraggableWidget } from "@/components/DraggableWidget";
 import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
@@ -304,7 +304,7 @@ export default function Home() {
       </Card>
     ),
     goals: (
-      <GoalProgress 
+      <FitnessGoalsWidget 
         workoutSessionsThisWeek={getWorkoutSessionsThisWeek()}
         totalCaloriesToday={getTodayNutrition().totalCalories}
         totalProteinToday={getTodayNutrition().totalProtein}
