@@ -48,6 +48,7 @@ export default function Home() {
     'workouts',
     'diet'
   ]);
+  const [hiddenWidgets, setHiddenWidgets] = useState<string[]>([]);
 
   useEffect(() => {
     calculateProgress();
@@ -57,6 +58,12 @@ export default function Home() {
     const savedOrder = localStorage.getItem('homepage-widget-order');
     if (savedOrder) {
       setWidgetOrder(JSON.parse(savedOrder));
+    }
+
+    // Load hidden widgets
+    const savedHidden = localStorage.getItem('homepage-hidden-widgets');
+    if (savedHidden) {
+      setHiddenWidgets(JSON.parse(savedHidden));
     }
   }, [workoutSessions]);
 
@@ -191,6 +198,21 @@ export default function Home() {
       });
     }
   };
+
+  const handleRemoveWidget = (widgetId: string) => {
+    const newHidden = [...hiddenWidgets, widgetId];
+    setHiddenWidgets(newHidden);
+    localStorage.setItem('homepage-hidden-widgets', JSON.stringify(newHidden));
+  };
+
+  const handleRestoreWidget = (widgetId: string) => {
+    const newHidden = hiddenWidgets.filter(id => id !== widgetId);
+    setHiddenWidgets(newHidden);
+    localStorage.setItem('homepage-hidden-widgets', JSON.stringify(newHidden));
+  };
+
+  const visibleWidgets = widgetOrder.filter(id => !hiddenWidgets.includes(id));
+  const availableWidgets = widgetOrder.filter(id => hiddenWidgets.includes(id));
 
   const widgets: Record<string, JSX.Element> = {
     stats: (
@@ -428,10 +450,32 @@ export default function Home() {
       </div>
 
       {isEditMode && (
-        <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 text-sm text-foreground">
-          <p className="font-medium">Edit Mode Active</p>
-          <p className="text-xs text-muted-foreground mt-1">Drag the grip handles to reorder widgets</p>
-        </div>
+        <>
+          <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 text-sm text-foreground">
+            <p className="font-medium">Edit Mode Active</p>
+            <p className="text-xs text-muted-foreground mt-1">Drag the grip handles to reorder widgets or click X to hide them</p>
+          </div>
+
+          {availableWidgets.length > 0 && (
+            <div className="bg-muted/50 border border-muted rounded-lg p-3">
+              <p className="text-sm font-medium mb-2">Hidden Widgets</p>
+              <div className="flex flex-wrap gap-2">
+                {availableWidgets.map(widgetId => (
+                  <Button
+                    key={widgetId}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleRestoreWidget(widgetId)}
+                    className="text-xs"
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Show {widgetId}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <DndContext
@@ -439,15 +483,16 @@ export default function Home() {
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={widgetOrder}
+          items={visibleWidgets}
           strategy={verticalListSortingStrategy}
         >
           <div className="space-y-6">
-            {widgetOrder.map((widgetId) => (
+            {visibleWidgets.map((widgetId) => (
               <DraggableWidget
                 key={widgetId}
                 id={widgetId}
                 isEditMode={isEditMode}
+                onRemove={() => handleRemoveWidget(widgetId)}
               >
                 {widgets[widgetId]}
               </DraggableWidget>
