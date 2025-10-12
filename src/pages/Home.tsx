@@ -48,6 +48,15 @@ export default function Home() {
     'workouts',
     'diet'
   ]);
+  
+  const widgetNames: Record<string, string> = {
+    'stats': 'Stats',
+    'steps': 'Daily Steps',
+    'fitness-goals': 'Fitness Goals',
+    'water': 'Water Tracker',
+    'workouts': 'Workouts',
+    'diet': 'Diet Tracker'
+  };
   const [hiddenWidgets, setHiddenWidgets] = useState<string[]>([]);
 
   useEffect(() => {
@@ -453,7 +462,7 @@ export default function Home() {
 
           {availableWidgets.length > 0 && (
             <div className="bg-muted/50 border border-muted rounded-lg p-3">
-              <p className="text-sm font-medium mb-2">Hidden Widgets</p>
+              <p className="text-sm font-medium mb-2">Add Widgets</p>
               <div className="flex flex-wrap gap-2">
                 {availableWidgets.map(widgetId => (
                   <Button
@@ -464,7 +473,7 @@ export default function Home() {
                     className="text-xs"
                   >
                     <Plus className="w-3 h-3 mr-1" />
-                    Show {widgetId}
+                    {widgetNames[widgetId] || widgetId}
                   </Button>
                 ))}
               </div>
