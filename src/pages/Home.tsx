@@ -3,13 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
-import { Plus, Minus, TrendingUp, TrendingDown, Utensils, Activity } from "lucide-react";
+import { Plus, Minus, TrendingUp, TrendingDown, Utensils, Activity, Edit3, Check } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useDietStore } from "@/stores/useDietStore";
 import { HealthService } from "@/services/HealthService";
 import GoalProgress from "@/components/GoalProgress";
 import { WaterTracker } from "@/components/WaterTracker";
+import { DraggableWidget } from "@/components/DraggableWidget";
+import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import muscularBodyDiagram from "@/assets/muscular-body-diagram.png";
 
 
@@ -36,10 +39,25 @@ export default function Home() {
   const [steps, setSteps] = useState(0);
   const [stepGoal] = useState(10000);
   const [permissionGranted, setPermissionGranted] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [widgetOrder, setWidgetOrder] = useState<string[]>([
+    'stats',
+    'steps',
+    'goals',
+    'water',
+    'workouts',
+    'diet'
+  ]);
 
   useEffect(() => {
     calculateProgress();
     initializeStepCounter();
+    
+    // Load saved widget order
+    const savedOrder = localStorage.getItem('homepage-widget-order');
+    if (savedOrder) {
+      setWidgetOrder(JSON.parse(savedOrder));
+    }
   }, [workoutSessions]);
 
   const initializeStepCounter = async () => {
@@ -160,15 +178,22 @@ export default function Home() {
     deleteWorkoutType(workoutName);
   };
 
-  return (
-    <div className="min-h-screen p-6 space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{getText('dynamic_greeting')}</h1>
-        <p className="text-sm sm:text-base text-muted-foreground mt-1">{getText('gym_companion')}</p>
-      </div>
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
 
-      {/* User Stats */}
+    if (over && active.id !== over.id) {
+      setWidgetOrder((items) => {
+        const oldIndex = items.indexOf(active.id as string);
+        const newIndex = items.indexOf(over.id as string);
+        const newOrder = arrayMove(items, oldIndex, newIndex);
+        localStorage.setItem('homepage-widget-order', JSON.stringify(newOrder));
+        return newOrder;
+      });
+    }
+  };
+
+  const widgets: Record<string, JSX.Element> = {
+    stats: (
       <Card className="border-2 border-[hsl(var(--widget-border))]">
         <CardContent className="p-4">
           <div className="grid grid-cols-3 gap-4 text-center">
@@ -187,7 +212,6 @@ export default function Home() {
                         arrow: isImproving ? 'up' : 'down'
                       };
                     } else {
-                      // First week or no previous data
                       const isImproving = progressKg > 0;
                       return {
                         text: isImproving ? '+100%' : '0%',
@@ -227,8 +251,8 @@ export default function Home() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Step Counter */}
+    ),
+    steps: (
       <Card className="border-2 border-[hsl(var(--widget-border))]">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
@@ -256,18 +280,16 @@ export default function Home() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Goals Progress */}
+    ),
+    goals: (
       <GoalProgress 
         workoutSessionsThisWeek={getWorkoutSessionsThisWeek()}
         totalCaloriesToday={getTodayNutrition().totalCalories}
         totalProteinToday={getTodayNutrition().totalProtein}
       />
-
-      {/* Water Tracker */}
-      <WaterTracker />
-
-      {/* Workout Type Buttons */}
+    ),
+    water: <WaterTracker />,
+    workouts: (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg sm:text-xl font-semibold">{getText('choose_workout')}</h2>
@@ -358,8 +380,8 @@ export default function Home() {
           })}
         </div>
       </div>
-
-      {/* Diet Tracker */}
+    ),
+    diet: (
       <Card 
         className="p-4 cursor-pointer hover:shadow-md transition-all border-2 border-widget bg-background"
         onClick={() => navigate("/diet-tracker")}
@@ -374,6 +396,66 @@ export default function Home() {
           </div>
         </div>
       </Card>
+    )
+  };
+  };
+
+  return (
+    <div className="min-h-screen p-6 space-y-6">
+      {/* Header with Edit Toggle */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="text-center flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{getText('dynamic_greeting')}</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">{getText('gym_companion')}</p>
+        </div>
+        <Button
+          variant={isEditMode ? "default" : "outline"}
+          size="sm"
+          onClick={() => setIsEditMode(!isEditMode)}
+          className="flex items-center gap-2 shrink-0"
+        >
+          {isEditMode ? (
+            <>
+              <Check className="w-4 h-4" />
+              Done
+            </>
+          ) : (
+            <>
+              <Edit3 className="w-4 h-4" />
+              Edit Layout
+            </>
+          )}
+        </Button>
+      </div>
+
+      {isEditMode && (
+        <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 text-sm text-foreground">
+          <p className="font-medium">Edit Mode Active</p>
+          <p className="text-xs text-muted-foreground mt-1">Drag the grip handles to reorder widgets</p>
+        </div>
+      )}
+
+      <DndContext
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={widgetOrder}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="space-y-6">
+            {widgetOrder.map((widgetId) => (
+              <DraggableWidget
+                key={widgetId}
+                id={widgetId}
+                isEditMode={isEditMode}
+              >
+                {widgets[widgetId]}
+              </DraggableWidget>
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
     </div>
   );
 }
