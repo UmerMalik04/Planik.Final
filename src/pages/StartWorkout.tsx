@@ -9,11 +9,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ArrowLeft, Check, Plus, Minus, Dumbbell } from "lucide-react";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
 import { CompletedExercise } from "@/stores/useWorkoutStore";
+import { useSettings } from "@/contexts/SettingsContext";
+import RestTimer from "@/components/RestTimer";
 
 export default function StartWorkout() {
   const navigate = useNavigate();
   const { planId } = useParams();
   const { workoutPlans, startWorkout, completeWorkout, getExerciseHistory, resumeWorkout, currentWorkoutSession, addExerciseToCurrentWorkout } = useWorkoutStore();
+  const { settings } = useSettings();
   
   const plan = workoutPlans.find(p => p.id === planId);
   const [currentSession, setCurrentSession] = useState<any>(null);
@@ -22,6 +25,12 @@ export default function StartWorkout() {
   const [newExerciseName, setNewExerciseName] = useState("");
   const [newExerciseReps, setNewExerciseReps] = useState(10);
   const [newExerciseSets, setNewExerciseSets] = useState(3);
+  
+  // Rest timer state
+  const [restTimerActive, setRestTimerActive] = useState(false);
+  const [restTimerSeconds, setRestTimerSeconds] = useState(90);
+  const [restTimerExercise, setRestTimerExercise] = useState("");
+  const [restTimerSet, setRestTimerSet] = useState(0);
 
   interface SetData {
     weight: number;
@@ -154,10 +163,27 @@ export default function StartWorkout() {
       if (!updated[exerciseIndex]) {
         updated[exerciseIndex] = Array(3).fill(null).map(() => ({ weight: 0, reps: 0, type: 'normal' as const }));
       }
+      
+      const oldSet = updated[exerciseIndex][setIndex];
       updated[exerciseIndex][setIndex] = {
         ...updated[exerciseIndex][setIndex],
         [field]: value
       };
+      
+      // Check if set is now complete (both weight and reps > 0) and wasn't before
+      const newSet = updated[exerciseIndex][setIndex];
+      const wasIncomplete = !oldSet || oldSet.weight === 0 || oldSet.reps === 0;
+      const isNowComplete = newSet.weight > 0 && newSet.reps > 0;
+      
+      // Trigger rest timer if enabled, auto-start is on, and set just became complete
+      if (settings.restTimerEnabled && settings.autoStartTimer && wasIncomplete && isNowComplete) {
+        const exercise = completedExercises[exerciseIndex];
+        const restTime = plan.restTimer || settings.defaultRestTime;
+        setRestTimerSeconds(restTime);
+        setRestTimerExercise(exercise.name);
+        setRestTimerSet(setIndex + 1);
+        setRestTimerActive(true);
+      }
       
       // Update completed exercise with best set values
       const sets = updated[exerciseIndex];
@@ -514,6 +540,17 @@ export default function StartWorkout() {
           </Button>
         </div>
       </div>
+
+      {/* Rest Timer */}
+      <RestTimer
+        isActive={restTimerActive}
+        initialSeconds={restTimerSeconds}
+        exerciseName={restTimerExercise}
+        setNumber={restTimerSet}
+        onComplete={() => setRestTimerActive(false)}
+        onSkip={() => setRestTimerActive(false)}
+        onAddTime={() => setRestTimerSeconds(prev => prev + 30)}
+      />
     </>
   );
 }

@@ -11,6 +11,9 @@ interface AppSettings {
   dateFormat: DateFormat;
   biometricLogin: boolean;
   autoSync: boolean;
+  restTimerEnabled: boolean;
+  defaultRestTime: number;
+  autoStartTimer: boolean;
 }
 
 interface SettingsContextType {
@@ -29,6 +32,9 @@ const defaultSettings: AppSettings = {
   dateFormat: 'MM/DD/YYYY',
   biometricLogin: false,
   autoSync: true,
+  restTimerEnabled: true,
+  defaultRestTime: 90,
+  autoStartTimer: true,
 };
 
 // Comprehensive translations

@@ -23,7 +23,7 @@ import {
   Palette, 
   Calendar,
   Lock,
-  
+  Timer,
   Trash2,
   Cloud,
   Download,
@@ -596,6 +596,76 @@ export default function Settings() {
               </>
             )}
 
+          </CardContent>
+        </Card>
+
+        {/* Workout Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Timer className="h-5 w-5" />
+              Workout Settings
+            </CardTitle>
+            <CardDescription>Configure rest timer and workout preferences</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Rest Timer Enabled */}
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Rest Timer</Label>
+                <p className="text-sm text-muted-foreground">
+                  Show rest timer between sets
+                </p>
+              </div>
+              <Switch
+                checked={settings.restTimerEnabled}
+                onCheckedChange={(value) => updateSetting('restTimerEnabled', value)}
+              />
+            </div>
+
+            {settings.restTimerEnabled && (
+              <>
+                <Separator />
+
+                {/* Default Rest Time */}
+                <div className="space-y-3">
+                  <Label>Default Rest Time (seconds)</Label>
+                  <div className="flex items-center gap-4">
+                    <Input
+                      type="number"
+                      min="30"
+                      max="300"
+                      step="15"
+                      value={settings.defaultRestTime}
+                      onChange={(e) => updateSetting('defaultRestTime', Number(e.target.value))}
+                      className="w-24"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      {Math.floor(settings.defaultRestTime / 60)}:{(settings.defaultRestTime % 60).toString().padStart(2, '0')} minutes
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Default rest duration between sets (30-300 seconds)
+                  </p>
+                </div>
+
+                <Separator />
+
+                {/* Auto-start Timer */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Auto-start Timer</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Automatically start rest timer after completing a set
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.autoStartTimer}
+                    onCheckedChange={(value) => updateSetting('autoStartTimer', value)}
+                  />
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 

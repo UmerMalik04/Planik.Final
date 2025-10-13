@@ -46,6 +46,7 @@ export interface WorkoutPlan {
   type: string;
   exercises: Exercise[];
   sets: number;
+  restTimer?: number;
 }
 
 export interface WorkoutType {
