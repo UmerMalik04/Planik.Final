@@ -15,13 +15,15 @@ export default function CreatePlan() {
 
   const [planName, setPlanName] = useState(`My ${workoutType} Plan`);
   const [sets, setSets] = useState("");
+  const [restTimer, setRestTimer] = useState("90");
 
   const handleCreatePlan = () => {
     const newPlan = {
       name: planName,
       type: workoutType as "Push" | "Pull" | "Leg" | "Arm",
       exercises: [],
-      sets: Number(sets) || 3
+      sets: Number(sets) || 3,
+      restTimer: Number(restTimer) || 90
     };
 
     addWorkoutPlan(newPlan);
@@ -81,6 +83,20 @@ export default function CreatePlan() {
               min="1"
               max="10"
               placeholder="Enter number of sets"
+              className="mt-1"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="restTimer">Rest Timer Between Sets (seconds)</Label>
+            <Input
+              id="restTimer"
+              type="number"
+              value={restTimer}
+              onChange={(e) => setRestTimer(e.target.value)}
+              min="30"
+              max="300"
+              placeholder="90"
               className="mt-1"
             />
           </div>
