@@ -15,7 +15,7 @@ export default function CreatePlan() {
 
   const [planName, setPlanName] = useState(`My ${workoutType} Plan`);
   const [sets, setSets] = useState("");
-  const [restTimer, setRestTimer] = useState("90");
+  const [restTimer, setRestTimer] = useState("1.5");
 
   const handleCreatePlan = () => {
     const newPlan = {
@@ -23,7 +23,7 @@ export default function CreatePlan() {
       type: workoutType as "Push" | "Pull" | "Leg" | "Arm",
       exercises: [],
       sets: Number(sets) || 3,
-      restTimer: Number(restTimer) || 90
+      restTimer: Math.round((Number(restTimer) || 1.5) * 60)
     };
 
     addWorkoutPlan(newPlan);
@@ -88,15 +88,16 @@ export default function CreatePlan() {
           </div>
 
           <div>
-            <Label htmlFor="restTimer">Rest Timer Between Sets (seconds)</Label>
+            <Label htmlFor="restTimer">Rest Timer Between Sets (minutes)</Label>
             <Input
               id="restTimer"
               type="number"
+              step="0.5"
               value={restTimer}
               onChange={(e) => setRestTimer(e.target.value)}
-              min="30"
-              max="300"
-              placeholder="90"
+              min="0.5"
+              max="5"
+              placeholder="1.5"
               className="mt-1"
             />
           </div>
