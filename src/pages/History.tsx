@@ -3,13 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
 
 export default function History() {
-  const { workoutSessions, workoutPlans } = useWorkoutStore();
+  const { workoutSessions, workoutPlans, initializeUserData } = useWorkoutStore();
   const { formatWeight, formatDate: formatAppDate, getText } = useSettings();
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
+
+  // Refresh data when page loads
+  useEffect(() => {
+    initializeUserData();
+  }, []);
 
   const formatDate = (date: Date) => {
     const dayOfWeek = format(date, 'EEE'); // Mon, Tue, etc.
