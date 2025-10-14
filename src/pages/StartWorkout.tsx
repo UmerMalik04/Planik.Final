@@ -287,6 +287,9 @@ export default function StartWorkout() {
   const handleCompleteWorkout = () => {
     if (!currentSession) return;
     
+    console.log('Completing workout with session:', currentSession);
+    console.log('Completed exercises:', completedExercises);
+    
     const validExercises = completedExercises.filter(exercise => 
       exercise.weight > 0 && exercise.reps > 0
     ).map((exercise) => {
@@ -297,6 +300,8 @@ export default function StartWorkout() {
         setData: exerciseSets[originalIndex] || []
       };
     });
+    
+    console.log('Valid exercises to save:', validExercises);
     
     if (validExercises.length === 0) {
       alert("Please complete at least one exercise before finishing the workout.");

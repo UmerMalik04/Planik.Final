@@ -13,7 +13,10 @@ export default function History() {
 
   // Refresh data when page loads
   useEffect(() => {
-    initializeUserData();
+    console.log('History page loading...');
+    initializeUserData().then(() => {
+      console.log('Workout sessions loaded:', workoutSessions);
+    });
   }, []);
 
   const formatDate = (date: Date) => {

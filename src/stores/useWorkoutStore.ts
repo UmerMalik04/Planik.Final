@@ -416,13 +416,23 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
 
   completeWorkout: async (sessionId, exercises) => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      console.error('No user found when completing workout');
+      return;
+    }
+
+    console.log('Completing workout for session:', sessionId);
+    console.log('Exercises to save:', exercises);
 
     // Update session to inactive
-    await supabase
+    const { error: updateError } = await supabase
       .from('workout_sessions')
       .update({ is_active: false })
       .eq('id', sessionId);
+
+    if (updateError) {
+      console.error('Error updating session:', updateError);
+    }
 
     // Insert completed exercises
     const completedExercisesData = exercises.map(exercise => ({
@@ -439,10 +449,19 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
       date: exercise.date
     }));
 
+    console.log('Data to insert:', completedExercisesData);
+
     if (completedExercisesData.length > 0) {
-      await supabase
+      const { data: insertedData, error: insertError } = await supabase
         .from('completed_exercises')
-        .insert(completedExercisesData);
+        .insert(completedExercisesData)
+        .select();
+
+      if (insertError) {
+        console.error('Error inserting exercises:', insertError);
+      } else {
+        console.log('Successfully inserted exercises:', insertedData);
+      }
     }
 
     // Reload the session with completed exercises from database
