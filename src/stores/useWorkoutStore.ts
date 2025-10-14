@@ -154,11 +154,12 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
       set({ workoutPlans: plansWithExercises });
     }
 
-    // Load sessions - load both active and completed, we'll filter in the UI
+    // Load sessions
     const { data: sessions, error: sessionsError } = await supabase
       .from('workout_sessions')
       .select('*')
       .eq('user_id', user.id)
+      .eq('is_active', false)  // Only load completed sessions
       .order('date', { ascending: false });
 
     if (sessionsError) {

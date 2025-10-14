@@ -28,12 +28,10 @@ export default function History() {
     return { dayOfWeek, dayNumber, month, year };
   };
 
-  // Sort sessions by date (most recent first) and filter completed sessions
-  const sortedSessions = [...workoutSessions]
-    .filter(session => session.exercises && session.exercises.length > 0)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-  console.log('Filtered sessions with exercises:', sortedSessions);
+  // Sort sessions by date (most recent first)
+  const sortedSessions = [...workoutSessions].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
 
   return (
     <div className="container mx-auto px-4 py-6">
