@@ -445,9 +445,28 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
         .insert(completedExercisesData);
     }
 
+    // Reload the session with completed exercises from database
+    const { data: completedExercises } = await supabase
+      .from('completed_exercises')
+      .select('*')
+      .eq('session_id', sessionId);
+
+    const exercisesFromDb = completedExercises?.map(e => ({
+      id: e.id,
+      name: e.name,
+      weight: Number(e.weight),
+      reps: e.reps,
+      sets: e.sets,
+      date: e.date,
+      previousWeight: e.previous_weight ? Number(e.previous_weight) : undefined,
+      previousReps: e.previous_reps || undefined,
+      setData: (e.set_data as unknown) as SetData[] | undefined,
+      previousSetData: (e.previous_set_data as unknown) as SetData[] | undefined
+    })) || [];
+
     set((state) => {
       const updatedSessions = state.workoutSessions.map(session =>
-        session.id === sessionId ? { ...session, exercises } : session
+        session.id === sessionId ? { ...session, exercises: exercisesFromDb } : session
       );
 
       return {
