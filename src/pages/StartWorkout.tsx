@@ -10,7 +10,6 @@ import { ArrowLeft, Check, Plus, Minus, Dumbbell, Timer, Play, Pause, RotateCcw 
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
 import { CompletedExercise } from "@/stores/useWorkoutStore";
 import { useSettings } from "@/contexts/SettingsContext";
-import RestTimer from "@/components/RestTimer";
 import { ShareWorkout } from "@/components/ShareWorkout";
 
 export default function StartWorkout() {
@@ -28,12 +27,6 @@ export default function StartWorkout() {
   const [newExerciseSets, setNewExerciseSets] = useState(3);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [workoutCompleted, setWorkoutCompleted] = useState(false);
-  
-  // Rest timer state (modal)
-  const [restTimerActive, setRestTimerActive] = useState(false);
-  const [restTimerSeconds, setRestTimerSeconds] = useState(90);
-  const [restTimerExercise, setRestTimerExercise] = useState("");
-  const [restTimerSet, setRestTimerSet] = useState(0);
   
   // Bottom timer state
   const [bottomTimerRunning, setBottomTimerRunning] = useState(false);
@@ -202,16 +195,6 @@ export default function StartWorkout() {
           restTime: bottomTimerSeconds
         }]);
         setBottomTimerSeconds(0);
-      }
-      
-      // Trigger rest timer if enabled, auto-start is on, and set just became complete
-      if (settings.restTimerEnabled && settings.autoStartTimer && wasIncomplete && isNowComplete) {
-        const exercise = completedExercises[exerciseIndex];
-        const restTime = plan.restTimer || settings.defaultRestTime;
-        setRestTimerSeconds(restTime);
-        setRestTimerExercise(exercise.name);
-        setRestTimerSet(setIndex + 1);
-        setRestTimerActive(true);
       }
       
       // Update completed exercise with best set values
@@ -651,17 +634,6 @@ export default function StartWorkout() {
           </div>
         </div>
       </div>
-
-      {/* Rest Timer */}
-      <RestTimer
-        isActive={restTimerActive}
-        initialSeconds={restTimerSeconds}
-        exerciseName={restTimerExercise}
-        setNumber={restTimerSet}
-        onComplete={() => setRestTimerActive(false)}
-        onSkip={() => setRestTimerActive(false)}
-        onAddTime={() => setRestTimerSeconds(prev => prev + 30)}
-      />
     </>
   );
 }
