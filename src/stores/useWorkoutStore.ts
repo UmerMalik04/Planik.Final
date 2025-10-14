@@ -155,11 +155,18 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
     }
 
     // Load sessions
-    const { data: sessions } = await supabase
+    const { data: sessions, error: sessionsError } = await supabase
       .from('workout_sessions')
       .select('*')
       .eq('user_id', user.id)
+      .eq('is_active', false)  // Only load completed sessions
       .order('date', { ascending: false });
+
+    if (sessionsError) {
+      console.error('Error loading sessions:', sessionsError);
+    }
+
+    console.log('Loaded sessions from DB:', sessions);
 
     if (sessions) {
       const sessionsWithExercises = await Promise.all(
