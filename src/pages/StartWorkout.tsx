@@ -11,6 +11,7 @@ import { useWorkoutStore } from "@/stores/useWorkoutStore";
 import { CompletedExercise } from "@/stores/useWorkoutStore";
 import { useSettings } from "@/contexts/SettingsContext";
 import RestTimer from "@/components/RestTimer";
+import { ShareWorkout } from "@/components/ShareWorkout";
 
 export default function StartWorkout() {
   const navigate = useNavigate();
@@ -25,6 +26,8 @@ export default function StartWorkout() {
   const [newExerciseName, setNewExerciseName] = useState("");
   const [newExerciseReps, setNewExerciseReps] = useState(10);
   const [newExerciseSets, setNewExerciseSets] = useState(3);
+  const [showShareSheet, setShowShareSheet] = useState(false);
+  const [workoutCompleted, setWorkoutCompleted] = useState(false);
   
   // Rest timer state
   const [restTimerActive, setRestTimerActive] = useState(false);
@@ -284,7 +287,25 @@ export default function StartWorkout() {
     }
     
     completeWorkout(currentSession.id, validExercises);
+    setWorkoutCompleted(true);
+    setShowShareSheet(true);
+  };
+
+  const handleShareComplete = () => {
+    setShowShareSheet(false);
     navigate("/");
+  };
+
+  const getTotalSets = () => {
+    return completedExercises.reduce((total, exercise, index) => {
+      return total + (exercise.sets + (extraSets[index] || 0));
+    }, 0);
+  };
+
+  const getTotalWeight = () => {
+    return Object.values(exerciseSets).reduce((total, sets) => {
+      return total + sets.reduce((setTotal, set) => setTotal + (set.weight * set.reps), 0);
+    }, 0);
   };
 
   return (
@@ -520,6 +541,23 @@ export default function StartWorkout() {
             </Card>
           ))}
         </div>
+
+        {/* Share Sheet */}
+        <ShareWorkout
+          open={showShareSheet}
+          onOpenChange={(open) => {
+            setShowShareSheet(open);
+            if (!open && workoutCompleted) {
+              handleShareComplete();
+            }
+          }}
+          workoutData={{
+            planName: plan?.name || '',
+            exerciseCount: completedExercises.length,
+            totalSets: getTotalSets(),
+            totalWeight: getTotalWeight()
+          }}
+        />
 
         {/* Complete Workout Button */}
         <div className="space-y-3">
