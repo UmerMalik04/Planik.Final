@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, Check, Plus, Minus, Dumbbell } from "lucide-react";
+import { ArrowLeft, Check, Plus, Minus, Dumbbell, Timer, Play, Pause, RotateCcw } from "lucide-react";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
 import { CompletedExercise } from "@/stores/useWorkoutStore";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -29,11 +29,16 @@ export default function StartWorkout() {
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [workoutCompleted, setWorkoutCompleted] = useState(false);
   
-  // Rest timer state
+  // Rest timer state (modal)
   const [restTimerActive, setRestTimerActive] = useState(false);
   const [restTimerSeconds, setRestTimerSeconds] = useState(90);
   const [restTimerExercise, setRestTimerExercise] = useState("");
   const [restTimerSet, setRestTimerSet] = useState(0);
+  
+  // Bottom timer state
+  const [bottomTimerRunning, setBottomTimerRunning] = useState(false);
+  const [bottomTimerSeconds, setBottomTimerSeconds] = useState(0);
+  const [bottomTimerRecords, setBottomTimerRecords] = useState<{exerciseIndex: number, setIndex: number, restTime: number}[]>([]);
 
   interface SetData {
     weight: number;
@@ -60,6 +65,17 @@ export default function StartWorkout() {
       initializeWorkout(session, plan);
     }
   }, [plan, planId]);
+
+  // Bottom timer effect
+  useEffect(() => {
+    if (!bottomTimerRunning) return;
+    
+    const interval = setInterval(() => {
+      setBottomTimerSeconds(prev => prev + 1);
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [bottomTimerRunning]);
 
   const initializeWorkout = (session: any, workoutPlan: any) => {
     // Initialize completed exercises with plan exercises
@@ -177,6 +193,16 @@ export default function StartWorkout() {
       const newSet = updated[exerciseIndex][setIndex];
       const wasIncomplete = !oldSet || oldSet.weight === 0 || oldSet.reps === 0;
       const isNowComplete = newSet.weight > 0 && newSet.reps > 0;
+      
+      // Record rest time and reset bottom timer when set is completed
+      if (wasIncomplete && isNowComplete && bottomTimerRunning) {
+        setBottomTimerRecords(prev => [...prev, {
+          exerciseIndex,
+          setIndex,
+          restTime: bottomTimerSeconds
+        }]);
+        setBottomTimerSeconds(0);
+      }
       
       // Trigger rest timer if enabled, auto-start is on, and set just became complete
       if (settings.restTimerEnabled && settings.autoStartTimer && wasIncomplete && isNowComplete) {
@@ -306,6 +332,21 @@ export default function StartWorkout() {
     return Object.values(exerciseSets).reduce((total, sets) => {
       return total + sets.reduce((setTotal, set) => setTotal + (set.weight * set.reps), 0);
     }, 0);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const toggleBottomTimer = () => {
+    setBottomTimerRunning(!bottomTimerRunning);
+  };
+
+  const resetBottomTimer = () => {
+    setBottomTimerSeconds(0);
+    setBottomTimerRunning(false);
   };
 
   return (
@@ -560,7 +601,7 @@ export default function StartWorkout() {
         />
 
         {/* Complete Workout Button */}
-        <div className="space-y-3">
+        <div className="space-y-3 pb-24">
           <Button
             onClick={handleCompleteWorkout}
             className="w-full h-12 text-lg"
@@ -576,6 +617,38 @@ export default function StartWorkout() {
           >
             Cancel
           </Button>
+        </div>
+
+        {/* Bottom Timer Bar */}
+        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg">
+          <div className="p-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Timer className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <p className="text-xs text-muted-foreground">Rest Timer</p>
+                <p className="text-2xl font-bold font-mono">{formatTime(bottomTimerSeconds)}</p>
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={toggleBottomTimer}
+                className="h-12 w-12"
+              >
+                {bottomTimerRunning ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={resetBottomTimer}
+                className="h-12 w-12"
+              >
+                <RotateCcw className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
