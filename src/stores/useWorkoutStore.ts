@@ -155,18 +155,11 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
     }
 
     // Load sessions
-    const { data: sessions, error: sessionsError } = await supabase
+    const { data: sessions } = await supabase
       .from('workout_sessions')
       .select('*')
       .eq('user_id', user.id)
-      .eq('is_active', false)  // Only load completed sessions
       .order('date', { ascending: false });
-
-    if (sessionsError) {
-      console.error('Error loading sessions:', sessionsError);
-    }
-
-    console.log('Loaded sessions from DB:', sessions);
 
     if (sessions) {
       const sessionsWithExercises = await Promise.all(
@@ -423,23 +416,13 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
 
   completeWorkout: async (sessionId, exercises) => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.error('No user found when completing workout');
-      return;
-    }
-
-    console.log('Completing workout for session:', sessionId);
-    console.log('Exercises to save:', exercises);
+    if (!user) return;
 
     // Update session to inactive
-    const { error: updateError } = await supabase
+    await supabase
       .from('workout_sessions')
       .update({ is_active: false })
       .eq('id', sessionId);
-
-    if (updateError) {
-      console.error('Error updating session:', updateError);
-    }
 
     // Insert completed exercises
     const completedExercisesData = exercises.map(exercise => ({
@@ -456,19 +439,10 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
       date: exercise.date
     }));
 
-    console.log('Data to insert:', completedExercisesData);
-
     if (completedExercisesData.length > 0) {
-      const { data: insertedData, error: insertError } = await supabase
+      await supabase
         .from('completed_exercises')
-        .insert(completedExercisesData)
-        .select();
-
-      if (insertError) {
-        console.error('Error inserting exercises:', insertError);
-      } else {
-        console.log('Successfully inserted exercises:', insertedData);
-      }
+        .insert(completedExercisesData);
     }
 
     // Reload the session with completed exercises from database

@@ -284,15 +284,8 @@ export default function StartWorkout() {
     return 'border-yellow-500 bg-yellow-50 text-yellow-900 dark:bg-yellow-950 dark:text-yellow-100';
   };
 
-  const handleCompleteWorkout = async () => {
-    if (!currentSession) {
-      console.error('No current session');
-      return;
-    }
-    
-    console.log('Completing workout with session:', currentSession);
-    console.log('Completed exercises:', completedExercises);
-    console.log('Exercise sets data:', exerciseSets);
+  const handleCompleteWorkout = () => {
+    if (!currentSession) return;
     
     const validExercises = completedExercises.filter(exercise => 
       exercise.weight > 0 && exercise.reps > 0
@@ -305,15 +298,12 @@ export default function StartWorkout() {
       };
     });
     
-    console.log('Valid exercises to save:', validExercises);
-    
     if (validExercises.length === 0) {
       alert("Please complete at least one exercise before finishing the workout.");
       return;
     }
     
-    await completeWorkout(currentSession.id, validExercises);
-    console.log('Workout completed, navigating home');
+    completeWorkout(currentSession.id, validExercises);
     navigate("/");
   };
 
