@@ -190,7 +190,7 @@ export default function StartWorkout() {
       const wasIncomplete = !oldSet || oldSet.weight === 0 || oldSet.reps === 0;
       const isNowComplete = newSet.weight > 0 && newSet.reps > 0;
       
-      // Record rest time and automatically start timer when set is completed
+      // Record rest time when set is completed (but don't auto-start timer)
       if (wasIncomplete && isNowComplete) {
         // Record the rest time for this set
         if (bottomTimerRunning) {
@@ -199,10 +199,9 @@ export default function StartWorkout() {
             setIndex,
             restTime: bottomTimerSeconds
           }]);
+          // Stop the timer when a set is completed
+          setBottomTimerRunning(false);
         }
-        // Reset and auto-start timer for next set
-        setBottomTimerSeconds(0);
-        setBottomTimerRunning(true);
       }
       
       // Update completed exercise with best set values
