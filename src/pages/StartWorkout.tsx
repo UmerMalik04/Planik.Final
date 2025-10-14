@@ -11,6 +11,7 @@ import { useWorkoutStore } from "@/stores/useWorkoutStore";
 import { CompletedExercise } from "@/stores/useWorkoutStore";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useShare } from "@/hooks/useShare";
+import { ShareWorkout } from "@/components/ShareWorkout";
 
 export default function StartWorkout() {
   const navigate = useNavigate();
@@ -33,8 +34,7 @@ export default function StartWorkout() {
   const [isEditingTimer, setIsEditingTimer] = useState(false);
   const [timerInputMinutes, setTimerInputMinutes] = useState("0");
   const [timerInputSeconds, setTimerInputSeconds] = useState("0");
-
-  const { shareNative, shareToTwitter, shareToWhatsApp, copyToClipboard, canShare } = useShare();
+  const [showShareSheet, setShowShareSheet] = useState(false);
 
   interface SetData {
     weight: number;
@@ -334,22 +334,8 @@ export default function StartWorkout() {
     setBottomTimerRunning(false);
   };
 
-  const handleShareWorkout = async () => {
-    const totalSets = getTotalSets();
-    const totalWeight = getTotalWeight();
-    const workoutText = `💪 Completed ${plan?.name || 'Workout'}!\n\n📊 ${completedExercises.length} exercises • ${totalSets} sets • ${totalWeight}kg total volume`;
-    
-    if (canShare) {
-      await shareNative({
-        title: 'Workout Complete',
-        text: workoutText
-      });
-    } else {
-      // Fallback: show options in a simple menu
-      if (confirm('Copy workout to clipboard?')) {
-        await copyToClipboard(workoutText);
-      }
-    }
+  const handleShareWorkout = () => {
+    setShowShareSheet(true);
   };
 
   const handleTimerEdit = () => {
@@ -370,6 +356,17 @@ export default function StartWorkout() {
 
   return (
     <>
+      {/* Share Workout Sheet */}
+      <ShareWorkout 
+        open={showShareSheet}
+        onOpenChange={setShowShareSheet}
+        workoutData={{
+          planName: plan?.name || 'Workout',
+          exerciseCount: completedExercises.length,
+          totalSets: getTotalSets(),
+          totalWeight: getTotalWeight()
+        }}
+      />
 
       {/* Add Exercise Dialog */}
       <Dialog open={showAddExerciseDialog} onOpenChange={setShowAddExerciseDialog}>
