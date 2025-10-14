@@ -187,14 +187,19 @@ export default function StartWorkout() {
       const wasIncomplete = !oldSet || oldSet.weight === 0 || oldSet.reps === 0;
       const isNowComplete = newSet.weight > 0 && newSet.reps > 0;
       
-      // Record rest time and reset bottom timer when set is completed
-      if (wasIncomplete && isNowComplete && bottomTimerRunning) {
-        setBottomTimerRecords(prev => [...prev, {
-          exerciseIndex,
-          setIndex,
-          restTime: bottomTimerSeconds
-        }]);
+      // Record rest time and automatically start timer when set is completed
+      if (wasIncomplete && isNowComplete) {
+        // Record the rest time for this set
+        if (bottomTimerRunning) {
+          setBottomTimerRecords(prev => [...prev, {
+            exerciseIndex,
+            setIndex,
+            restTime: bottomTimerSeconds
+          }]);
+        }
+        // Reset and auto-start timer for next set
         setBottomTimerSeconds(0);
+        setBottomTimerRunning(true);
       }
       
       // Update completed exercise with best set values
@@ -420,6 +425,36 @@ export default function StartWorkout() {
                 )}
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Rest Timer for this exercise */}
+                <div className="bg-muted rounded-lg p-3 border border-border">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <Timer className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Rest Timer</p>
+                        <p className="text-xl font-bold font-mono">{formatTime(bottomTimerSeconds)}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={toggleBottomTimer}
+                      >
+                        {bottomTimerRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={resetBottomTimer}
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="text-center text-sm text-muted-foreground mb-4">
                   Sets: {exercise.sets}
                 </div>
@@ -600,38 +635,6 @@ export default function StartWorkout() {
           >
             Cancel
           </Button>
-        </div>
-
-        {/* Bottom Timer Bar */}
-        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg">
-          <div className="p-4 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Timer className="w-5 h-5 text-muted-foreground" />
-              <div>
-                <p className="text-xs text-muted-foreground">Rest Timer</p>
-                <p className="text-2xl font-bold font-mono">{formatTime(bottomTimerSeconds)}</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={toggleBottomTimer}
-                className="h-12 w-12"
-              >
-                {bottomTimerRunning ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={resetBottomTimer}
-                className="h-12 w-12"
-              >
-                <RotateCcw className="w-5 h-5" />
-              </Button>
-            </div>
-          </div>
         </div>
       </div>
     </>
