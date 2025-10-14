@@ -6,11 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, Check, Plus, Minus, Dumbbell, Timer, Play, Pause, RotateCcw } from "lucide-react";
+import { ArrowLeft, Check, Plus, Minus, Dumbbell, Timer, Play, Pause, RotateCcw, Share2 } from "lucide-react";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
 import { CompletedExercise } from "@/stores/useWorkoutStore";
 import { useSettings } from "@/contexts/SettingsContext";
-import { ShareWorkout } from "@/components/ShareWorkout";
+import { useShare } from "@/hooks/useShare";
 
 export default function StartWorkout() {
   const navigate = useNavigate();
@@ -25,13 +25,16 @@ export default function StartWorkout() {
   const [newExerciseName, setNewExerciseName] = useState("");
   const [newExerciseReps, setNewExerciseReps] = useState(10);
   const [newExerciseSets, setNewExerciseSets] = useState(3);
-  const [showShareSheet, setShowShareSheet] = useState(false);
-  const [workoutCompleted, setWorkoutCompleted] = useState(false);
   
   // Bottom timer state
   const [bottomTimerRunning, setBottomTimerRunning] = useState(false);
   const [bottomTimerSeconds, setBottomTimerSeconds] = useState(0);
   const [bottomTimerRecords, setBottomTimerRecords] = useState<{exerciseIndex: number, setIndex: number, restTime: number}[]>([]);
+  const [isEditingTimer, setIsEditingTimer] = useState(false);
+  const [timerInputMinutes, setTimerInputMinutes] = useState("0");
+  const [timerInputSeconds, setTimerInputSeconds] = useState("0");
+
+  const { shareNative, shareToTwitter, shareToWhatsApp, copyToClipboard, canShare } = useShare();
 
   interface SetData {
     weight: number;
@@ -301,12 +304,6 @@ export default function StartWorkout() {
     }
     
     completeWorkout(currentSession.id, validExercises);
-    setWorkoutCompleted(true);
-    setShowShareSheet(true);
-  };
-
-  const handleShareComplete = () => {
-    setShowShareSheet(false);
     navigate("/");
   };
 
@@ -335,6 +332,40 @@ export default function StartWorkout() {
   const resetBottomTimer = () => {
     setBottomTimerSeconds(0);
     setBottomTimerRunning(false);
+  };
+
+  const handleShareWorkout = async () => {
+    const totalSets = getTotalSets();
+    const totalWeight = getTotalWeight();
+    const workoutText = `💪 Completed ${plan?.name || 'Workout'}!\n\n📊 ${completedExercises.length} exercises • ${totalSets} sets • ${totalWeight}kg total volume`;
+    
+    if (canShare) {
+      await shareNative({
+        title: 'Workout Complete',
+        text: workoutText
+      });
+    } else {
+      // Fallback: show options in a simple menu
+      if (confirm('Copy workout to clipboard?')) {
+        await copyToClipboard(workoutText);
+      }
+    }
+  };
+
+  const handleTimerEdit = () => {
+    const mins = Math.floor(bottomTimerSeconds / 60);
+    const secs = bottomTimerSeconds % 60;
+    setTimerInputMinutes(mins.toString());
+    setTimerInputSeconds(secs.toString());
+    setIsEditingTimer(true);
+    setBottomTimerRunning(false);
+  };
+
+  const handleTimerSave = () => {
+    const mins = parseInt(timerInputMinutes) || 0;
+    const secs = parseInt(timerInputSeconds) || 0;
+    setBottomTimerSeconds(mins * 60 + secs);
+    setIsEditingTimer(false);
   };
 
   return (
@@ -385,19 +416,29 @@ export default function StartWorkout() {
 
       <div className="min-h-screen p-6 space-y-6 bg-background text-foreground">
         {/* Header */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(`/workout-plan/${plan?.id}`)}
+              className="hover:bg-accent"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">{plan?.name}</h1>
+              <p className="text-muted-foreground">{currentDate}</p>
+            </div>
+          </div>
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate(`/workout-plan/${plan?.id}`)}
+            onClick={handleShareWorkout}
             className="hover:bg-accent"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <Share2 className="w-5 h-5" />
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold">{plan?.name}</h1>
-            <p className="text-muted-foreground">{currentDate}</p>
-          </div>
         </div>
 
         {/* Add Exercise Button */}
@@ -428,30 +469,68 @@ export default function StartWorkout() {
                 {/* Rest Timer for this exercise */}
                 <div className="bg-muted rounded-lg p-3 border border-border">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-1">
                       <Timer className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">Rest Timer</p>
-                        <p className="text-xl font-bold font-mono">{formatTime(bottomTimerSeconds)}</p>
+                      <div className="flex-1">
+                        <p className="text-xs text-muted-foreground mb-1">Rest Timer</p>
+                        {isEditingTimer ? (
+                          <div className="flex items-center gap-1">
+                            <Input
+                              type="number"
+                              value={timerInputMinutes}
+                              onChange={(e) => setTimerInputMinutes(e.target.value)}
+                              className="w-16 h-8 text-center font-mono text-lg"
+                              placeholder="0"
+                              min="0"
+                              max="99"
+                            />
+                            <span className="text-lg">:</span>
+                            <Input
+                              type="number"
+                              value={timerInputSeconds}
+                              onChange={(e) => setTimerInputSeconds(e.target.value)}
+                              className="w-16 h-8 text-center font-mono text-lg"
+                              placeholder="00"
+                              min="0"
+                              max="59"
+                            />
+                            <Button
+                              size="sm"
+                              onClick={handleTimerSave}
+                              className="ml-2"
+                            >
+                              Set
+                            </Button>
+                          </div>
+                        ) : (
+                          <button 
+                            onClick={handleTimerEdit}
+                            className="text-2xl font-mono font-bold hover:text-primary transition-colors"
+                          >
+                            {formatTime(bottomTimerSeconds)}
+                          </button>
+                        )}
                       </div>
                     </div>
                     
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={toggleBottomTimer}
-                      >
-                        {bottomTimerRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={resetBottomTimer}
-                      >
-                        <RotateCcw className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    {!isEditingTimer && (
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={toggleBottomTimer}
+                        >
+                          {bottomTimerRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={resetBottomTimer}
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -600,23 +679,6 @@ export default function StartWorkout() {
             </Card>
           ))}
         </div>
-
-        {/* Share Sheet */}
-        <ShareWorkout
-          open={showShareSheet}
-          onOpenChange={(open) => {
-            setShowShareSheet(open);
-            if (!open && workoutCompleted) {
-              handleShareComplete();
-            }
-          }}
-          workoutData={{
-            planName: plan?.name || '',
-            exerciseCount: completedExercises.length,
-            totalSets: getTotalSets(),
-            totalWeight: getTotalWeight()
-          }}
-        />
 
         {/* Complete Workout Button */}
         <div className="space-y-3 pb-24">
