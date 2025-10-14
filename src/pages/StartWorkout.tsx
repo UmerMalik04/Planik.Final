@@ -505,7 +505,7 @@ export default function StartWorkout() {
                         ) : (
                           <button 
                             onClick={handleTimerEdit}
-                            className="text-2xl font-mono font-bold hover:text-primary transition-colors"
+                            className="text-3xl font-timer font-bold hover:text-primary transition-colors tracking-wider"
                           >
                             {formatTime(bottomTimerSeconds)}
                           </button>
