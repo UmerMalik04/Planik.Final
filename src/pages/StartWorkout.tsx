@@ -273,14 +273,11 @@ export default function StartWorkout() {
   };
 
   const getPerformanceColor = (current: number, previous: number | undefined, field: 'weight' | 'reps') => {
-    if (!previous) return 'border-border bg-background text-foreground';
+    if (!previous || current === 0) return 'border-border bg-background text-foreground';
     
-    let currentScore = field === 'weight' ? current : current;
-    let previousScore = field === 'weight' ? previous : previous;
-    
-    if (currentScore > previousScore) return 'border-green-500 bg-green-50 text-green-900 dark:bg-green-950 dark:text-green-100';
-    if (currentScore < previousScore) return 'border-red-500 bg-red-50 text-red-900 dark:bg-red-950 dark:text-red-100';
-    return 'border-yellow-500 bg-yellow-50 text-yellow-900 dark:bg-yellow-950 dark:text-yellow-100';
+    if (current > previous) return 'border-2 border-green-500 bg-green-50 text-green-900 dark:bg-green-950 dark:text-green-100 focus:ring-green-500';
+    if (current < previous) return 'border-2 border-red-500 bg-red-50 text-red-900 dark:bg-red-950 dark:text-red-100 focus:ring-red-500';
+    return 'border-2 border-yellow-500 bg-yellow-50 text-yellow-900 dark:bg-yellow-950 dark:text-yellow-100 focus:ring-yellow-500';
   };
 
   const handleCompleteWorkout = () => {
