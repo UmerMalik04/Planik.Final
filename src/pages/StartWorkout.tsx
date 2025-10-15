@@ -565,90 +565,106 @@ export default function StartWorkout() {
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <Label className="text-muted-foreground text-xs font-medium">Weight (kg)</Label>
-                            {(exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight) && (
+                          <Label className="text-muted-foreground text-xs font-medium mb-1.5">Weight (kg)</Label>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              placeholder="0"
+                              value={exerciseSets[index]?.[setIndex]?.weight || ''}
+                              onChange={(e) => updateExerciseSet(index, setIndex, 'weight', Number(e.target.value))}
+                              className={`w-24 text-center antialiased ${
+                                (() => {
+                                  const current = exerciseSets[index]?.[setIndex]?.weight || 0;
+                                  const previous = exercise.previousSetData?.[setIndex]?.weight;
+                                  if (!previous || current === 0) return 'border-border';
+                                  if (current > previous) return 'border-2 border-green-500';
+                                  if (current < previous) return 'border-2 border-red-500';
+                                  return 'border-2 border-yellow-500';
+                                })()
+                              }`}
+                            />
+                            {exercise.previousSetData?.[setIndex]?.weight && (
                               <div className="flex items-center gap-1">
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                                  exerciseSets[index]?.[setIndex]?.weight > 0
-                                    ? exerciseSets[index][setIndex].weight > (exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight || 0)
-                                      ? 'bg-success-light text-success-dark border border-success'
-                                      : exerciseSets[index][setIndex].weight < (exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight || 0)
-                                      ? 'bg-error-light text-error-dark border border-error'
-                                      : 'bg-warning-light text-warning-dark border border-warning'
-                                    : 'bg-muted/50 text-muted-foreground/60 border border-border/50'
+                                <span className={`text-xs px-2 py-1 rounded-full font-semibold text-white ${
+                                  (() => {
+                                    const current = exerciseSets[index]?.[setIndex]?.weight || 0;
+                                    const previous = exercise.previousSetData[setIndex].weight;
+                                    if (current === 0 || !current) return 'bg-gray-500';
+                                    if (current > previous) return 'bg-green-500';
+                                    if (current < previous) return 'bg-red-500';
+                                    return 'bg-yellow-500';
+                                  })()
                                 }`}>
-                                  Prev: {exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight}kg
+                                  Prev: {exercise.previousSetData[setIndex].weight}kg
                                 </span>
                                 {exerciseSets[index]?.[setIndex]?.weight > 0 && (
-                                  <span className={`text-xs font-bold ${
-                                    exerciseSets[index][setIndex].weight > (exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight || 0)
-                                      ? 'text-success'
-                                      : exerciseSets[index][setIndex].weight < (exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight || 0)
-                                      ? 'text-error'
-                                      : 'text-warning'
+                                  <span className={`text-sm font-bold ${
+                                    (() => {
+                                      const current = exerciseSets[index][setIndex].weight;
+                                      const previous = exercise.previousSetData[setIndex].weight;
+                                      if (current > previous) return 'text-green-500';
+                                      if (current < previous) return 'text-red-500';
+                                      return 'text-yellow-500';
+                                    })()
                                   }`}>
-                                    {exerciseSets[index][setIndex].weight > (exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight || 0) && '+'}
-                                    {(exerciseSets[index][setIndex].weight - (exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight || 0)).toFixed(1)}
+                                    {exerciseSets[index][setIndex].weight > exercise.previousSetData[setIndex].weight ? '+' : ''}
+                                    {(exerciseSets[index][setIndex].weight - exercise.previousSetData[setIndex].weight).toFixed(1)}
                                   </span>
                                 )}
                               </div>
                             )}
                           </div>
-                          <Input
-                            type="number"
-                            placeholder="0"
-                            value={exerciseSets[index]?.[setIndex]?.weight || ''}
-                            onChange={(e) => updateExerciseSet(index, setIndex, 'weight', Number(e.target.value))}
-                            className={`antialiased ${getPerformanceColor(
-                              exerciseSets[index]?.[setIndex]?.weight || 0, 
-                              exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight, 
-                              'weight'
-                            )}`}
-                          />
                         </div>
                         <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <Label className="text-muted-foreground text-xs font-medium">Reps</Label>
-                            {(exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps) && (
+                          <Label className="text-muted-foreground text-xs font-medium mb-1.5">Reps</Label>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              placeholder="0"
+                              value={exerciseSets[index]?.[setIndex]?.reps || ''}
+                              onChange={(e) => updateExerciseSet(index, setIndex, 'reps', Number(e.target.value))}
+                              className={`w-24 text-center antialiased ${
+                                (() => {
+                                  const current = exerciseSets[index]?.[setIndex]?.reps || 0;
+                                  const previous = exercise.previousSetData?.[setIndex]?.reps;
+                                  if (!previous || current === 0) return 'border-border';
+                                  if (current > previous) return 'border-2 border-green-500';
+                                  if (current < previous) return 'border-2 border-red-500';
+                                  return 'border-2 border-yellow-500';
+                                })()
+                              }`}
+                            />
+                            {exercise.previousSetData?.[setIndex]?.reps && (
                               <div className="flex items-center gap-1">
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                                  exerciseSets[index]?.[setIndex]?.reps > 0
-                                    ? exerciseSets[index][setIndex].reps > (exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps || 0)
-                                      ? 'bg-success-light text-success-dark border border-success'
-                                      : exerciseSets[index][setIndex].reps < (exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps || 0)
-                                      ? 'bg-error-light text-error-dark border border-error'
-                                      : 'bg-warning-light text-warning-dark border border-warning'
-                                    : 'bg-muted/50 text-muted-foreground/60 border border-border/50'
+                                <span className={`text-xs px-2 py-1 rounded-full font-semibold text-white ${
+                                  (() => {
+                                    const current = exerciseSets[index]?.[setIndex]?.reps || 0;
+                                    const previous = exercise.previousSetData[setIndex].reps;
+                                    if (current === 0 || !current) return 'bg-gray-500';
+                                    if (current > previous) return 'bg-green-500';
+                                    if (current < previous) return 'bg-red-500';
+                                    return 'bg-yellow-500';
+                                  })()
                                 }`}>
-                                  Prev: {exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps}
+                                  Prev: {exercise.previousSetData[setIndex].reps}
                                 </span>
                                 {exerciseSets[index]?.[setIndex]?.reps > 0 && (
-                                  <span className={`text-xs font-bold ${
-                                    exerciseSets[index][setIndex].reps > (exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps || 0)
-                                      ? 'text-success'
-                                      : exerciseSets[index][setIndex].reps < (exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps || 0)
-                                      ? 'text-error'
-                                      : 'text-warning'
+                                  <span className={`text-sm font-bold ${
+                                    (() => {
+                                      const current = exerciseSets[index][setIndex].reps;
+                                      const previous = exercise.previousSetData[setIndex].reps;
+                                      if (current > previous) return 'text-green-500';
+                                      if (current < previous) return 'text-red-500';
+                                      return 'text-yellow-500';
+                                    })()
                                   }`}>
-                                    {exerciseSets[index][setIndex].reps > (exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps || 0) && '+'}
-                                    {exerciseSets[index][setIndex].reps - (exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps || 0)}
+                                    {exerciseSets[index][setIndex].reps > exercise.previousSetData[setIndex].reps ? '+' : ''}
+                                    {exerciseSets[index][setIndex].reps - exercise.previousSetData[setIndex].reps}
                                   </span>
                                 )}
                               </div>
                             )}
                           </div>
-                          <Input
-                            type="number"
-                            placeholder="0"
-                            value={exerciseSets[index]?.[setIndex]?.reps || ''}
-                            onChange={(e) => updateExerciseSet(index, setIndex, 'reps', Number(e.target.value))}
-                            className={`antialiased ${getPerformanceColor(
-                              exerciseSets[index]?.[setIndex]?.reps || 0, 
-                              exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps, 
-                              'reps'
-                            )}`}
-                          />
                         </div>
                       </div>
                       
