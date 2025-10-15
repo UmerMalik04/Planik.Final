@@ -452,10 +452,21 @@ export default function StartWorkout() {
             <Card key={index} className="bg-card border-border">
               <CardHeader className="pb-2">
                 <CardTitle className="text-foreground">{exercise.name}</CardTitle>
-                {exercise.previousWeight && exercise.previousReps && (
-                  <p className="text-sm text-muted-foreground">
-                    Last time: {exercise.previousWeight}kg × {exercise.previousReps} reps
-                  </p>
+                {(exercise.previousWeight || exercise.previousReps || exercise.previousSetData) && (
+                  <div className="mt-2 p-2 bg-muted/50 rounded border border-border/50">
+                    <p className="text-xs text-muted-foreground/80 font-medium mb-1">Previous Workout:</p>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground/70">
+                      {exercise.previousWeight && (
+                        <span>Weight: <span className="font-semibold">{exercise.previousWeight}kg</span></span>
+                      )}
+                      {exercise.previousReps && (
+                        <span>Reps: <span className="font-semibold">{exercise.previousReps}</span></span>
+                      )}
+                      {exercise.previousSetData && (
+                        <span>Sets: <span className="font-semibold">{exercise.previousSetData.length}</span></span>
+                      )}
+                    </div>
+                  </div>
                 )}
               </CardHeader>
               <CardContent className="space-y-4">
