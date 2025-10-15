@@ -554,19 +554,33 @@ export default function StartWorkout() {
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <Label className="text-muted-foreground text-xs font-medium">Weight (kg)</Label>
+                          <div className="flex items-center justify-between mb-1">
+                            <Label className="text-muted-foreground text-xs font-medium">Weight (kg)</Label>
+                            {exerciseSets[index]?.[setIndex]?.weight > 0 && (exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight) && (
+                              <span className={`text-xs font-semibold ${
+                                exerciseSets[index][setIndex].weight > (exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight || 0)
+                                  ? 'text-green-600 dark:text-green-400'
+                                  : exerciseSets[index][setIndex].weight < (exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight || 0)
+                                  ? 'text-red-600 dark:text-red-400'
+                                  : 'text-yellow-600 dark:text-yellow-400'
+                              }`}>
+                                {exerciseSets[index][setIndex].weight > (exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight || 0) && '+'}
+                                {(exerciseSets[index][setIndex].weight - (exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight || 0)).toFixed(1)}kg
+                              </span>
+                            )}
+                          </div>
                           <Input
                             type="number"
                             placeholder={
                               exercise.previousSetData?.[setIndex]?.weight 
-                                ? `Prev: ${exercise.previousSetData[setIndex].weight}kg` 
+                                ? `Last: ${exercise.previousSetData[setIndex].weight}kg` 
                                 : exercise.previousWeight 
-                                ? `Prev: ${exercise.previousWeight}kg` 
+                                ? `Last: ${exercise.previousWeight}kg` 
                                 : "0"
                             }
                             value={exerciseSets[index]?.[setIndex]?.weight || ''}
                             onChange={(e) => updateExerciseSet(index, setIndex, 'weight', Number(e.target.value))}
-                            className={`mt-1 antialiased placeholder:text-xs sm:placeholder:text-sm ${getPerformanceColor(
+                            className={`antialiased placeholder:text-muted-foreground/50 ${getPerformanceColor(
                               exerciseSets[index]?.[setIndex]?.weight || 0, 
                               exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight, 
                               'weight'
@@ -574,19 +588,33 @@ export default function StartWorkout() {
                           />
                         </div>
                         <div>
-                          <Label className="text-muted-foreground text-xs font-medium">Reps</Label>
+                          <div className="flex items-center justify-between mb-1">
+                            <Label className="text-muted-foreground text-xs font-medium">Reps</Label>
+                            {exerciseSets[index]?.[setIndex]?.reps > 0 && (exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps) && (
+                              <span className={`text-xs font-semibold ${
+                                exerciseSets[index][setIndex].reps > (exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps || 0)
+                                  ? 'text-green-600 dark:text-green-400'
+                                  : exerciseSets[index][setIndex].reps < (exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps || 0)
+                                  ? 'text-red-600 dark:text-red-400'
+                                  : 'text-yellow-600 dark:text-yellow-400'
+                              }`}>
+                                {exerciseSets[index][setIndex].reps > (exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps || 0) && '+'}
+                                {exerciseSets[index][setIndex].reps - (exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps || 0)}
+                              </span>
+                            )}
+                          </div>
                           <Input
                             type="number"
                             placeholder={
                               exercise.previousSetData?.[setIndex]?.reps 
-                                ? `Prev: ${exercise.previousSetData[setIndex].reps}` 
+                                ? `Last: ${exercise.previousSetData[setIndex].reps}` 
                                 : exercise.previousReps 
-                                ? `Prev: ${exercise.previousReps}` 
+                                ? `Last: ${exercise.previousReps}` 
                                 : "0"
                             }
                             value={exerciseSets[index]?.[setIndex]?.reps || ''}
                             onChange={(e) => updateExerciseSet(index, setIndex, 'reps', Number(e.target.value))}
-                            className={`mt-1 antialiased placeholder:text-xs sm:placeholder:text-sm ${getPerformanceColor(
+                            className={`antialiased placeholder:text-muted-foreground/50 ${getPerformanceColor(
                               exerciseSets[index]?.[setIndex]?.reps || 0, 
                               exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps, 
                               'reps'
