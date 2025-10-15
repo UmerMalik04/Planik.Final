@@ -275,9 +275,9 @@ export default function StartWorkout() {
   const getPerformanceColor = (current: number, previous: number | undefined, field: 'weight' | 'reps') => {
     if (!previous || current === 0) return 'border-border bg-background text-foreground';
     
-    if (current > previous) return 'border-2 border-green-500 bg-green-50 text-green-900 dark:bg-green-950 dark:text-green-100 focus:ring-green-500';
-    if (current < previous) return 'border-2 border-red-500 bg-red-50 text-red-900 dark:bg-red-950 dark:text-red-100 focus:ring-red-500';
-    return 'border-2 border-yellow-500 bg-yellow-50 text-yellow-900 dark:bg-yellow-950 dark:text-yellow-100 focus:ring-yellow-500';
+    if (current > previous) return 'border-2 border-success bg-success-light text-success-dark dark:bg-success-light dark:text-success-dark focus:ring-success';
+    if (current < previous) return 'border-2 border-error bg-error-light text-error-dark dark:bg-error-light dark:text-error-dark focus:ring-error';
+    return 'border-2 border-warning bg-warning-light text-warning-dark dark:bg-warning-light dark:text-warning-dark focus:ring-warning';
   };
 
   const handleCompleteWorkout = () => {
@@ -559,10 +559,10 @@ export default function StartWorkout() {
                             {exerciseSets[index]?.[setIndex]?.weight > 0 && (exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight) && (
                               <span className={`text-xs font-semibold ${
                                 exerciseSets[index][setIndex].weight > (exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight || 0)
-                                  ? 'text-green-600 dark:text-green-400'
+                                  ? 'text-success dark:text-success-dark'
                                   : exerciseSets[index][setIndex].weight < (exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight || 0)
-                                  ? 'text-red-600 dark:text-red-400'
-                                  : 'text-yellow-600 dark:text-yellow-400'
+                                  ? 'text-error dark:text-error-dark'
+                                  : 'text-warning dark:text-warning-dark'
                               }`}>
                                 {exerciseSets[index][setIndex].weight > (exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight || 0) && '+'}
                                 {(exerciseSets[index][setIndex].weight - (exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight || 0)).toFixed(1)}kg
@@ -593,10 +593,10 @@ export default function StartWorkout() {
                             {exerciseSets[index]?.[setIndex]?.reps > 0 && (exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps) && (
                               <span className={`text-xs font-semibold ${
                                 exerciseSets[index][setIndex].reps > (exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps || 0)
-                                  ? 'text-green-600 dark:text-green-400'
+                                  ? 'text-success dark:text-success-dark'
                                   : exerciseSets[index][setIndex].reps < (exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps || 0)
-                                  ? 'text-red-600 dark:text-red-400'
-                                  : 'text-yellow-600 dark:text-yellow-400'
+                                  ? 'text-error dark:text-error-dark'
+                                  : 'text-warning dark:text-warning-dark'
                               }`}>
                                 {exerciseSets[index][setIndex].reps > (exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps || 0) && '+'}
                                 {exerciseSets[index][setIndex].reps - (exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps || 0)}
