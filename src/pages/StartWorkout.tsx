@@ -544,12 +544,27 @@ export default function StartWorkout() {
                 
                 {/* Individual Sets */}
                 <div className="space-y-3">
-                  {Array(exercise.sets + (extraSets[index] || 0)).fill(0).map((_, setIndex) => (
-                    <div key={setIndex} className="border border-border rounded p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-muted-foreground">
-                          {setIndex < exercise.sets ? `Set ${setIndex + 1}` : `Extra Set ${setIndex - exercise.sets + 1}`}
-                        </span>
+                  {Array(exercise.sets + (extraSets[index] || 0)).fill(0).map((_, setIndex) => {
+                    const currentWeight = exerciseSets[index]?.[setIndex]?.weight || 0;
+                    const previousWeight = exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight || 0;
+                    const showArrow = currentWeight > 0 && previousWeight > 0;
+                    const isImprovement = currentWeight > previousWeight;
+                    const isWorse = currentWeight < previousWeight;
+                    
+                    return (
+                      <div key={setIndex} className="border border-border rounded p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-muted-foreground">
+                              {setIndex < exercise.sets ? `Set ${setIndex + 1}` : `Extra Set ${setIndex - exercise.sets + 1}`}
+                            </span>
+                            {showArrow && isImprovement && (
+                              <span className="text-success text-lg">↑</span>
+                            )}
+                            {showArrow && isWorse && (
+                              <span className="text-error text-lg">↓</span>
+                            )}
+                          </div>
                         <Select 
                           defaultValue="normal"
                           onValueChange={(value: 'normal' | 'dropset') => updateSetType(index, setIndex, value)}
@@ -675,7 +690,8 @@ export default function StartWorkout() {
                         </div>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 
                 {/* Add/Remove Set Buttons */}
