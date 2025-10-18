@@ -99,7 +99,7 @@ export default function StartWorkout() {
     const initialSetTypes: { [key: string]: 'normal' | 'dropset' } = {};
     
     workoutPlan.exercises.forEach((exercise: any, index: number) => {
-      initialSetsData[index] = Array(exercise.sets || 3).fill(null).map(() => ({ weight: 0, reps: 0, type: 'normal' as const }));
+      initialSetsData[index] = Array(exercise.sets || 3).fill(null).map(() => ({ weight: null as any, reps: null as any, type: 'normal' as const }));
       
       // Initialize set types for all sets to 'normal'
       Array(exercise.sets || 3).fill(0).forEach((_, setIndex) => {
@@ -273,11 +273,12 @@ export default function StartWorkout() {
   };
 
   const getPerformanceColor = (current: number, previous: number | undefined, field: 'weight' | 'reps') => {
-    if (!previous || current === 0) return 'border-border bg-background text-foreground';
+    if (!previous) return 'border-border bg-background text-foreground';
+    if (!current || current === 0) return 'border-border bg-background text-foreground';
     
-    if (current > previous) return 'border-2 border-success bg-success-light text-success-dark dark:bg-success-light dark:text-success-dark focus:ring-success';
-    if (current < previous) return 'border-2 border-error bg-error-light text-error-dark dark:bg-error-light dark:text-error-dark focus:ring-error';
-    return 'border-2 border-warning bg-warning-light text-warning-dark dark:bg-warning-light dark:text-warning-dark focus:ring-warning';
+    if (current > previous) return 'border-2 border-success bg-success-light text-success-dark dark:bg-success-dark/20 dark:text-success focus:ring-success';
+    if (current < previous) return 'border-2 border-error bg-error-light text-error-dark dark:bg-error-dark/20 dark:text-error focus:ring-error';
+    return 'border-2 border-warning bg-warning-light text-warning-dark dark:bg-warning-dark/20 dark:text-warning focus:ring-warning';
   };
 
   const handleCompleteWorkout = () => {
@@ -545,11 +546,16 @@ export default function StartWorkout() {
                 {/* Individual Sets */}
                 <div className="space-y-3">
                   {Array(exercise.sets + (extraSets[index] || 0)).fill(0).map((_, setIndex) => {
-                    const currentWeight = exerciseSets[index]?.[setIndex]?.weight || 0;
+                    const currentWeight = exerciseSets[index]?.[setIndex]?.weight;
+                    const currentReps = exerciseSets[index]?.[setIndex]?.reps;
                     const previousWeight = exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight || 0;
-                    const showArrow = currentWeight > 0 && previousWeight > 0;
-                    const isImprovement = currentWeight > previousWeight;
-                    const isWorse = currentWeight < previousWeight;
+                    const previousReps = exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps || 0;
+                    const showWeightArrow = currentWeight && currentWeight > 0 && previousWeight > 0;
+                    const showRepsArrow = currentReps && currentReps > 0 && previousReps > 0;
+                    const isWeightImprovement = currentWeight > previousWeight;
+                    const isWeightWorse = currentWeight < previousWeight;
+                    const isRepsImprovement = currentReps > previousReps;
+                    const isRepsWorse = currentReps < previousReps;
                     
                     return (
                       <div key={setIndex} className="border border-border rounded p-3">
@@ -558,11 +564,17 @@ export default function StartWorkout() {
                             <span className="text-sm font-medium text-muted-foreground">
                               {setIndex < exercise.sets ? `Set ${setIndex + 1}` : `Extra Set ${setIndex - exercise.sets + 1}`}
                             </span>
-                            {showArrow && isImprovement && (
-                              <span className="text-success text-lg">↑</span>
+                            {showWeightArrow && isWeightImprovement && (
+                              <span className="text-success text-lg font-bold">↑</span>
                             )}
-                            {showArrow && isWorse && (
-                              <span className="text-error text-lg">↓</span>
+                            {showWeightArrow && isWeightWorse && (
+                              <span className="text-error text-lg font-bold">↓</span>
+                            )}
+                            {showRepsArrow && isRepsImprovement && !showWeightArrow && (
+                              <span className="text-success text-lg font-bold">↑</span>
+                            )}
+                            {showRepsArrow && isRepsWorse && !showWeightArrow && (
+                              <span className="text-error text-lg font-bold">↓</span>
                             )}
                           </div>
                         <Select 
@@ -612,12 +624,12 @@ export default function StartWorkout() {
                           </div>
                           <Input
                             type="number"
-                            placeholder={exercise.previousSetData?.[setIndex]?.weight?.toString() || exercise.previousWeight?.toString() || '0'}
-                            value={exerciseSets[index]?.[setIndex]?.weight || ''}
-                            onChange={(e) => updateExerciseSet(index, setIndex, 'weight', Number(e.target.value))}
+                            placeholder={previousWeight > 0 ? previousWeight.toString() : '0'}
+                            value={currentWeight ?? ''}
+                            onChange={(e) => updateExerciseSet(index, setIndex, 'weight', e.target.value === '' ? null : Number(e.target.value))}
                             className={`antialiased ${getPerformanceColor(
-                              exerciseSets[index]?.[setIndex]?.weight || 0, 
-                              exercise.previousSetData?.[setIndex]?.weight || exercise.previousWeight, 
+                              currentWeight || 0, 
+                              previousWeight, 
                               'weight'
                             )}`}
                           />
@@ -655,12 +667,12 @@ export default function StartWorkout() {
                           </div>
                           <Input
                             type="number"
-                            placeholder={exercise.previousSetData?.[setIndex]?.reps?.toString() || exercise.previousReps?.toString() || '0'}
-                            value={exerciseSets[index]?.[setIndex]?.reps || ''}
-                            onChange={(e) => updateExerciseSet(index, setIndex, 'reps', Number(e.target.value))}
+                            placeholder={previousReps > 0 ? previousReps.toString() : '0'}
+                            value={currentReps ?? ''}
+                            onChange={(e) => updateExerciseSet(index, setIndex, 'reps', e.target.value === '' ? null : Number(e.target.value))}
                             className={`antialiased ${getPerformanceColor(
-                              exerciseSets[index]?.[setIndex]?.reps || 0, 
-                              exercise.previousSetData?.[setIndex]?.reps || exercise.previousReps, 
+                              currentReps || 0, 
+                              previousReps, 
                               'reps'
                             )}`}
                           />
