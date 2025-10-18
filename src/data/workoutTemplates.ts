@@ -134,7 +134,6 @@ export const workoutTemplates: WorkoutTemplate[] = [
       { name: 'Rear Delt Fly / Reverse Pec Deck', sets: 3, reps: '12-15', notes: "Don't shrug" },
       { name: 'Plank', sets: 3, reps: '60 sec', notes: 'Keep body straight' },
       { name: 'Hanging Knee Raises', sets: 3, reps: '12-15', notes: 'Focus on abs, not swing' },
-      { name: 'Cable Woodchopper', sets: 3, reps: '10-12 each side', notes: 'Rotational strength' },
     ],
   },
 ];
