@@ -67,6 +67,33 @@ export type Database = {
           },
         ]
       }
+      daily_steps: {
+        Row: {
+          created_at: string | null
+          date: string
+          id: string
+          steps: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          steps?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          steps?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       exercises: {
         Row: {
           created_at: string
@@ -225,6 +252,102 @@ export type Database = {
           updated_at?: string
           user_id?: string
           weekly_workout_frequency?: number | null
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          created_at: string | null
+          hidden_widgets: string[] | null
+          id: string
+          updated_at: string | null
+          user_id: string
+          widget_order: string[] | null
+        }
+        Insert: {
+          created_at?: string | null
+          hidden_widgets?: string[] | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+          widget_order?: string[] | null
+        }
+        Update: {
+          created_at?: string | null
+          hidden_widgets?: string[] | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+          widget_order?: string[] | null
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          display_name: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          auto_increment_amount: number | null
+          auto_increment_weight: boolean | null
+          created_at: string | null
+          enable_notifications: boolean | null
+          id: string
+          rest_timer_duration: number | null
+          rest_timer_enabled: boolean | null
+          theme: string | null
+          theme_color: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auto_increment_amount?: number | null
+          auto_increment_weight?: boolean | null
+          created_at?: string | null
+          enable_notifications?: boolean | null
+          id?: string
+          rest_timer_duration?: number | null
+          rest_timer_enabled?: boolean | null
+          theme?: string | null
+          theme_color?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auto_increment_amount?: number | null
+          auto_increment_weight?: boolean | null
+          created_at?: string | null
+          enable_notifications?: boolean | null
+          id?: string
+          rest_timer_duration?: number | null
+          rest_timer_enabled?: boolean | null
+          theme?: string | null
+          theme_color?: string | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
