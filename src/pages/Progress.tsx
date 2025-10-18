@@ -112,25 +112,53 @@ export default function Progress() {
                new Date(session.date) < oneWeekAgo;
       });
 
-      // Calculate average weights
+      // Calculate average weights - use setData for more accurate totals
       const getCurrentWeekAverage = () => {
         if (currentWeekSessions.length === 0) return 0;
-        const totalWeight = currentWeekSessions.reduce((sum, session) => 
-          sum + session.exercises.reduce((exerciseSum, exercise) => 
-            exerciseSum + exercise.weight, 0), 0);
-        const totalExercises = currentWeekSessions.reduce((sum, session) => 
-          sum + session.exercises.length, 0);
-        return totalExercises > 0 ? totalWeight / totalExercises : 0;
+        let totalVolume = 0;
+        let totalSets = 0;
+        
+        currentWeekSessions.forEach(session => {
+          session.exercises.forEach(exercise => {
+            if (exercise.setData && exercise.setData.length > 0) {
+              // Use actual set data
+              exercise.setData.forEach(set => {
+                totalVolume += set.weight * set.reps;
+                totalSets += 1;
+              });
+            } else {
+              // Fallback to exercise totals
+              totalVolume += exercise.weight * exercise.reps * exercise.sets;
+              totalSets += exercise.sets;
+            }
+          });
+        });
+        
+        return totalSets > 0 ? totalVolume / totalSets : 0;
       };
 
       const getPreviousWeekAverage = () => {
         if (previousWeekSessions.length === 0) return 0;
-        const totalWeight = previousWeekSessions.reduce((sum, session) => 
-          sum + session.exercises.reduce((exerciseSum, exercise) => 
-            exerciseSum + exercise.weight, 0), 0);
-        const totalExercises = previousWeekSessions.reduce((sum, session) => 
-          sum + session.exercises.length, 0);
-        return totalExercises > 0 ? totalWeight / totalExercises : 0;
+        let totalVolume = 0;
+        let totalSets = 0;
+        
+        previousWeekSessions.forEach(session => {
+          session.exercises.forEach(exercise => {
+            if (exercise.setData && exercise.setData.length > 0) {
+              // Use actual set data
+              exercise.setData.forEach(set => {
+                totalVolume += set.weight * set.reps;
+                totalSets += 1;
+              });
+            } else {
+              // Fallback to exercise totals
+              totalVolume += exercise.weight * exercise.reps * exercise.sets;
+              totalSets += exercise.sets;
+            }
+          });
+        });
+        
+        return totalSets > 0 ? totalVolume / totalSets : 0;
       };
 
       const currentAvg = getCurrentWeekAverage();
@@ -142,6 +170,8 @@ export default function Progress() {
         if (difference > 0.5) trend = 'increase';
         else if (difference < -0.5) trend = 'decrease';
         else trend = 'same';
+      } else if (currentAvg > 0 && previousAvg === 0) {
+        trend = 'increase';
       }
 
       return {
