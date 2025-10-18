@@ -182,7 +182,7 @@ export default function Settings() {
     });
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (!newPassword || !confirmPassword) {
       toast({
         title: "Password Required",
@@ -210,23 +210,28 @@ export default function Settings() {
       return;
     }
 
-    // Update password in localStorage
-    const currentUser = JSON.parse(localStorage.getItem('current-user') || '{}');
-    const savedUsers = JSON.parse(localStorage.getItem('mock-users') || '[]');
-    const userIndex = savedUsers.findIndex((u: any) => u.email === currentUser.email);
-    
-    if (userIndex !== -1) {
-      savedUsers[userIndex].password = newPassword;
-      localStorage.setItem('mock-users', JSON.stringify(savedUsers));
+    try {
+      // Update password using Supabase
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+      
+      setNewPassword('');
+      setConfirmPassword('');
+      
+      toast({
+        title: "Password Updated",
+        description: "Your password has been changed successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update password. Please try again.",
+        variant: "destructive",
+      });
     }
-    
-    setNewPassword('');
-    setConfirmPassword('');
-    
-    toast({
-      title: "Password Updated",
-      description: "Your password has been changed successfully.",
-    });
   };
 
   const handleFeedback = async () => {

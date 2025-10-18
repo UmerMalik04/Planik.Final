@@ -182,61 +182,16 @@ export default function Auth() {
     try {
       console.log('Starting password reset for:', forgotPasswordEmail);
       
-      // Always use our custom Resend service since Supabase email has issues
-      const resetToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      const resetUrl = `${window.location.origin}/auth?type=recovery&token=${resetToken}&email=${encodeURIComponent(forgotPasswordEmail)}`;
+      // Use Supabase's built-in password reset with custom redirect URL
+      const redirectUrl = `${window.location.origin}/auth`;
       
-      console.log('Calling send-email function with:', {
-        to: forgotPasswordEmail,
-        subject: 'Reset your Planik password'
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
+        redirectTo: redirectUrl,
       });
-      
-      // Call our custom send-email function with proper reset link
-      const { data: emailData, error: emailError } = await supabase.functions.invoke('send-email', {
-        body: {
-          to: forgotPasswordEmail,
-          subject: 'Reset your Planik password',
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #333; margin-bottom: 10px;">Reset Your Password</h1>
-                <p style="color: #666;">Planik Fitness App</p>
-              </div>
-              
-              <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                <p style="margin: 0 0 15px 0; color: #333;">Hello,</p>
-                <p style="margin: 0 0 15px 0; color: #333;">You requested to reset your password for your Planik account.</p>
-                <p style="margin: 0; color: #333;">Click the button below to reset your password:</p>
-              </div>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${resetUrl}" style="background: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">Reset My Password</a>
-              </div>
-              
-              <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 6px; margin: 20px 0;">
-                <p style="margin: 0; color: #856404; font-size: 14px;"><strong>Security tip:</strong> This link will expire in 24 hours for your security.</p>
-              </div>
-              
-              <p style="color: #666; font-size: 14px; margin: 20px 0;">If you can't click the button, copy and paste this link into your browser:</p>
-              <p style="color: #007bff; font-size: 12px; word-break: break-all; background: #f8f9fa; padding: 10px; border-radius: 4px;">${resetUrl}</p>
-              
-              <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-              <p style="color: #666; font-size: 12px; text-align: center;">If you didn't request this password reset, please ignore this email. Your password will remain unchanged.</p>
-              <p style="color: #666; font-size: 12px; text-align: center;">This email was sent from Planik fitness app.</p>
-              
-              <div style="margin-top: 20px; padding: 10px; background: #e7f3ff; border-radius: 6px;">
-                <p style="margin: 0; color: #0066cc; font-size: 12px;"><strong>Note:</strong> Check your inbox and spam folder. The email should arrive within a few minutes.</p>
-              </div>
-            </div>
-          `
-        }
-      });
-      
-      console.log('Send-email function response:', { data: emailData, error: emailError });
-      
-      if (emailError) {
-        console.error('Custom email service failed:', emailError);
-        throw new Error('Failed to send email: ' + emailError.message);
+
+      if (error) {
+        console.error('Supabase password reset error:', error);
+        throw error;
       }
       
       toast({
