@@ -57,11 +57,16 @@ export default function StartWorkout() {
   });
 
   useEffect(() => {
-    if (plan && !currentSession) {
-      const session = startWorkout(plan.id);
-      setCurrentSession(session);
-      initializeWorkout(session, plan);
-    }
+    const initSession = async () => {
+      if (plan && !currentSession) {
+        const session = await startWorkout(plan.id);
+        console.log('Session created:', session);
+        setCurrentSession(session);
+        initializeWorkout(session, plan);
+      }
+    };
+    
+    initSession();
   }, [plan, planId]);
 
   // Bottom timer effect
@@ -326,7 +331,7 @@ export default function StartWorkout() {
     setShowSummary(true);
   };
 
-  const confirmCompleteWorkout = () => {
+  const confirmCompleteWorkout = async () => {
     if (!currentSession) return;
     
     const validExercises = completedExercises.filter(exercise => 
@@ -339,7 +344,10 @@ export default function StartWorkout() {
       };
     });
     
-    completeWorkout(currentSession.id, validExercises);
+    console.log('Saving workout with session ID:', currentSession.id);
+    console.log('Valid exercises:', validExercises);
+    
+    await completeWorkout(currentSession.id, validExercises);
     navigate("/");
   };
 
