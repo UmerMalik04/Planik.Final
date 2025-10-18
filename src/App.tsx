@@ -11,6 +11,7 @@ import { supabase } from "./integrations/supabase/client";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import CreatePlan from "./pages/CreatePlan";
+import Templates from "./pages/Templates";
 import WorkoutPlan from "./pages/WorkoutPlan";
 import AddExercise from "./pages/AddExercise";
 import EditExercise from "./pages/EditExercise";
@@ -80,6 +81,13 @@ function App() {
             <AuthGuard>
               <Layout>
                 <CreatePlan />
+              </Layout>
+            </AuthGuard>
+          } />
+          <Route path="/templates" element={
+            <AuthGuard>
+              <Layout>
+                <Templates />
               </Layout>
             </AuthGuard>
           } />

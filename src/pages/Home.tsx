@@ -315,15 +315,25 @@ export default function Home() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg sm:text-xl font-semibold">{getText('choose_workout')}</h2>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowCustomInput(!showCustomInput)}
-            className="flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            {getText('custom')}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/templates')}
+              className="flex items-center gap-2"
+            >
+              Templates
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowCustomInput(!showCustomInput)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              {getText('custom')}
+            </Button>
+          </div>
         </div>
         
         {showCustomInput && (
