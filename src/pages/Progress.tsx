@@ -280,33 +280,10 @@ export default function Progress() {
       });
 
       const avgVolumePerSet = totalSets > 0 ? totalVolume / totalSets : 0;
-      const firstSessionAvg = index === 0 ? avgVolumePerSet : 
-        (() => {
-          const firstSession = typeSessions[0];
-          let firstTotal = 0;
-          let firstSets = 0;
-          firstSession.exercises.forEach(ex => {
-            if (ex.setData && ex.setData.length > 0) {
-              ex.setData.forEach(set => {
-                firstTotal += set.weight * set.reps;
-                firstSets += 1;
-              });
-            } else {
-              firstTotal += ex.weight * ex.reps * ex.sets;
-              firstSets += ex.sets;
-            }
-          });
-          return firstSets > 0 ? firstTotal / firstSets : 0;
-        })();
-
-      const improvementPercentage = firstSessionAvg > 0 
-        ? ((avgVolumePerSet / firstSessionAvg - 1) * 100) 
-        : 0;
 
       return {
         session: index + 1,
-        percentage: Math.round(improvementPercentage * 10) / 10,
-        avgVolume: Math.round(avgVolumePerSet * 10) / 10,
+        weight: Math.round(avgVolumePerSet * 10) / 10,
         date: formatDate(session.date)
       };
     });
@@ -682,19 +659,18 @@ export default function Progress() {
                       label={{ value: 'Date', position: 'insideBottom', offset: -5 }}
                     />
                     <YAxis 
-                      label={{ value: 'Improvement %', angle: -90, position: 'insideLeft' }}
+                      label={{ value: 'Avg Weight', angle: -90, position: 'insideLeft' }}
                     />
                     <Tooltip 
-                      formatter={(value, name) => {
-                        if (name === 'percentage') return [`${value}%`, 'Improvement'];
-                        if (name === 'avgVolume') return [value, 'Avg Volume/Set'];
-                        return [value, name];
-                      }}
+                      formatter={(value, name) => [
+                        name === 'weight' ? formatWeight(value as number) : value,
+                        'Avg Weight per Set'
+                      ]}
                       labelFormatter={(label) => label}
                     />
                     <Line 
                       type="monotone" 
-                      dataKey="percentage" 
+                      dataKey="weight" 
                       stroke="hsl(var(--primary))" 
                       strokeWidth={2}
                       dot={{ fill: "hsl(var(--primary))" }}
@@ -703,7 +679,7 @@ export default function Progress() {
                 </ResponsiveContainer>
               </div>
               <div className="text-sm text-muted-foreground text-center">
-                Shows percentage improvement in average volume per set from your first workout
+                Tap outside to close
               </div>
             </div>
           )}
