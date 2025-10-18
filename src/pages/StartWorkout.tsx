@@ -12,6 +12,7 @@ import { CompletedExercise } from "@/stores/useWorkoutStore";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useShare } from "@/hooks/useShare";
 import { ShareWorkout } from "@/components/ShareWorkout";
+import { WorkoutImprovementSummary } from "@/components/WorkoutImprovementSummary";
 
 export default function StartWorkout() {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ export default function StartWorkout() {
   const [timerInputMinutes, setTimerInputMinutes] = useState("0");
   const [timerInputSeconds, setTimerInputSeconds] = useState("0");
   const [showShareSheet, setShowShareSheet] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
 
   interface SetData {
     weight: number;
@@ -300,6 +302,23 @@ export default function StartWorkout() {
       return;
     }
     
+    // Show summary before completing
+    setShowSummary(true);
+  };
+
+  const confirmCompleteWorkout = () => {
+    if (!currentSession) return;
+    
+    const validExercises = completedExercises.filter(exercise => 
+      exercise.weight > 0 && exercise.reps > 0
+    ).map((exercise) => {
+      const originalIndex = completedExercises.findIndex(e => e.id === exercise.id);
+      return {
+        ...exercise,
+        setData: exerciseSets[originalIndex] || []
+      };
+    });
+    
     completeWorkout(currentSession.id, validExercises);
     navigate("/");
   };
@@ -364,6 +383,26 @@ export default function StartWorkout() {
           totalWeight: getTotalWeight()
         }}
       />
+
+      {/* Workout Improvement Summary Dialog */}
+      <Dialog open={showSummary} onOpenChange={setShowSummary}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Workout Complete! 🎉</DialogTitle>
+          </DialogHeader>
+          <WorkoutImprovementSummary 
+            exercises={completedExercises.filter(e => e.weight > 0 && e.reps > 0)} 
+          />
+          <div className="flex gap-3 mt-4">
+            <Button variant="outline" onClick={() => setShowSummary(false)} className="flex-1">
+              Back to Workout
+            </Button>
+            <Button onClick={confirmCompleteWorkout} className="flex-1">
+              Finish & Save
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Add Exercise Dialog */}
       <Dialog open={showAddExerciseDialog} onOpenChange={setShowAddExerciseDialog}>
