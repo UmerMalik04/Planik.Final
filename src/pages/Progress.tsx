@@ -252,47 +252,64 @@ export default function Progress() {
   };
 
   const getWorkoutTypeChartData = (workoutTypeName: string) => {
-    // Get all sessions for this workout type
+    // Get all sessions for this workout type, sorted chronologically
     const typeSessions = workoutSessions.filter(session => {
       const plan = workoutPlans.find(plan => plan.id === session.planId);
       return plan?.type === workoutTypeName;
     }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    // Group sessions by week and calculate weekly averages
-    const weeklyData: { [key: string]: { totalWeight: number; exerciseCount: number; date: string } } = {};
-    
-    typeSessions.forEach(session => {
-      const sessionDate = new Date(session.date);
-      const weekKey = `${sessionDate.getFullYear()}-W${Math.ceil(sessionDate.getDate() / 7)}`;
-      
-      const weekAverage = session.exercises.reduce((sum, exercise) => sum + exercise.weight, 0) / session.exercises.length;
-      
-      if (!weeklyData[weekKey]) {
-        weeklyData[weekKey] = {
-          totalWeight: 0,
-          exerciseCount: 0,
-          date: formatDate(session.date)
-        };
-      }
-      
-      weeklyData[weekKey].totalWeight += weekAverage;
-      weeklyData[weekKey].exerciseCount += 1;
-    });
+    if (typeSessions.length === 0) return [];
 
-    // Convert to chart format with percentage improvement
-    const chartData = Object.entries(weeklyData).map(([week, data], index) => {
-      const weeklyAverage = data.totalWeight / data.exerciseCount;
-      const firstWeekAverage = index === 0 ? weeklyAverage : Object.values(weeklyData)[0].totalWeight / Object.values(weeklyData)[0].exerciseCount;
-      const improvementPercentage = firstWeekAverage > 0 ? ((weeklyAverage / firstWeekAverage - 1) * 100) : 0;
-      
+    // Calculate average volume per set for each session
+    return typeSessions.map((session, index) => {
+      let totalVolume = 0;
+      let totalSets = 0;
+
+      session.exercises.forEach(exercise => {
+        if (exercise.setData && exercise.setData.length > 0) {
+          // Use actual set data
+          exercise.setData.forEach(set => {
+            totalVolume += set.weight * set.reps;
+            totalSets += 1;
+          });
+        } else {
+          // Fallback to exercise totals
+          totalVolume += exercise.weight * exercise.reps * exercise.sets;
+          totalSets += exercise.sets;
+        }
+      });
+
+      const avgVolumePerSet = totalSets > 0 ? totalVolume / totalSets : 0;
+      const firstSessionAvg = index === 0 ? avgVolumePerSet : 
+        (() => {
+          const firstSession = typeSessions[0];
+          let firstTotal = 0;
+          let firstSets = 0;
+          firstSession.exercises.forEach(ex => {
+            if (ex.setData && ex.setData.length > 0) {
+              ex.setData.forEach(set => {
+                firstTotal += set.weight * set.reps;
+                firstSets += 1;
+              });
+            } else {
+              firstTotal += ex.weight * ex.reps * ex.sets;
+              firstSets += ex.sets;
+            }
+          });
+          return firstSets > 0 ? firstTotal / firstSets : 0;
+        })();
+
+      const improvementPercentage = firstSessionAvg > 0 
+        ? ((avgVolumePerSet / firstSessionAvg - 1) * 100) 
+        : 0;
+
       return {
-        week,
+        session: index + 1,
         percentage: Math.round(improvementPercentage * 10) / 10,
-        date: data.date
+        avgVolume: Math.round(avgVolumePerSet * 10) / 10,
+        date: formatDate(session.date)
       };
     });
-
-    return chartData;
   };
 
   return (
@@ -543,9 +560,8 @@ export default function Progress() {
         )}
       </div>
 
-      {/* Custom Exercise Progress Section */}
+      {/* Workout Type Progress Section */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Custom Exercise Progress</h2>
         {workoutTypeProgress.length === 0 ? (
           <Card>
             <CardContent className="p-6 text-center">
@@ -669,24 +685,25 @@ export default function Progress() {
                       label={{ value: 'Improvement %', angle: -90, position: 'insideLeft' }}
                     />
                     <Tooltip 
-                      formatter={(value, name) => [
-                        `${value}%`,
-                        'Improvement'
-                      ]}
+                      formatter={(value, name) => {
+                        if (name === 'percentage') return [`${value}%`, 'Improvement'];
+                        if (name === 'avgVolume') return [value, 'Avg Volume/Set'];
+                        return [value, name];
+                      }}
                       labelFormatter={(label) => label}
                     />
                     <Line 
                       type="monotone" 
                       dataKey="percentage" 
-                      stroke="hsl(var(--secondary))" 
+                      stroke="hsl(var(--primary))" 
                       strokeWidth={2}
-                      dot={{ fill: "hsl(var(--secondary))" }}
+                      dot={{ fill: "hsl(var(--primary))" }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
               <div className="text-sm text-muted-foreground text-center">
-                Shows percentage improvement from your baseline week
+                Shows percentage improvement in average volume per set from your first workout
               </div>
             </div>
           )}
