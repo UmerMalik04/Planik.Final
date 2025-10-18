@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 type Theme = 'light' | 'dark';
 
@@ -31,16 +32,23 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themeColor, setThemeColorState] = useState('211 100% 50%');
 
   useEffect(() => {
-    // Load saved theme from localStorage
-    const savedTheme = localStorage.getItem('app-theme') as Theme;
-    const savedColor = localStorage.getItem('app-theme-color');
-    
-    if (savedTheme) {
-      setTheme(savedTheme);
-    }
-    if (savedColor) {
-      setThemeColorState(savedColor);
-    }
+    const loadTheme = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('user_settings')
+        .select('theme, theme_color')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (data) {
+        if (data.theme) setTheme(data.theme as Theme);
+        if (data.theme_color) setThemeColorState(data.theme_color);
+      }
+    };
+
+    loadTheme();
   }, []);
 
   useEffect(() => {
@@ -52,9 +60,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.style.setProperty('--primary', themeColor);
     document.documentElement.style.setProperty('--accent', themeColor);
     
-    // Save to localStorage
-    localStorage.setItem('app-theme', theme);
-    localStorage.setItem('app-theme-color', themeColor);
+    // Save to Supabase
+    const saveTheme = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase
+        .from('user_settings')
+        .upsert({
+          user_id: user.id,
+          theme,
+          theme_color: themeColor
+        }, { onConflict: 'user_id' });
+    };
+
+    saveTheme();
   }, [theme, themeColor]);
 
   const toggleTheme = () => {

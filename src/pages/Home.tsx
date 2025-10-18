@@ -14,6 +14,7 @@ import { DraggableWidget } from "@/components/DraggableWidget";
 import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import muscularBodyDiagram from "@/assets/muscular-body-diagram.png";
+import { supabase } from "@/integrations/supabase/client";
 
 
 export default function Home() {
@@ -53,19 +54,24 @@ export default function Home() {
   useEffect(() => {
     calculateProgress();
     initializeStepCounter();
-    
-    // Load saved widget order
-    const savedOrder = localStorage.getItem('homepage-widget-order');
-    if (savedOrder) {
-      setWidgetOrder(JSON.parse(savedOrder));
-    }
-
-    // Load hidden widgets
-    const savedHidden = localStorage.getItem('homepage-hidden-widgets');
-    if (savedHidden) {
-      setHiddenWidgets(JSON.parse(savedHidden));
-    }
+    loadPreferences();
   }, [workoutSessions]);
+
+  const loadPreferences = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('user_preferences')
+      .select('widget_order, hidden_widgets')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (data) {
+      if (data.widget_order) setWidgetOrder(data.widget_order);
+      if (data.hidden_widgets) setHiddenWidgets(data.hidden_widgets);
+    }
+  };
 
   const initializeStepCounter = async () => {
     // Request permissions for native step counter
@@ -185,7 +191,7 @@ export default function Home() {
     deleteWorkoutType(workoutName);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
@@ -193,22 +199,56 @@ export default function Home() {
         const oldIndex = items.indexOf(active.id as string);
         const newIndex = items.indexOf(over.id as string);
         const newOrder = arrayMove(items, oldIndex, newIndex);
-        localStorage.setItem('homepage-widget-order', JSON.stringify(newOrder));
+        
+        const saveOrder = async () => {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase
+              .from('user_preferences')
+              .upsert({
+                user_id: user.id,
+                widget_order: newOrder,
+                hidden_widgets: hiddenWidgets
+              }, { onConflict: 'user_id' });
+          }
+        };
+        saveOrder();
+        
         return newOrder;
       });
     }
   };
 
-  const handleRemoveWidget = (widgetId: string) => {
+  const handleRemoveWidget = async (widgetId: string) => {
     const newHidden = [...hiddenWidgets, widgetId];
     setHiddenWidgets(newHidden);
-    localStorage.setItem('homepage-hidden-widgets', JSON.stringify(newHidden));
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          widget_order: widgetOrder,
+          hidden_widgets: newHidden
+        }, { onConflict: 'user_id' });
+    }
   };
 
-  const handleRestoreWidget = (widgetId: string) => {
+  const handleRestoreWidget = async (widgetId: string) => {
     const newHidden = hiddenWidgets.filter(id => id !== widgetId);
     setHiddenWidgets(newHidden);
-    localStorage.setItem('homepage-hidden-widgets', JSON.stringify(newHidden));
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          widget_order: widgetOrder,
+          hidden_widgets: newHidden
+        }, { onConflict: 'user_id' });
+    }
   };
 
   const visibleWidgets = widgetOrder.filter(id => !hiddenWidgets.includes(id));

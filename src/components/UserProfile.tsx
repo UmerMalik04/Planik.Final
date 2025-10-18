@@ -33,73 +33,47 @@ export default function UserProfile() {
 
   useEffect(() => {
     const getUser = async () => {
-      // First try to get user from localStorage (for updated profile data)
-      const savedUser = localStorage.getItem('current-user');
-      const avatarUrl = localStorage.getItem('user-avatar');
-      
-      if (savedUser) {
-        const parsedUser = JSON.parse(savedUser);
-        // Ensure avatar URL is always updated
-        if (avatarUrl) {
-          parsedUser.user_metadata = {
-            ...parsedUser.user_metadata,
-            avatar_url: avatarUrl
-          };
-        }
-        setUser(parsedUser);
-      } else {
-        // Fallback to Supabase if no saved user
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user && avatarUrl) {
-          user.user_metadata = {
-            ...user.user_metadata,
-            avatar_url: avatarUrl
-          };
-        }
-        setUser(user);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get profile data from Supabase
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('display_name, avatar_url')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (profile) {
+        user.user_metadata = {
+          ...user.user_metadata,
+          name: profile.display_name,
+          avatar_url: profile.avatar_url
+        };
       }
+      
+      setUser(user);
     };
 
     getUser();
 
-    // Listen for storage changes to update avatar immediately
-    const handleStorageChange = () => {
-      getUser();
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (session?.user) {
-          // Check if we have updated user data in localStorage
-          const savedUser = localStorage.getItem('current-user');
-          const avatarUrl = localStorage.getItem('user-avatar');
-          
-          if (savedUser) {
-            const parsedUser = JSON.parse(savedUser);
-            // Merge Supabase user with saved data and ensure avatar
-            const mergedUser = {
-              ...session.user,
-              user_metadata: {
-                ...session.user.user_metadata,
-                ...parsedUser.user_metadata
-              }
+          // Get profile data from Supabase
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('display_name, avatar_url')
+            .eq('user_id', session.user.id)
+            .maybeSingle();
+
+          if (profile) {
+            session.user.user_metadata = {
+              ...session.user.user_metadata,
+              name: profile.display_name,
+              avatar_url: profile.avatar_url
             };
-            if (avatarUrl) {
-              mergedUser.user_metadata.avatar_url = avatarUrl;
-            }
-            setUser(mergedUser);
-          } else {
-            const updatedUser = { ...session.user };
-            if (avatarUrl) {
-              updatedUser.user_metadata = {
-                ...updatedUser.user_metadata,
-                avatar_url: avatarUrl
-              };
-            }
-            setUser(updatedUser);
           }
+          setUser(session.user);
         } else {
           setUser(null);
         }
@@ -108,7 +82,6 @@ export default function UserProfile() {
 
     return () => {
       subscription.unsubscribe();
-      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
