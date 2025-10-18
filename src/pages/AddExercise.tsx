@@ -15,8 +15,6 @@ export default function AddExercise() {
 
   const plan = workoutPlans.find(p => p.id === planId);
   const [exerciseName, setExerciseName] = useState("");
-  const [reps, setReps] = useState("");
-  const [sets, setSets] = useState("");
   const [hasWarmup, setHasWarmup] = useState(false);
 
   if (!plan) {
@@ -31,12 +29,12 @@ export default function AddExercise() {
   }
 
   const handleSaveExercise = () => {
-    if (!exerciseName.trim() || !reps || !sets) return;
+    if (!exerciseName.trim()) return;
 
     const exercise = {
       name: exerciseName.trim(),
-      reps: Number(reps),
-      sets: Number(sets),
+      reps: 10,
+      sets: 3,
       hasWarmup
     };
 
@@ -44,7 +42,7 @@ export default function AddExercise() {
     navigate(`/workout-plan/${plan.id}`);
   };
 
-  const isValid = exerciseName.trim() && reps && sets && Number(reps) > 0 && Number(sets) > 0;
+  const isValid = exerciseName.trim();
 
   return (
     <div className="min-h-screen p-6 space-y-6">
@@ -76,32 +74,6 @@ export default function AddExercise() {
               value={exerciseName}
               onChange={(e) => setExerciseName(e.target.value)}
               placeholder="e.g., Bicep Curls"
-              className="mt-1"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="reps">Target Reps</Label>
-            <Input
-              id="reps"
-              type="number"
-              value={reps}
-              onChange={(e) => setReps(e.target.value)}
-              placeholder="12"
-              min="1"
-              className="mt-1"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="sets">Number of Sets</Label>
-            <Input
-              id="sets"
-              type="number"
-              value={sets}
-              onChange={(e) => setSets(e.target.value)}
-              placeholder="3"
-              min="1"
               className="mt-1"
             />
           </div>
