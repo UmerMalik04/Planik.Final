@@ -180,32 +180,23 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      console.log('Starting password reset for:', forgotPasswordEmail);
-      
-      // Use Supabase's built-in password reset with custom redirect URL
-      const redirectUrl = `${window.location.origin}/auth`;
-      
       const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
-        redirectTo: redirectUrl,
+        redirectTo: `${window.location.origin}/auth?type=recovery`,
       });
 
-      if (error) {
-        console.error('Supabase password reset error:', error);
-        throw error;
-      }
+      if (error) throw error;
       
       toast({
         title: "Password Reset Email Sent!",
-        description: `A password reset link has been sent to ${forgotPasswordEmail}. Please check your email (including spam folder) and click the link to reset your password.`,
+        description: `A password reset link has been sent to ${forgotPasswordEmail}. Please check your email and click the link.`,
       });
       
       setShowForgotPassword(false);
       setForgotPasswordEmail('');
     } catch (error: any) {
-      console.error('Password reset error:', error);
       toast({
-        title: "Error Sending Email",
-        description: error.message || "Failed to send password reset email. Please try again or contact support.",
+        title: "Error",
+        description: error.message || "Failed to send reset email. Please try again.",
         variant: "destructive",
       });
     } finally {
