@@ -13,16 +13,24 @@ export const WorkoutImprovementSummary = ({ exercises }: WorkoutImprovementSumma
       return { type: 'new', message: 'First time!', color: 'bg-blue-500' };
     }
 
-    const prevWeight = exercise.previousWeight || 0;
-    const prevReps = exercise.previousReps || 0;
-    const currentWeight = exercise.weight;
-    const currentReps = exercise.reps;
+    // Calculate total volume using all sets if available
+    let currentVolume = 0;
+    let previousVolume = 0;
+    
+    if (exercise.setData && exercise.setData.length > 0) {
+      currentVolume = exercise.setData.reduce((sum, set) => sum + (set.weight * set.reps), 0);
+    } else {
+      currentVolume = exercise.weight * exercise.reps * (exercise.sets || 1);
+    }
+    
+    if (exercise.previousSetData && exercise.previousSetData.length > 0) {
+      previousVolume = exercise.previousSetData.reduce((sum, set) => sum + (set.weight * set.reps), 0);
+    } else {
+      previousVolume = (exercise.previousWeight || 0) * (exercise.previousReps || 0) * (exercise.sets || 1);
+    }
 
-    // Calculate volume (weight × reps)
-    const prevVolume = prevWeight * prevReps;
-    const currentVolume = currentWeight * currentReps;
-    const volumeDiff = currentVolume - prevVolume;
-    const volumePercent = prevVolume > 0 ? ((volumeDiff / prevVolume) * 100).toFixed(1) : 0;
+    const volumeDiff = currentVolume - previousVolume;
+    const volumePercent = previousVolume > 0 ? ((volumeDiff / previousVolume) * 100).toFixed(1) : 0;
 
     if (volumeDiff > 0) {
       return {
@@ -31,8 +39,8 @@ export const WorkoutImprovementSummary = ({ exercises }: WorkoutImprovementSumma
         color: 'bg-success',
         icon: TrendingUp,
         details: {
-          weightDiff: currentWeight - prevWeight,
-          repsDiff: currentReps - prevReps,
+          currentVolume,
+          previousVolume,
         }
       };
     } else if (volumeDiff < 0) {
@@ -42,8 +50,8 @@ export const WorkoutImprovementSummary = ({ exercises }: WorkoutImprovementSumma
         color: 'bg-error',
         icon: TrendingDown,
         details: {
-          weightDiff: currentWeight - prevWeight,
-          repsDiff: currentReps - prevReps,
+          currentVolume,
+          previousVolume,
         }
       };
     } else {
@@ -131,11 +139,17 @@ export const WorkoutImprovementSummary = ({ exercises }: WorkoutImprovementSumma
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-medium">
-                    {exercise.weight}kg × {exercise.reps}
+                    {exercise.setData && exercise.setData.length > 0 
+                      ? `${exercise.setData.length} sets`
+                      : `${exercise.weight}kg × ${exercise.reps}`
+                    }
                   </div>
                   {exercise.previousWeight && exercise.previousReps && (
                     <div className="text-xs text-muted-foreground">
-                      Was: {exercise.previousWeight}kg × {exercise.previousReps}
+                      {exercise.previousSetData && exercise.previousSetData.length > 0
+                        ? `Was: ${exercise.previousSetData.length} sets`
+                        : `Was: ${exercise.previousWeight}kg × ${exercise.previousReps}`
+                      }
                     </div>
                   )}
                 </div>
