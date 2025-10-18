@@ -260,33 +260,32 @@ export default function Progress() {
 
     if (typeSessions.length === 0) return [];
 
-    // Calculate average volume per set for each session
+    // Calculate average weight for each session
     return typeSessions.map((session, index) => {
-      let totalVolume = 0;
-      let totalSets = 0;
+      let totalWeight = 0;
+      let exerciseCount = 0;
 
       session.exercises.forEach(exercise => {
         if (exercise.setData && exercise.setData.length > 0) {
-          // Use actual set data
-          exercise.setData.forEach(set => {
-            totalVolume += set.weight * set.reps;
-            totalSets += 1;
-          });
-        } else {
-          // Fallback to exercise totals
-          totalVolume += exercise.weight * exercise.reps * exercise.sets;
-          totalSets += exercise.sets;
+          // Average weight across all sets for this exercise
+          const exerciseAvg = exercise.setData.reduce((sum, set) => sum + set.weight, 0) / exercise.setData.length;
+          totalWeight += exerciseAvg;
+          exerciseCount += 1;
+        } else if (exercise.weight > 0) {
+          // Use exercise weight directly
+          totalWeight += exercise.weight;
+          exerciseCount += 1;
         }
       });
 
-      const avgVolumePerSet = totalSets > 0 ? totalVolume / totalSets : 0;
+      const avgWeight = exerciseCount > 0 ? totalWeight / exerciseCount : 0;
 
       return {
         session: index + 1,
-        weight: Math.round(avgVolumePerSet * 10) / 10,
+        weight: Math.round(avgWeight * 10) / 10,
         date: formatDate(session.date)
       };
-    });
+    }).filter(data => data.weight > 0);
   };
 
   return (
@@ -650,37 +649,53 @@ export default function Progress() {
           </DialogHeader>
           {selectedWorkoutType && (
             <div className="space-y-4">
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={getWorkoutTypeChartData(selectedWorkoutType)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="date" 
-                      label={{ value: 'Date', position: 'insideBottom', offset: -5 }}
-                    />
-                    <YAxis 
-                      label={{ value: 'Avg Weight', angle: -90, position: 'insideLeft' }}
-                    />
-                    <Tooltip 
-                      formatter={(value, name) => [
-                        name === 'weight' ? formatWeight(value as number) : value,
-                        'Avg Weight per Set'
-                      ]}
-                      labelFormatter={(label) => label}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="weight" 
-                      stroke="hsl(var(--primary))" 
-                      strokeWidth={2}
-                      dot={{ fill: "hsl(var(--primary))" }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="text-sm text-muted-foreground text-center">
-                Tap outside to close
-              </div>
+              {getWorkoutTypeChartData(selectedWorkoutType).length > 0 ? (
+                <>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart 
+                        data={getWorkoutTypeChartData(selectedWorkoutType)}
+                        margin={{ top: 5, right: 20, bottom: 20, left: 0 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                        <XAxis 
+                          dataKey="date" 
+                          tick={{ fill: 'hsl(var(--foreground))' }}
+                          tickLine={{ stroke: 'hsl(var(--foreground))' }}
+                        />
+                        <YAxis 
+                          tick={{ fill: 'hsl(var(--foreground))' }}
+                          tickLine={{ stroke: 'hsl(var(--foreground))' }}
+                          domain={['auto', 'auto']}
+                        />
+                        <Tooltip 
+                          formatter={(value) => [formatWeight(value as number), 'Avg Weight']}
+                          labelFormatter={(label) => `Date: ${label}`}
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--background))', 
+                            border: '1px solid hsl(var(--border))' 
+                          }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="weight" 
+                          stroke="hsl(var(--primary))" 
+                          strokeWidth={3}
+                          dot={{ fill: "hsl(var(--primary))", r: 5 }}
+                          activeDot={{ r: 7 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="text-sm text-muted-foreground text-center">
+                    Tap outside to close
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No workout data available for {selectedWorkoutType}
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
