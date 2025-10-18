@@ -8,7 +8,16 @@ interface WorkoutImprovementSummaryProps {
 }
 
 export const WorkoutImprovementSummary = ({ exercises }: WorkoutImprovementSummaryProps) => {
+  console.log('WorkoutImprovementSummary received exercises:', exercises);
+  
   const getExerciseImprovement = (exercise: CompletedExercise) => {
+    console.log('Analyzing exercise:', exercise.name, {
+      previousWeight: exercise.previousWeight,
+      previousReps: exercise.previousReps,
+      setData: exercise.setData,
+      previousSetData: exercise.previousSetData
+    });
+    
     if (!exercise.previousWeight && !exercise.previousReps) {
       return { type: 'new', message: 'First time!', color: 'bg-blue-500' };
     }

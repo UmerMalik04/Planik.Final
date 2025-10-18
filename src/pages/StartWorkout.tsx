@@ -76,10 +76,16 @@ export default function StartWorkout() {
   }, [bottomTimerRunning]);
 
   const initializeWorkout = (session: any, workoutPlan: any) => {
+    console.log('Initializing workout with session:', session);
+    console.log('Workout plan exercises:', workoutPlan.exercises);
+    
     // Initialize completed exercises with plan exercises
     const initialExercises: CompletedExercise[] = workoutPlan.exercises.map((exercise: any, index: number) => {
       const history = getExerciseHistory(exercise.name);
+      console.log(`Exercise: ${exercise.name}, History:`, history);
       const lastPerformance = history[0]; // Most recent
+      
+      console.log(`Last performance for ${exercise.name}:`, lastPerformance);
       
       return {
         id: `${session.id}-${index}`,
@@ -90,10 +96,12 @@ export default function StartWorkout() {
         date: session.date,
         previousWeight: lastPerformance?.weight,
         previousReps: lastPerformance?.reps,
-        previousSetData: lastPerformance?.setData
+        previousSetData: lastPerformance?.setData,
+        setData: []
       };
     });
     
+    console.log('Initial exercises with previous data:', initialExercises);
     setCompletedExercises(initialExercises);
     
     // Initialize sets data
@@ -291,11 +299,23 @@ export default function StartWorkout() {
     ).map((exercise) => {
       // Find the correct set data for this exercise by finding its index in completedExercises
       const originalIndex = completedExercises.findIndex(e => e.id === exercise.id);
+      const setDataForExercise = exerciseSets[originalIndex] || [];
+      
+      console.log(`Completing ${exercise.name}:`, {
+        exercise,
+        setData: setDataForExercise,
+        previousWeight: exercise.previousWeight,
+        previousReps: exercise.previousReps,
+        previousSetData: exercise.previousSetData
+      });
+      
       return {
         ...exercise,
-        setData: exerciseSets[originalIndex] || []
+        setData: setDataForExercise
       };
     });
+    
+    console.log('Valid exercises to save:', validExercises);
     
     if (validExercises.length === 0) {
       alert("Please complete at least one exercise before finishing the workout.");
