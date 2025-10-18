@@ -612,7 +612,7 @@ export default function StartWorkout() {
                           </div>
                           <Input
                             type="number"
-                            placeholder="0"
+                            placeholder={exercise.previousSetData?.[setIndex]?.weight?.toString() || exercise.previousWeight?.toString() || '0'}
                             value={exerciseSets[index]?.[setIndex]?.weight || ''}
                             onChange={(e) => updateExerciseSet(index, setIndex, 'weight', Number(e.target.value))}
                             className={`antialiased ${getPerformanceColor(
@@ -655,7 +655,7 @@ export default function StartWorkout() {
                           </div>
                           <Input
                             type="number"
-                            placeholder="0"
+                            placeholder={exercise.previousSetData?.[setIndex]?.reps?.toString() || exercise.previousReps?.toString() || '0'}
                             value={exerciseSets[index]?.[setIndex]?.reps || ''}
                             onChange={(e) => updateExerciseSet(index, setIndex, 'reps', Number(e.target.value))}
                             className={`antialiased ${getPerformanceColor(
