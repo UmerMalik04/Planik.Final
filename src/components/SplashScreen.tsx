@@ -11,14 +11,14 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
     const timer = setTimeout(() => {
       setIsVisible(false);
       setTimeout(onComplete, 300); // Wait for fade out animation
-    }, 2000);
+    }, 7000);
 
     return () => clearTimeout(timer);
   }, [onComplete]);
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-primary via-purple-600 to-blue-600 transition-opacity duration-300 ${
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-t from-purple-600 via-pink-500 to-orange-400 transition-opacity duration-300 ${
         isVisible ? 'opacity-100' : 'opacity-0'
       }`}
     >
@@ -29,7 +29,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
           className="w-32 h-32 rounded-3xl shadow-2xl animate-pulse"
         />
         <h1 className="text-5xl font-bold text-white tracking-tight">
-          FlexFlow
+          planik
         </h1>
         <p className="text-white/80 text-lg">Your Fitness Journey Starts Here</p>
       </div>
