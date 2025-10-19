@@ -30,14 +30,13 @@ const Templates = () => {
           user_id: user.id,
           name: template.name,
           type: template.name,
-          sets: Math.max(...template.exercises.map(e => e.sets)),
         })
         .select()
         .single();
 
       if (planError || !planData) {
+        console.error("Error creating workout plan:", planError);
         toast.error("Failed to create workout plan");
-        console.error(planError);
         return;
       }
 
