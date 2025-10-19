@@ -61,8 +61,7 @@ export default function Settings() {
   const { theme, toggleTheme, themeColor, setThemeColor, availableColors } = useTheme();
   const { settings, updateSetting, getText } = useSettings();
   const [feedback, setFeedback] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [resetPasswordEmail, setResetPasswordEmail] = useState('');
   const [customReminderTime, setCustomReminderTime] = useState('19:00');
   const [notificationPermission, setNotificationPermission] = useState('default');
   const [termsDialogOpen, setTermsDialogOpen] = useState(false);
@@ -71,7 +70,7 @@ export default function Settings() {
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
   const [supportMessage, setSupportMessage] = useState("");
   const [isSendingSupport, setIsSendingSupport] = useState(false);
-  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [isSendingPasswordReset, setIsSendingPasswordReset] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -184,99 +183,59 @@ export default function Settings() {
   };
 
   const handleChangePassword = async () => {
-    if (!newPassword || !confirmPassword) {
+    if (!resetPasswordEmail) {
       toast({
-        title: "Password Required",
-        description: "Please enter both password fields.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (newPassword !== confirmPassword) {
-      toast({
-        title: "Password Mismatch",
-        description: "Passwords do not match.",
+        title: "Email Required",
+        description: "Please enter your email address.",
         variant: "destructive",
       });
       return;
     }
 
-    if (newPassword.length < 8) {
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(resetPasswordEmail)) {
       toast({
-        title: "Password Too Short",
-        description: "Password must be at least 8 characters long.",
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
         variant: "destructive",
       });
       return;
     }
 
-    // Check for strong password requirements
-    const hasLowercase = /[a-z]/.test(newPassword);
-    const hasUppercase = /[A-Z]/.test(newPassword);
-    const hasNumber = /[0-9]/.test(newPassword);
-    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?`~]/.test(newPassword);
-
-    if (!hasLowercase || !hasUppercase || !hasNumber || !hasSpecial) {
-      toast({
-        title: "Weak Password",
-        description: "Password must contain at least one uppercase letter, lowercase letter, number, and special character (!@#$%^&*...).",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsUpdatingPassword(true);
+    setIsSendingPasswordReset(true);
     
     try {
-      console.log('Starting password update...');
+      console.log('Sending password reset email to:', resetPasswordEmail);
       
-      // Check if user is authenticated
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error("You must be logged in to update your password");
-      }
-
-      console.log('User authenticated, updating password...');
-      
-      // Update password directly using Supabase
-      const { data, error } = await supabase.auth.updateUser({
-        password: newPassword
+      // Call the password reset edge function
+      const { data, error } = await supabase.functions.invoke('request-password-reset', {
+        body: { email: resetPasswordEmail }
       });
 
-      console.log('Password update response:', { data, error });
-
       if (error) {
-        console.error('Supabase password update error:', error);
-        
-        // Handle specific error cases
-        if (error.message?.includes('weak_password') || error.message?.includes('Password should contain')) {
-          throw new Error("Password must contain at least one uppercase letter, lowercase letter, number, and special character.");
-        }
-        
+        console.error('Password reset error:', error);
         throw error;
       }
       
-      setNewPassword('');
-      setConfirmPassword('');
+      setResetPasswordEmail('');
       
       toast({
-        title: "✓ Password Updated",
-        description: "Your password has been changed successfully.",
+        title: "✓ Password Reset Email Sent",
+        description: `A password reset link has been sent to ${resetPasswordEmail}. Please check your email.`,
       });
       
-      console.log('Password updated successfully');
+      console.log('Password reset email sent successfully');
     } catch (error: any) {
-      console.error('Password update error:', error);
+      console.error('Password reset error:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to update password. Please try again.",
+        description: error.message || "Failed to send password reset email. Please try again.",
         variant: "destructive",
       });
     } finally {
       console.log('Resetting loading state');
-      setIsUpdatingPassword(false);
+      setIsSendingPasswordReset(false);
     }
   };
 
@@ -737,24 +696,18 @@ export default function Settings() {
               <Label>{getText('change_password')}</Label>
               <div className="space-y-2">
                 <Input
-                  type="password"
-                  placeholder={getText('new_password')}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                />
-                <Input
-                  type="password"
-                  placeholder={getText('confirm_new_password')}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  type="email"
+                  placeholder="Enter your email address"
+                  value={resetPasswordEmail}
+                  onChange={(e) => setResetPasswordEmail(e.target.value)}
                 />
                 <Button 
                   onClick={handleChangePassword} 
-                  disabled={isUpdatingPassword}
+                  disabled={isSendingPasswordReset}
                   className="w-full transition-all active:scale-95 hover:shadow-lg disabled:opacity-50"
                 >
                   <Lock className="h-4 w-4 mr-2" />
-                  {isUpdatingPassword ? "Updating..." : getText('update_password')}
+                  {isSendingPasswordReset ? "Sending..." : "Change Password"}
                 </Button>
               </div>
             </div>
