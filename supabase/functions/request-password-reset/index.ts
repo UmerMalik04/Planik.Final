@@ -45,7 +45,7 @@ serve(async (req) => {
 
     console.log("Sending password reset email via Resend...");
 
-    // Send email via Resend
+    // Send email via Resend with your custom template
     const emailResult = await resend.emails.send({
       from: "Planik <onboarding@resend.dev>",
       to: [email],
@@ -54,45 +54,115 @@ serve(async (req) => {
         <!DOCTYPE html>
         <html>
           <head>
+            <meta charset="UTF-8" />
+            <title>Reset Your Password</title>
             <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; background-color: #1a1a1a; margin: 0; padding: 0; }
-              .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
-              .header { color: #ffffff; font-size: 32px; font-weight: bold; text-align: center; margin: 30px 0 10px; }
-              .subtitle { color: #999999; font-size: 16px; text-align: center; margin: 0 0 30px; }
-              .message-box { background-color: #2a2a2a; border-radius: 8px; padding: 30px; margin: 20px 0; }
-              .text { color: #cccccc; font-size: 16px; line-height: 24px; margin: 0 0 16px; }
-              .button-container { text-align: center; margin: 30px 0; }
-              .button { background-color: #4A9EFF; border-radius: 8px; color: #000000; font-size: 16px; font-weight: bold; text-decoration: none; padding: 14px 40px; display: inline-block; }
-              .security-tip { background-color: #4a4a2a; border-radius: 8px; padding: 20px; margin: 20px 0; }
-              .security-text { color: #d4c894; font-size: 14px; margin: 0; }
-              .footer-text { color: #999999; font-size: 13px; margin: 20px 0 10px; }
-              .link-text { color: #4A9EFF; font-size: 12px; word-break: break-all; margin: 0 0 20px; }
-              .footer { color: #666666; font-size: 13px; margin: 30px 0 0; }
+              body {
+                font-family: Arial, sans-serif;
+                background-color: #f9fafc;
+                color: #333;
+                margin: 0;
+                padding: 0;
+              }
+              .container {
+                max-width: 600px;
+                background-color: #ffffff;
+                margin: 40px auto;
+                padding: 40px;
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+              }
+              h2 {
+                text-align: center;
+                color: #222;
+                margin-bottom: 4px;
+              }
+              h4 {
+                text-align: center;
+                color: #666;
+                font-weight: normal;
+                margin-top: 0;
+              }
+              .message {
+                background-color: #f5f7fa;
+                padding: 20px;
+                border-radius: 8px;
+                margin-top: 20px;
+                text-align: left;
+              }
+              .button {
+                display: inline-block;
+                background-color: #007bff;
+                color: #ffffff !important;
+                text-decoration: none;
+                padding: 12px 24px;
+                border-radius: 6px;
+                margin: 20px 0;
+                font-weight: bold;
+              }
+              .button:hover {
+                background-color: #0056b3;
+              }
+              .warning {
+                background-color: #fff8e1;
+                color: #8a6d3b;
+                border-left: 4px solid #ffcc00;
+                padding: 12px 16px;
+                border-radius: 4px;
+                font-size: 14px;
+                margin-bottom: 20px;
+              }
+              .note {
+                background-color: #e8f0fe;
+                color: #2f4f90;
+                padding: 10px;
+                border-radius: 4px;
+                font-size: 13px;
+                margin-top: 20px;
+              }
+              p {
+                line-height: 1.5;
+              }
+              footer {
+                font-size: 13px;
+                text-align: center;
+                color: #777;
+                margin-top: 20px;
+              }
             </style>
           </head>
           <body>
             <div class="container">
-              <h1 class="header">Reset Your Password</h1>
-              <p class="subtitle">Planik Fitness App</p>
-              
-              <div class="message-box">
-                <p class="text">Hello,</p>
-                <p class="text">You requested to reset your password for your Planik account.</p>
-                <p class="text">Click the button below to reset your password:</p>
+              <h2>Reset Your Password</h2>
+              <h4>Planik Fitness App</h4>
+
+              <div class="message">
+                <p>Hello,</p>
+                <p>You requested to reset your password for your Planik account.</p>
+                <p>Click the button below to reset your password:</p>
+
+                <p style="text-align:center;">
+                  <a href="${resetLink}" class="button">Reset My Password</a>
+                </p>
+
+                <div class="warning">
+                  <strong>Security tip:</strong> This link will expire in 24 hours for your security.
+                </div>
+
+                <p>If you can't click the button, copy and paste this link into your browser:</p>
+                <p><a href="${resetLink}">${resetLink}</a></p>
+
+                <hr />
+
+                <p>If you didn't request this password reset, please ignore this email. Your password will remain unchanged.</p>
+
+                <footer>
+                  This email was sent from Planik Fitness App.<br />
+                  <div class="note">
+                    Note: Check your inbox and spam folder. The email should arrive within a few minutes.
+                  </div>
+                </footer>
               </div>
-
-              <div class="button-container">
-                <a href="${resetLink}" class="button">Reset My Password</a>
-              </div>
-
-              <div class="security-tip">
-                <p class="security-text"><strong>Security tip:</strong> This link will expire in 24 hours for your security.</p>
-              </div>
-
-              <p class="footer-text">If you can't click the button, copy and paste this link into your browser:</p>
-              <p class="link-text">${resetLink}</p>
-
-              <p class="footer">If you didn't request this password reset, you can safely ignore this email.</p>
             </div>
           </body>
         </html>
