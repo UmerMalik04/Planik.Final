@@ -202,10 +202,25 @@ export default function Settings() {
       return;
     }
 
-    if (newPassword.length < 6) {
+    if (newPassword.length < 8) {
       toast({
         title: "Password Too Short",
-        description: "Password must be at least 6 characters long.",
+        description: "Password must be at least 8 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check for strong password requirements
+    const hasLowercase = /[a-z]/.test(newPassword);
+    const hasUppercase = /[A-Z]/.test(newPassword);
+    const hasNumber = /[0-9]/.test(newPassword);
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?`~]/.test(newPassword);
+
+    if (!hasLowercase || !hasUppercase || !hasNumber || !hasSpecial) {
+      toast({
+        title: "Weak Password",
+        description: "Password must contain at least one uppercase letter, lowercase letter, number, and special character (!@#$%^&*...).",
         variant: "destructive",
       });
       return;
@@ -234,6 +249,12 @@ export default function Settings() {
 
       if (error) {
         console.error('Supabase password update error:', error);
+        
+        // Handle specific error cases
+        if (error.message?.includes('weak_password') || error.message?.includes('Password should contain')) {
+          throw new Error("Password must contain at least one uppercase letter, lowercase letter, number, and special character.");
+        }
+        
         throw error;
       }
       
