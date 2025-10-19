@@ -221,8 +221,9 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
-        redirectTo: `${window.location.origin}/auth?type=recovery`,
+      // Call our custom edge function to send branded email
+      const { data, error } = await supabase.functions.invoke('request-password-reset', {
+        body: { email: forgotPasswordEmail }
       });
 
       if (error) throw error;
