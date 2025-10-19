@@ -71,6 +71,7 @@ export default function Settings() {
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
   const [supportMessage, setSupportMessage] = useState("");
   const [isSendingSupport, setIsSendingSupport] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -210,6 +211,8 @@ export default function Settings() {
       return;
     }
 
+    setIsUpdatingPassword(true);
+    
     try {
       // Update password directly using Supabase
       const { error } = await supabase.auth.updateUser({
@@ -222,7 +225,7 @@ export default function Settings() {
       setConfirmPassword('');
       
       toast({
-        title: "Password Updated",
+        title: "✓ Password Updated",
         description: "Your password has been changed successfully.",
       });
     } catch (error: any) {
@@ -232,6 +235,8 @@ export default function Settings() {
         description: error.message || "Failed to update password. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsUpdatingPassword(false);
     }
   };
 
@@ -705,10 +710,11 @@ export default function Settings() {
                 />
                 <Button 
                   onClick={handleChangePassword} 
-                  className="w-full transition-all active:scale-95 hover:shadow-lg"
+                  disabled={isUpdatingPassword}
+                  className="w-full transition-all active:scale-95 hover:shadow-lg disabled:opacity-50"
                 >
                   <Lock className="h-4 w-4 mr-2" />
-                  {getText('update_password')}
+                  {isUpdatingPassword ? "Updating..." : getText('update_password')}
                 </Button>
               </div>
             </div>
