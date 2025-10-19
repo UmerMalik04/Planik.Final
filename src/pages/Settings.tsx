@@ -214,12 +214,28 @@ export default function Settings() {
     setIsUpdatingPassword(true);
     
     try {
+      console.log('Starting password update...');
+      
+      // Check if user is authenticated
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("You must be logged in to update your password");
+      }
+
+      console.log('User authenticated, updating password...');
+      
       // Update password directly using Supabase
-      const { error } = await supabase.auth.updateUser({
+      const { data, error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
-      if (error) throw error;
+      console.log('Password update response:', { data, error });
+
+      if (error) {
+        console.error('Supabase password update error:', error);
+        throw error;
+      }
       
       setNewPassword('');
       setConfirmPassword('');
@@ -228,6 +244,8 @@ export default function Settings() {
         title: "✓ Password Updated",
         description: "Your password has been changed successfully.",
       });
+      
+      console.log('Password updated successfully');
     } catch (error: any) {
       console.error('Password update error:', error);
       toast({
@@ -236,6 +254,7 @@ export default function Settings() {
         variant: "destructive",
       });
     } finally {
+      console.log('Resetting loading state');
       setIsUpdatingPassword(false);
     }
   };
