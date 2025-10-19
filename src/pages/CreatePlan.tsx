@@ -16,7 +16,7 @@ export default function CreatePlan() {
   const [planName, setPlanName] = useState(`My ${workoutType} Plan`);
   const [restTimer, setRestTimer] = useState("1.5");
 
-  const handleCreatePlan = () => {
+  const handleCreatePlan = async () => {
     const newPlan = {
       name: planName,
       type: workoutType,
@@ -24,16 +24,14 @@ export default function CreatePlan() {
       restTimer: Math.round((Number(restTimer) || 1.5) * 60)
     };
 
-    addWorkoutPlan(newPlan);
+    await addWorkoutPlan(newPlan);
     
     // Navigate to exercise entry for this new plan
-    setTimeout(() => {
-      const plans = useWorkoutStore.getState().workoutPlans;
-      const createdPlan = plans.find(p => p.name === planName && p.type === workoutType);
-      if (createdPlan) {
-        navigate(`/add-exercise/${createdPlan.id}`);
-      }
-    }, 100);
+    const plans = useWorkoutStore.getState().workoutPlans;
+    const createdPlan = plans.find(p => p.name === planName && p.type === workoutType);
+    if (createdPlan) {
+      navigate(`/add-exercise/${createdPlan.id}`);
+    }
   };
 
   return (
