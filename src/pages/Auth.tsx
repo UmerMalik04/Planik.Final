@@ -45,18 +45,59 @@ export default function Auth() {
 
   // Check URL parameters for password reset
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const type = urlParams.get('type');
-    const token = urlParams.get('token');
-    const emailParam = urlParams.get('email');
-    
-    if (type === 'recovery' && (token || emailParam)) {
-      setShowPasswordReset(true);
-      if (emailParam) {
-        setEmail(emailParam);
+    const handleRecoveryUrl = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const type = urlParams.get('type');
+      const token = urlParams.get('token');
+      const emailParam = urlParams.get('email');
+      
+      console.log('Recovery URL params:', { type, token, emailParam });
+      
+      if (type === 'recovery') {
+        if (token) {
+          // If we have a token, verify it with Supabase
+          try {
+            const { data, error } = await supabase.auth.verifyOtp({
+              token_hash: token,
+              type: 'recovery',
+            });
+            
+            if (error) {
+              console.error('Token verification error:', error);
+              toast({
+                title: "Invalid Reset Link",
+                description: "This password reset link is invalid or has expired. Please request a new one.",
+                variant: "destructive",
+              });
+            } else {
+              console.log('Token verified successfully:', data);
+              setShowPasswordReset(true);
+              toast({
+                title: "Link Verified",
+                description: "You can now set your new password.",
+              });
+            }
+          } catch (err) {
+            console.error('Error verifying token:', err);
+            toast({
+              title: "Error",
+              description: "Failed to verify reset link. Please try again.",
+              variant: "destructive",
+            });
+          }
+        } else {
+          // No token, just show the reset form
+          setShowPasswordReset(true);
+        }
+        
+        if (emailParam) {
+          setEmail(decodeURIComponent(emailParam));
+        }
       }
-    }
-  }, []);
+    };
+    
+    handleRecoveryUrl();
+  }, [toast]);
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
