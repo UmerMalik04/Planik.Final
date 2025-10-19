@@ -211,40 +211,12 @@ export default function Settings() {
     }
 
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: "Error",
-          description: "You must be logged in to change your password.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Update password using Supabase
+      // Update password directly using Supabase
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
-      if (error) {
-        // If the error is about needing reauthentication, send password reset email
-        if (error.message.includes('session') || error.message.includes('token')) {
-          const { error: resetError } = await supabase.auth.resetPasswordForEmail(user.email!, {
-            redirectTo: `${window.location.origin}/settings`,
-          });
-
-          if (resetError) throw resetError;
-
-          toast({
-            title: "Email Sent",
-            description: "For security, we've sent a password reset link to your email. Please check your inbox.",
-          });
-          return;
-        }
-        throw error;
-      }
+      if (error) throw error;
       
       setNewPassword('');
       setConfirmPassword('');
