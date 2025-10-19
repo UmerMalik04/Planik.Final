@@ -703,7 +703,10 @@ export default function Settings() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                 />
-                <Button onClick={handleChangePassword} className="w-full">
+                <Button 
+                  onClick={handleChangePassword} 
+                  className="w-full transition-all active:scale-95 hover:shadow-lg"
+                >
                   <Lock className="h-4 w-4 mr-2" />
                   {getText('update_password')}
                 </Button>
@@ -714,7 +717,7 @@ export default function Settings() {
             
             <Button 
               variant="destructive" 
-              className="w-full justify-start"
+              className="w-full justify-start transition-all active:scale-95 hover:shadow-lg"
               onClick={handleDeleteAccount}
             >
               <Trash2 className="h-4 w-4 mr-2" />
