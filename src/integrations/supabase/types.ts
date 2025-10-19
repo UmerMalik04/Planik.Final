@@ -14,9 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      completed_exercises: {
+        Row: {
+          created_at: string | null
+          exercise_name: string
+          id: string
+          notes: string | null
+          reps: number
+          session_id: string
+          sets: number
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          exercise_name: string
+          id?: string
+          notes?: string | null
+          reps: number
+          session_id: string
+          sets: number
+          user_id: string
+          weight?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          exercise_name?: string
+          id?: string
+          notes?: string | null
+          reps?: number
+          session_id?: string
+          sets?: number
+          user_id?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "completed_exercises_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "workout_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exercises: {
         Row: {
           created_at: string | null
+          has_warmup: boolean | null
           id: string
           name: string
           notes: string | null
@@ -29,6 +74,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          has_warmup?: boolean | null
           id?: string
           name: string
           notes?: string | null
@@ -41,6 +87,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          has_warmup?: boolean | null
           id?: string
           name?: string
           notes?: string | null
@@ -103,6 +150,36 @@ export type Database = {
           quantity?: number | null
           unit?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      personal_records: {
+        Row: {
+          created_at: string | null
+          date: string
+          exercise_name: string
+          id: string
+          reps: number
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string | null
+          date?: string
+          exercise_name: string
+          id?: string
+          reps: number
+          user_id: string
+          weight: number
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          exercise_name?: string
+          id?: string
+          reps?: number
+          user_id?: string
+          weight?: number
         }
         Relationships: []
       }
@@ -254,6 +331,8 @@ export type Database = {
           id: string
           is_template: boolean | null
           name: string
+          rest_timer: number | null
+          type: string | null
           updated_at: string | null
           user_id: string
         }
@@ -263,6 +342,8 @@ export type Database = {
           id?: string
           is_template?: boolean | null
           name: string
+          rest_timer?: number | null
+          type?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -272,10 +353,53 @@ export type Database = {
           id?: string
           is_template?: boolean | null
           name?: string
+          rest_timer?: number | null
+          type?: string | null
           updated_at?: string | null
           user_id?: string
         }
         Relationships: []
+      }
+      workout_sessions: {
+        Row: {
+          created_at: string | null
+          date: string
+          duration: number | null
+          id: string
+          notes: string | null
+          plan_id: string
+          total_volume: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date?: string
+          duration?: number | null
+          id?: string
+          notes?: string | null
+          plan_id: string
+          total_volume?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          duration?: number | null
+          id?: string
+          notes?: string | null
+          plan_id?: string
+          total_volume?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_sessions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "workout_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
