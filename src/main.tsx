@@ -1,8 +1,9 @@
-import { StrictMode } from "react";
+import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
+import { SplashScreen } from "./components/SplashScreen";
 import App from "./App.tsx";
 import "./index.css";
 import { registerSW } from 'virtual:pwa-register';
@@ -19,17 +20,29 @@ const updateSW = registerSW({
   },
 });
 
+const MainApp = () => {
+  const [showSplash, setShowSplash] = useState(true);
+
+  if (showSplash) {
+    return <SplashScreen onComplete={() => setShowSplash(false)} />;
+  }
+
+  return (
+    <BrowserRouter>
+      <ThemeProvider>
+        <SettingsProvider>
+          <App />
+        </SettingsProvider>
+      </ThemeProvider>
+    </BrowserRouter>
+  );
+};
+
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Failed to find the root element");
 
 createRoot(rootElement).render(
   <StrictMode>
-    <BrowserRouter>
-    <ThemeProvider>
-      <SettingsProvider>
-        <App />
-      </SettingsProvider>
-    </ThemeProvider>
-    </BrowserRouter>
+    <MainApp />
   </StrictMode>
 );
