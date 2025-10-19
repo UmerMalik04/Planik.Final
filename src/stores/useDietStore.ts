@@ -9,8 +9,8 @@ export interface FoodItem {
   protein: number;
   carbs: number;
   fat: number;
-  fiber: number;
-  sugar: number;
+  fiber?: number;
+  sugar?: number;
   date: string;
   quantity: number;
   unit: string;
@@ -75,8 +75,6 @@ export const useDietStore = create<DietStore>()((set, get) => ({
           protein: item.protein,
           carbs: item.carbs,
           fat: item.fat,
-          fiber: item.fiber,
-          sugar: item.sugar,
           date: item.date,
           quantity: item.quantity,
           unit: item.unit
@@ -87,8 +85,6 @@ export const useDietStore = create<DietStore>()((set, get) => ({
         day.totalProtein += item.protein;
         day.totalCarbs += item.carbs;
         day.totalFat += item.fat;
-        day.totalFiber += item.fiber;
-        day.totalSugar += item.sugar;
       });
 
       set({ dailyNutrition: Array.from(dailyMap.values()) });
@@ -125,8 +121,8 @@ export const useDietStore = create<DietStore>()((set, get) => ({
         protein: data.protein,
         carbs: data.carbs,
         fat: data.fat,
-        fiber: data.fiber,
-        sugar: data.sugar,
+        fiber: 0,
+        sugar: 0,
         date: data.date,
         quantity: data.quantity,
         unit: data.unit
@@ -144,8 +140,8 @@ export const useDietStore = create<DietStore>()((set, get) => ({
           updatedDay.totalProtein += food.protein;
           updatedDay.totalCarbs += food.carbs;
           updatedDay.totalFat += food.fat;
-          updatedDay.totalFiber += food.fiber;
-          updatedDay.totalSugar += food.sugar;
+          updatedDay.totalFiber += food.fiber || 0;
+          updatedDay.totalSugar += food.sugar || 0;
 
           const newDailyNutrition = [...state.dailyNutrition];
           newDailyNutrition[existingDayIndex] = updatedDay;
@@ -158,8 +154,8 @@ export const useDietStore = create<DietStore>()((set, get) => ({
             totalProtein: food.protein,
             totalCarbs: food.carbs,
             totalFat: food.fat,
-            totalFiber: food.fiber,
-            totalSugar: food.sugar,
+            totalFiber: food.fiber || 0,
+            totalSugar: food.sugar || 0,
             foods: [foodWithId],
           };
 
@@ -194,8 +190,8 @@ export const useDietStore = create<DietStore>()((set, get) => ({
           updatedDay.totalProtein -= removedFood.protein;
           updatedDay.totalCarbs -= removedFood.carbs;
           updatedDay.totalFat -= removedFood.fat;
-          updatedDay.totalFiber -= removedFood.fiber;
-          updatedDay.totalSugar -= removedFood.sugar;
+          updatedDay.totalFiber -= removedFood.fiber || 0;
+          updatedDay.totalSugar -= removedFood.sugar || 0;
 
           const newDailyNutrition = [...state.dailyNutrition];
           newDailyNutrition[dayIndex] = updatedDay;

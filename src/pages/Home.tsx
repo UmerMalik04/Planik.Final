@@ -68,8 +68,8 @@ export default function Home() {
       .maybeSingle();
 
     if (data) {
-      if (data.widget_order) setWidgetOrder(data.widget_order);
-      if (data.hidden_widgets) setHiddenWidgets(data.hidden_widgets);
+      if (data.widget_order) setWidgetOrder(data.widget_order as string[]);
+      if (data.hidden_widgets) setHiddenWidgets(data.hidden_widgets as string[]);
     }
   };
 

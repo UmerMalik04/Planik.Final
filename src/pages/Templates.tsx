@@ -49,7 +49,7 @@ const Templates = () => {
           .from('exercises')
           .insert({
             user_id: user.id,
-            plan_id: planData.id,
+            workout_plan_id: planData.id,
             name: exercise.name,
             reps: repsNum,
             sets: exercise.sets,

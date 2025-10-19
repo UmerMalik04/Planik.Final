@@ -154,7 +154,7 @@ export default function WorkoutPlan() {
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold">{plan.name}</h1>
-            <p className="text-muted-foreground">{plan.type} • {plan.sets} sets</p>
+            <p className="text-muted-foreground">{plan.type}</p>
           </div>
           <AlertDialog>
             <AlertDialogTrigger asChild>

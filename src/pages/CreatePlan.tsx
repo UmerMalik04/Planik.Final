@@ -19,16 +19,14 @@ export default function CreatePlan() {
   const handleCreatePlan = () => {
     const newPlan = {
       name: planName,
-      type: workoutType as "Push" | "Pull" | "Leg" | "Arm",
+      type: workoutType,
       exercises: [],
-      sets: 3,
       restTimer: Math.round((Number(restTimer) || 1.5) * 60)
     };
 
     addWorkoutPlan(newPlan);
     
     // Navigate to exercise entry for this new plan
-    // We'll need to get the ID, but since it's based on timestamp, we can find it
     setTimeout(() => {
       const plans = useWorkoutStore.getState().workoutPlans;
       const createdPlan = plans.find(p => p.name === planName && p.type === workoutType);

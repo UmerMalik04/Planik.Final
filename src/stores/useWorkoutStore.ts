@@ -45,7 +45,6 @@ export interface WorkoutPlan {
   name: string;
   type: string;
   exercises: Exercise[];
-  sets: number;
   restTimer?: number;
 }
 
@@ -131,20 +130,20 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
           const { data: exercises } = await supabase
             .from('exercises')
             .select('*')
-            .eq('plan_id', plan.id);
+            .eq('workout_plan_id', plan.id);
 
           return {
             id: plan.id,
             name: plan.name,
             type: plan.type,
-            sets: plan.sets,
+            restTimer: plan.rest_timer,
             exercises: exercises?.map(e => ({
               id: e.id,
               name: e.name,
               weight: e.weight,
               reps: e.reps,
               sets: e.sets,
-              planId: e.plan_id,
+              planId: e.workout_plan_id,
               hasWarmup: e.has_warmup
             })) || []
           };
@@ -175,15 +174,11 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
             date: session.date,
             exercises: completedExercises?.map(e => ({
               id: e.id,
-              name: e.name,
+              name: e.exercise_name,
               weight: Number(e.weight),
               reps: e.reps,
               sets: e.sets,
-              date: e.date,
-              previousWeight: e.previous_weight ? Number(e.previous_weight) : undefined,
-              previousReps: e.previous_reps || undefined,
-              setData: (e.set_data as unknown) as SetData[] | undefined,
-              previousSetData: (e.previous_set_data as unknown) as SetData[] | undefined
+              date: e.created_at
             })) || []
           };
         })
@@ -209,31 +204,8 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
       });
     }
 
-    // Load stats
-    const { data: stats } = await supabase
-      .from('user_stats')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-    if (stats) {
-      set({
-        currentStreak: stats.current_streak,
-        lastWorkoutDate: stats.last_workout_date,
-        progressKg: stats.progress_kg,
-        lastWeekProgress: stats.last_week_progress
-      });
-    }
-
-    // Load workout types
-    const { data: types } = await supabase
-      .from('workout_types')
-      .select('*')
-      .eq('user_id', user.id);
-
-    if (types && types.length > 0) {
-      set({ workoutTypes: types });
-    }
+    // Note: user_stats and workout_types tables don't exist yet
+    // These features can be implemented later if needed
   },
 
   addWorkoutPlan: async (plan) => {
@@ -246,7 +218,7 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
         user_id: user.id,
         name: plan.name,
         type: plan.type,
-        sets: plan.sets
+        rest_timer: plan.restTimer
       })
       .select()
       .single();
@@ -264,7 +236,7 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
       .update({
         name: updates.name,
         type: updates.type,
-        sets: updates.sets
+        rest_timer: updates.restTimer
       })
       .eq('id', id);
 
@@ -296,7 +268,7 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
       .from('exercises')
       .insert({
         user_id: user.id,
-        plan_id: planId,
+        workout_plan_id: planId,
         name: exercise.name,
         weight: exercise.weight,
         reps: exercise.reps,
@@ -313,7 +285,7 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
         weight: data.weight,
         reps: data.reps,
         sets: data.sets,
-        planId: data.plan_id,
+        planId: data.workout_plan_id,
         hasWarmup: data.has_warmup
       };
 
@@ -335,8 +307,7 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
       .from('workout_sessions')
       .insert({
         user_id: user.id,
-        plan_id: planId,
-        is_active: true
+        plan_id: planId
       })
       .select()
       .single();
@@ -379,7 +350,7 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
       .from('exercises')
       .insert({
         user_id: user.id,
-        plan_id: currentWorkoutSession.planId,
+        workout_plan_id: currentWorkoutSession.planId,
         name: exercise.name,
         weight: exercise.weight,
         reps: exercise.reps,
@@ -403,7 +374,7 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
                     weight: data.weight,
                     reps: data.reps,
                     sets: data.sets,
-                    planId: data.plan_id,
+                    planId: data.workout_plan_id,
                     hasWarmup: data.has_warmup
                   }
                 ]
@@ -418,25 +389,14 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Update session to inactive
-    await supabase
-      .from('workout_sessions')
-      .update({ is_active: false })
-      .eq('id', sessionId);
-
     // Insert completed exercises
     const completedExercisesData = exercises.map(exercise => ({
       user_id: user.id,
       session_id: sessionId,
-      name: exercise.name,
+      exercise_name: exercise.name,
       weight: exercise.weight,
       reps: exercise.reps,
-      sets: exercise.sets,
-      previous_weight: exercise.previousWeight,
-      previous_reps: exercise.previousReps,
-      set_data: exercise.setData as any,
-      previous_set_data: exercise.previousSetData as any,
-      date: exercise.date
+      sets: exercise.sets
     }));
 
     if (completedExercisesData.length > 0) {
@@ -453,15 +413,11 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
 
     const exercisesFromDb = completedExercises?.map(e => ({
       id: e.id,
-      name: e.name,
+      name: e.exercise_name,
       weight: Number(e.weight),
       reps: e.reps,
       sets: e.sets,
-      date: e.date,
-      previousWeight: e.previous_weight ? Number(e.previous_weight) : undefined,
-      previousReps: e.previous_reps || undefined,
-      setData: (e.set_data as unknown) as SetData[] | undefined,
-      previousSetData: (e.previous_set_data as unknown) as SetData[] | undefined
+      date: e.created_at
     })) || [];
 
     set((state) => {
@@ -666,66 +622,19 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
   },
 
   updateStreak: async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const today = new Date().toISOString().split('T')[0];
-    const lastDate = get().lastWorkoutDate;
-
-    let newStreak = 1;
-    let newLastDate = today;
-
-    if (lastDate) {
-      const lastWorkout = new Date(lastDate);
-      const todayDate = new Date(today);
-      const diffTime = todayDate.getTime() - lastWorkout.getTime();
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffDays === 1) {
-        newStreak = get().currentStreak + 1;
-      } else if (diffDays === 0) {
-        newStreak = get().currentStreak;
-      }
-    }
-
-    await supabase
-      .from('user_stats')
-      .upsert({
-        user_id: user.id,
-        current_streak: newStreak,
-        last_workout_date: newLastDate
-      });
-
-    set({ currentStreak: newStreak, lastWorkoutDate: newLastDate });
+    // This feature requires a user_stats table which doesn't exist yet
+    // Can be implemented later if needed
   },
 
   addWorkoutType: async (type: WorkoutType) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    await supabase
-      .from('workout_types')
-      .insert({
-        user_id: user.id,
-        name: type.name,
-        color: type.color
-      });
-
+    // This feature requires a workout_types table which doesn't exist yet
     set((state) => ({
       workoutTypes: [...state.workoutTypes, type]
     }));
   },
 
   deleteWorkoutType: async (name: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    await supabase
-      .from('workout_types')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('name', name);
-
+    // This feature requires a workout_types table which doesn't exist yet
     set((state) => ({
       workoutTypes: state.workoutTypes.filter(type => type.name !== name),
       workoutPlans: state.workoutPlans.filter(plan => plan.type !== name)

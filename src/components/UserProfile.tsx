@@ -40,7 +40,7 @@ export default function UserProfile() {
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('display_name, avatar_url')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .maybeSingle();
 
       if (profile) {
@@ -63,7 +63,7 @@ export default function UserProfile() {
           const { data: profile } = await supabase
             .from('user_profiles')
             .select('display_name, avatar_url')
-            .eq('user_id', session.user.id)
+            .eq('id', session.user.id)
             .maybeSingle();
 
           if (profile) {
