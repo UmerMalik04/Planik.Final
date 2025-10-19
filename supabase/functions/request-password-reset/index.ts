@@ -30,10 +30,19 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Generate password reset link via Supabase
+    // Get the origin from the request headers to build the correct redirect URL
+    const origin = req.headers.get('origin') || 'https://ae88b117-77b8-4910-b56c-76e68ab4d741.lovableproject.com';
+    const redirectUrl = `${origin}/auth?type=recovery`;
+
+    console.log("Redirect URL:", redirectUrl);
+
+    // Generate password reset link via Supabase with proper redirect
     const { data, error } = await supabaseClient.auth.admin.generateLink({
       type: 'recovery',
       email: email,
+      options: {
+        redirectTo: redirectUrl
+      }
     });
 
     if (error) {
