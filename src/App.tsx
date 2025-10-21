@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense } from 'react';
+import { useEffect } from 'react';
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -10,26 +10,26 @@ import { useDietStore } from "./stores/useDietStore";
 import { supabase } from "./integrations/supabase/client";
 import Layout from "./components/Layout";
 
-// Lazy load route components for code splitting
-const Home = lazy(() => import("./pages/Home"));
-const CreatePlan = lazy(() => import("./pages/CreatePlan"));
-const Templates = lazy(() => import("./pages/Templates"));
-const WorkoutPlan = lazy(() => import("./pages/WorkoutPlan"));
-const AddExercise = lazy(() => import("./pages/AddExercise"));
-const EditExercise = lazy(() => import("./pages/EditExercise"));
-const StartWorkout = lazy(() => import("./pages/StartWorkout"));
-const History = lazy(() => import("./pages/History"));
-const Progress = lazy(() => import("./pages/Progress"));
-const DietTracker = lazy(() => import("./pages/DietTracker"));
-const Auth = lazy(() => import("./pages/Auth"));
-const AuthCallback = lazy(() => import("./pages/AuthCallback"));
-const Demo = lazy(() => import("./pages/Demo"));
-const Profile = lazy(() => import("./pages/Profile"));
-const Settings = lazy(() => import("./pages/Settings"));
-const Exercises = lazy(() => import("./pages/Exercises"));
-const ExerciseDetail = lazy(() => import("./pages/ExerciseDetail"));
-const BodyMap = lazy(() => import("./pages/BodyMap"));
-const NotFound = lazy(() => import("./pages/NotFound"));
+// Import frequently used pages directly for instant navigation
+import Home from "./pages/Home";
+import History from "./pages/History";
+import Progress from "./pages/Progress";
+import Settings from "./pages/Settings";
+import Exercises from "./pages/Exercises";
+import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
+import CreatePlan from "./pages/CreatePlan";
+import Templates from "./pages/Templates";
+import WorkoutPlan from "./pages/WorkoutPlan";
+import AddExercise from "./pages/AddExercise";
+import EditExercise from "./pages/EditExercise";
+import StartWorkout from "./pages/StartWorkout";
+import DietTracker from "./pages/DietTracker";
+import Demo from "./pages/Demo";
+import Profile from "./pages/Profile";
+import ExerciseDetail from "./pages/ExerciseDetail";
+import BodyMap from "./pages/BodyMap";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -68,15 +68,7 @@ function App() {
         <Toaster />
         <Sonner />
         <DataInitializer />
-        <Suspense fallback={
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-4 text-muted-foreground">Loading...</p>
-            </div>
-          </div>
-        }>
-          <Routes>
+        <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/demo" element={<Demo />} />
@@ -187,7 +179,6 @@ function App() {
             } />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </Suspense>
       </TooltipProvider>
     </QueryClientProvider>
   );
