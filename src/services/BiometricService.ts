@@ -9,40 +9,36 @@ export interface BiometricResult {
 }
 
 export class BiometricService {
-  private static readonly CREDENTIALS_KEY = 'biometric_credentials';
+  private static readonly REFRESH_TOKEN_KEY = 'biometric_refresh_token';
   private static readonly BIOMETRIC_ENABLED_KEY = 'biometric_enabled';
 
-  static async saveCredentials(email: string, password: string): Promise<void> {
+  static async saveRefreshToken(refreshToken: string): Promise<void> {
     try {
-      const credentials = { email, password };
       await Preferences.set({
-        key: this.CREDENTIALS_KEY,
-        value: JSON.stringify(credentials)
+        key: this.REFRESH_TOKEN_KEY,
+        value: refreshToken
       });
     } catch (error) {
-      console.error('Error saving credentials:', error);
-      throw new Error('Failed to save credentials securely');
+      console.error('Error saving refresh token:', error);
+      throw new Error('Failed to save refresh token securely');
     }
   }
 
-  static async getStoredCredentials(): Promise<{ email: string; password: string } | null> {
+  static async getStoredRefreshToken(): Promise<string | null> {
     try {
-      const result = await Preferences.get({ key: this.CREDENTIALS_KEY });
-      if (result.value) {
-        return JSON.parse(result.value);
-      }
-      return null;
+      const result = await Preferences.get({ key: this.REFRESH_TOKEN_KEY });
+      return result.value || null;
     } catch (error) {
-      console.error('Error retrieving credentials:', error);
+      console.error('Error retrieving refresh token:', error);
       return null;
     }
   }
 
-  static async clearStoredCredentials(): Promise<void> {
+  static async clearStoredRefreshToken(): Promise<void> {
     try {
-      await Preferences.remove({ key: this.CREDENTIALS_KEY });
+      await Preferences.remove({ key: this.REFRESH_TOKEN_KEY });
     } catch (error) {
-      console.error('Error clearing credentials:', error);
+      console.error('Error clearing refresh token:', error);
     }
   }
 
@@ -145,7 +141,7 @@ export class BiometricService {
     return false;
   }
 
-  static async biometricLogin(): Promise<{ success: boolean; credentials?: { email: string; password: string }; error?: string }> {
+  static async biometricLogin(): Promise<{ success: boolean; refreshToken?: string; error?: string }> {
     try {
       // Check if biometric is enabled
       const isBiometricEnabled = await this.isBiometricEnabled();
@@ -159,10 +155,10 @@ export class BiometricService {
         return { success: false, error: availability.reason || 'Biometric authentication is not available on this device.' };
       }
 
-      // Get stored credentials
-      const credentials = await this.getStoredCredentials();
-      if (!credentials) {
-        return { success: false, error: 'No stored credentials found. Please login with email/password first and enable biometric login.' };
+      // Get stored refresh token
+      const refreshToken = await this.getStoredRefreshToken();
+      if (!refreshToken) {
+        return { success: false, error: 'No stored session found. Please login with email/password first and enable biometric login.' };
       }
 
       // Prompt for biometric authentication
@@ -171,7 +167,7 @@ export class BiometricService {
         return { success: false, error: 'Biometric authentication failed or was cancelled.' };
       }
 
-      return { success: true, credentials };
+      return { success: true, refreshToken };
     } catch (error) {
       console.error('Biometric login error:', error);
       return { success: false, error: 'An error occurred during biometric login. Please try again.' };

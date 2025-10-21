@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Mail, Lock, User, Calendar, Users, Chrome, Phone } from 'lucide-react';
+import { BiometricService } from '@/services/BiometricService';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -193,7 +194,12 @@ export default function Auth() {
         return;
       }
 
-      if (data.user) {
+      if (data.user && data.session) {
+        // Save refresh token if biometric is enabled
+        const biometricEnabled = await BiometricService.isBiometricEnabled();
+        if (biometricEnabled && data.session.refresh_token) {
+          await BiometricService.saveRefreshToken(data.session.refresh_token);
+        }
 
         toast({
           title: "Welcome back!",

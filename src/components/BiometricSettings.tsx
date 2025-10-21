@@ -55,13 +55,13 @@ export default function BiometricSettings() {
           });
         }
       } else {
-        // Disable biometric - clear stored credentials
+        // Disable biometric - clear stored refresh token
         await BiometricService.setBiometricEnabled(false);
-        await BiometricService.clearStoredCredentials();
+        await BiometricService.clearStoredRefreshToken();
         setBiometricEnabled(false);
         toast({
           title: "Biometric Login Disabled",
-          description: "Your stored credentials have been removed for security.",
+          description: "Your stored session has been removed for security.",
         });
       }
     } catch (error) {
@@ -193,8 +193,8 @@ export default function BiometricSettings() {
             <div className="text-xs text-muted-foreground">
               <p className="font-medium mb-1">Security Note:</p>
               <p>
-                Your login credentials are securely stored on your device. 
-                Disabling this feature will remove all stored credentials.
+                Your session token is securely stored on your device. No passwords are stored. 
+                Disabling this feature will remove the stored session.
               </p>
             </div>
           </div>
