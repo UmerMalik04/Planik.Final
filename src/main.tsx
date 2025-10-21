@@ -21,14 +21,9 @@ const updateSW = registerSW({
 });
 
 const MainApp = () => {
-  const [showSplash, setShowSplash] = useState(() => {
-    // Only show splash if not already shown in this session
-    const hasShown = sessionStorage.getItem('splashShown');
-    return !hasShown;
-  });
+  const [showSplash, setShowSplash] = useState(true);
 
   const handleSplashComplete = () => {
-    sessionStorage.setItem('splashShown', 'true');
     setShowSplash(false);
   };
 
