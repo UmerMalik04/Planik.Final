@@ -1,9 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const recognizeFoodSchema = z.object({
+  imageBase64: z.string()
+    .min(1, { message: "Image data cannot be empty" })
+    .max(10485760, { message: "Image size must be less than 10MB (base64)" })
+    .refine(
+      (val) => val.startsWith('data:image/'),
+      { message: "Invalid image format. Must be a valid data URL" }
+    )
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -11,7 +22,24 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64 } = await req.json();
+    const body = await req.json();
+    
+    // Validate and sanitize inputs
+    const validation = recognizeFoodSchema.safeParse(body);
+    if (!validation.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Invalid input",
+          details: validation.error.errors.map(e => ({ field: e.path.join('.'), message: e.message }))
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const { imageBase64 } = validation.data;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {

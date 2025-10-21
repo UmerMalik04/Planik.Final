@@ -1,6 +1,13 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+
+const emailRequestSchema = z.object({
+  to: z.string().email({ message: "Invalid email address" }).max(255, { message: "Email must be less than 255 characters" }),
+  subject: z.string().trim().min(1, { message: "Subject cannot be empty" }).max(200, { message: "Subject must be less than 200 characters" }),
+  html: z.string().min(1, { message: "HTML content cannot be empty" }).max(50000, { message: "HTML content must be less than 50000 characters" })
+});
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,18 +25,24 @@ Deno.serve(async (req) => {
       throw new Error('RESEND_API_KEY is not configured');
     }
 
-    const { to, subject, html } = await req.json();
+    const body = await req.json();
 
-    // Validate required fields
-    if (!to || !subject || !html) {
+    // Validate and sanitize inputs
+    const validation = emailRequestSchema.safeParse(body);
+    if (!validation.success) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: to, subject, html' }),
+        JSON.stringify({ 
+          error: 'Invalid input',
+          details: validation.error.errors.map(e => ({ field: e.path.join('.'), message: e.message }))
+        }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
+
+    const { to, subject, html } = validation.data;
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',

@@ -1,7 +1,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+
+const feedbackSchema = z.object({
+  feedback: z.string().trim().min(1, { message: "Feedback cannot be empty" }).max(2000, { message: "Feedback is too long (max 2000 characters)" }),
+  userEmail: z.string().email({ message: "Invalid email address" }).max(255, { message: "Email must be less than 255 characters" }).optional()
+});
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,12 +27,16 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { feedback, userEmail }: FeedbackRequest = await req.json();
+    const body = await req.json();
 
-    // Validate input
-    if (!feedback || feedback.trim().length === 0) {
+    // Validate and sanitize inputs
+    const validation = feedbackSchema.safeParse(body);
+    if (!validation.success) {
       return new Response(
-        JSON.stringify({ error: "Feedback cannot be empty" }),
+        JSON.stringify({ 
+          error: "Invalid input",
+          details: validation.error.errors.map(e => ({ field: e.path.join('.'), message: e.message }))
+        }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -34,15 +44,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    if (feedback.length > 2000) {
-      return new Response(
-        JSON.stringify({ error: "Feedback is too long (max 2000 characters)" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
-    }
+    const { feedback, userEmail } = validation.data;
 
     const emailResponse = await resend.emails.send({
       from: "Planik Feedback <onboarding@resend.dev>",
