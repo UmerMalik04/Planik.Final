@@ -56,6 +56,7 @@ export default function UserProfile() {
 
     getUser();
 
+    // Listen to auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session?.user) {
@@ -80,8 +81,34 @@ export default function UserProfile() {
       }
     );
 
+    // Listen to real-time profile updates
+    const profileChannel = supabase
+      .channel('profile-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'user_profiles'
+        },
+        async (payload) => {
+          const { data: { user: currentUser } } = await supabase.auth.getUser();
+          if (currentUser && payload.new.id === currentUser.id) {
+            // Update user with new profile data
+            currentUser.user_metadata = {
+              ...currentUser.user_metadata,
+              name: payload.new.display_name,
+              avatar_url: payload.new.avatar_url
+            };
+            setUser({ ...currentUser });
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       subscription.unsubscribe();
+      supabase.removeChannel(profileChannel);
     };
   }, []);
 
