@@ -137,78 +137,102 @@ export default function Profile() {
     }
   };
 
-  const handleProfilePictureChange = () => {
+  const handleProfilePictureChange = async () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
     
-    input.onchange = (event) => {
+    input.onchange = async (event) => {
       const file = (event.target as HTMLInputElement).files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const imageUrl = e.target?.result as string;
-          
-          try {
-            // Get current users array
-            const savedUsers = JSON.parse(localStorage.getItem('mock-users') || '[]');
-            
-            // Update the user in the array
-            const userIndex = savedUsers.findIndex((u: any) => u.email === user.email);
-            if (userIndex !== -1) {
-              savedUsers[userIndex].user_metadata = {
-                ...savedUsers[userIndex].user_metadata,
-                avatar_url: imageUrl
-              };
-            } else {
-              // If user not found, add them
-              savedUsers.push({
-                ...user,
-                user_metadata: {
-                  ...user.user_metadata,
-                  avatar_url: imageUrl
-                }
-              });
-            }
-            
-            // Save updated users array
-            localStorage.setItem('mock-users', JSON.stringify(savedUsers));
-            
-            // Update current user
-            const updatedUser = {
-              ...user,
-              user_metadata: {
-                ...user.user_metadata,
-                avatar_url: imageUrl
-              }
-            };
-            
-            // Save current user separately for immediate access
-            localStorage.setItem('current-user', JSON.stringify(updatedUser));
-            
-            // Also save just the avatar URL for easy access
-            localStorage.setItem('user-avatar', imageUrl);
-            
-            // Update state immediately
-            setUser(updatedUser);
-            
-            // Force a page refresh to ensure all components update
-            window.dispatchEvent(new Event('storage'));
-            
-            toast({
-              title: "Profile Picture Updated",
-              description: "Your profile picture has been changed successfully.",
-            });
-          } catch (error) {
-            console.error('Profile picture update error:', error);
-            toast({
-              title: "Error",
-              description: "Failed to update profile picture. Please try again.",
-              variant: "destructive",
-            });
+      if (!file) return;
+
+      // Check file size (max 5MB)
+      const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSizeInBytes) {
+        toast({
+          title: "Image Too Large",
+          description: "Please select an image smaller than 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid File Type",
+          description: "Please select a valid image file (PNG, JPG, WEBP, etc.).",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      try {
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (!currentUser) {
+          toast({
+            title: "Error",
+            description: "You must be logged in to update your profile picture.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Upload to Supabase Storage
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${currentUser.id}-${Date.now()}.${fileExt}`;
+        const filePath = `avatars/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true
+          });
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath);
+
+        // Update user profile in database
+        const { error: updateError } = await supabase
+          .from('user_profiles')
+          .upsert({
+            id: currentUser.id,
+            avatar_url: publicUrl,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'id' });
+
+        if (updateError) throw updateError;
+
+        // Update local state
+        const updatedUser = {
+          ...user,
+          user_metadata: {
+            ...user.user_metadata,
+            avatar_url: publicUrl
           }
         };
-        reader.readAsDataURL(file);
+        
+        setUser(updatedUser);
+        
+        // Trigger storage event to update other components
+        window.dispatchEvent(new Event('storage'));
+        
+        toast({
+          title: "Profile Picture Updated",
+          description: "Your profile picture has been changed successfully.",
+        });
+      } catch (error) {
+        console.error('Profile picture update error:', error);
+        toast({
+          title: "Upload Failed",
+          description: error instanceof Error ? error.message : "Failed to update profile picture. Please try again.",
+          variant: "destructive",
+        });
       }
     };
     
