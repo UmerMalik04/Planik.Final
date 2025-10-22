@@ -51,6 +51,33 @@ export default function Home() {
   ]);
   const [hiddenWidgets, setHiddenWidgets] = useState<string[]>([]);
 
+  // Ensure goals widget is always visible on first load
+  useEffect(() => {
+    const ensureGoalsVisible = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('user_preferences')
+        .select('hidden_widgets')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (data?.hidden_widgets && (data.hidden_widgets as string[]).includes('goals')) {
+        const newHidden = (data.hidden_widgets as string[]).filter(id => id !== 'goals');
+        await supabase
+          .from('user_preferences')
+          .upsert({
+            user_id: user.id,
+            widget_order: widgetOrder,
+            hidden_widgets: newHidden
+          }, { onConflict: 'user_id' });
+        setHiddenWidgets(newHidden);
+      }
+    };
+    ensureGoalsVisible();
+  }, []);
+
   useEffect(() => {
     calculateProgress();
     initializeStepCounter();
