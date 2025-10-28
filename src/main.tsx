@@ -1,8 +1,9 @@
-import { StrictMode } from "react";
+import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
+import { SplashScreen } from "./components/SplashScreen";
 import App from "./App.tsx";
 import "./index.css";
 import { registerSW } from 'virtual:pwa-register';
@@ -20,6 +21,20 @@ const updateSW = registerSW({
 });
 
 const MainApp = () => {
+  // Only show splash once per session
+  const [showSplash, setShowSplash] = useState(() => {
+    return sessionStorage.getItem('splashShown') !== 'true';
+  });
+
+  const handleSplashComplete = () => {
+    sessionStorage.setItem('splashShown', 'true');
+    setShowSplash(false);
+  };
+
+  if (showSplash) {
+    return <SplashScreen onComplete={handleSplashComplete} />;
+  }
+
   return (
     <BrowserRouter>
       <ThemeProvider>
