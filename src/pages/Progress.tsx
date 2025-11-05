@@ -614,7 +614,7 @@ export default function Progress() {
                       label={{ value: 'Date', position: 'insideBottom', offset: -5 }}
                     />
                     <YAxis 
-                      label={{ value: 'Weight', angle: -90, position: 'insideLeft' }}
+                      label={{ value: 'Weight (kg)', angle: -90, position: 'insideLeft' }}
                     />
                     <Tooltip 
                       formatter={(value, name) => [
@@ -662,11 +662,13 @@ export default function Progress() {
                           dataKey="date" 
                           tick={{ fill: 'hsl(var(--foreground))' }}
                           tickLine={{ stroke: 'hsl(var(--foreground))' }}
+                          label={{ value: 'Date', position: 'insideBottom', offset: -5 }}
                         />
                         <YAxis 
                           tick={{ fill: 'hsl(var(--foreground))' }}
                           tickLine={{ stroke: 'hsl(var(--foreground))' }}
                           domain={['auto', 'auto']}
+                          label={{ value: 'Weight (kg)', angle: -90, position: 'insideLeft' }}
                         />
                         <Tooltip 
                           formatter={(value) => [formatWeight(value as number), 'Avg Weight']}
