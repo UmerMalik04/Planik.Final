@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
 import { useState, useEffect } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
-import { Search, Dumbbell, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Search, Dumbbell, TrendingUp, TrendingDown, Minus, Weight, Hash, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function History() {
@@ -71,6 +71,46 @@ export default function History() {
     } else {
       return { status: 'same', color: 'text-muted-foreground', icon: Minus, volumeDiff: 0 };
     }
+  };
+
+  // Calculate workout statistics
+  const calculateWorkoutStats = (session: any) => {
+    let totalVolume = 0;
+    let totalSets = 0;
+    let totalReps = 0;
+    let improved = 0;
+    let decreased = 0;
+    let same = 0;
+
+    session.exercises.forEach((exercise: any) => {
+      const improvement = getExerciseImprovement(exercise.name, session, exercise);
+      
+      if (improvement.status === 'improved') improved++;
+      else if (improvement.status === 'decreased') decreased++;
+      else if (improvement.status === 'same') same++;
+
+      if (exercise.setData && exercise.setData.length > 0) {
+        exercise.setData.forEach((set: any) => {
+          totalVolume += set.weight * set.reps;
+          totalSets += 1;
+          totalReps += set.reps;
+        });
+      } else {
+        totalVolume += exercise.weight * exercise.reps * exercise.sets;
+        totalSets += exercise.sets;
+        totalReps += exercise.reps * exercise.sets;
+      }
+    });
+
+    return {
+      totalVolume,
+      totalSets,
+      totalReps,
+      improved,
+      decreased,
+      same,
+      duration: session.duration || 0
+    };
   };
 
   // Get workouts for a specific day
@@ -253,6 +293,88 @@ export default function History() {
                             </div>
                           </DialogTitle>
                         </DialogHeader>
+
+                        {/* Workout Statistics */}
+                        {(() => {
+                          const stats = calculateWorkoutStats(session);
+                          return (
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+                              <Card className="bg-muted/50">
+                                <CardContent className="p-3">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Weight className="w-4 h-4 text-primary" />
+                                    <span className="text-xs text-muted-foreground">Total Volume</span>
+                                  </div>
+                                  <p className="text-lg font-bold">{formatWeight(stats.totalVolume)}</p>
+                                </CardContent>
+                              </Card>
+                              
+                              <Card className="bg-muted/50">
+                                <CardContent className="p-3">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Hash className="w-4 h-4 text-primary" />
+                                    <span className="text-xs text-muted-foreground">Total Sets</span>
+                                  </div>
+                                  <p className="text-lg font-bold">{stats.totalSets}</p>
+                                </CardContent>
+                              </Card>
+
+                              <Card className="bg-muted/50">
+                                <CardContent className="p-3">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Hash className="w-4 h-4 text-primary" />
+                                    <span className="text-xs text-muted-foreground">Total Reps</span>
+                                  </div>
+                                  <p className="text-lg font-bold">{stats.totalReps}</p>
+                                </CardContent>
+                              </Card>
+
+                              {stats.duration > 0 && (
+                                <Card className="bg-muted/50">
+                                  <CardContent className="p-3">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <Clock className="w-4 h-4 text-primary" />
+                                      <span className="text-xs text-muted-foreground">Duration</span>
+                                    </div>
+                                    <p className="text-lg font-bold">{Math.floor(stats.duration / 60)}m</p>
+                                  </CardContent>
+                                </Card>
+                              )}
+
+                              {/* Improvement Summary */}
+                              {(stats.improved > 0 || stats.decreased > 0 || stats.same > 0) && (
+                                <Card className="bg-muted/50 col-span-2 sm:col-span-4">
+                                  <CardContent className="p-3">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <TrendingUp className="w-4 h-4 text-primary" />
+                                      <span className="text-xs text-muted-foreground">Performance vs Previous</span>
+                                    </div>
+                                    <div className="flex gap-4 text-sm">
+                                      {stats.improved > 0 && (
+                                        <div className="flex items-center gap-1 text-green-500">
+                                          <TrendingUp className="w-3 h-3" />
+                                          <span className="font-medium">{stats.improved} Better</span>
+                                        </div>
+                                      )}
+                                      {stats.same > 0 && (
+                                        <div className="flex items-center gap-1 text-muted-foreground">
+                                          <Minus className="w-3 h-3" />
+                                          <span className="font-medium">{stats.same} Same</span>
+                                        </div>
+                                      )}
+                                      {stats.decreased > 0 && (
+                                        <div className="flex items-center gap-1 text-red-500">
+                                          <TrendingDown className="w-3 h-3" />
+                                          <span className="font-medium">{stats.decreased} Lower</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              )}
+                            </div>
+                          );
+                        })()}
                         
                         <div className="space-y-4 mt-6">
                           {session.exercises.map((exercise, index) => {
