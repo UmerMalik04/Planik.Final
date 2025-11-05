@@ -26,7 +26,7 @@ export const exercisesData: Exercise[] = [
     "name": "Crunches",
     "muscle_groups": ["Abs"],
     "thumbnail": "assets/images/crunches_thumbnail.png",
-    "video_or_animation": "assets/animations/crunches_lottie.json",
+    "video_or_animation": "/assets/crunches.gif",
     "instructions": [
       "Lie flat on your back, knees bent, feet flat, hip-width apart.",
       "Place hands behind head or across chest.",
