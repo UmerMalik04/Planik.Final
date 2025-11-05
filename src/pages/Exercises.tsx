@@ -5,12 +5,24 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, Search, X } from 'lucide-react';
+import { ArrowLeft, Search, X, Dumbbell, Footprints, AlignVerticalSpaceAround, CircleDot, Heart, Activity, Zap } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { exercisesData, type Exercise } from '@/data/exercises_full';
-import { MuscleGroupIcon } from '@/components/MuscleGroupIcon';
+
 
 const muscleGroups = ['All', 'Legs', 'Back', 'Chest', 'Shoulders', 'Abs', 'Cardio', 'Triceps', 'Biceps'];
+
+const muscleGroupIcons: Record<string, any> = {
+  'All': Dumbbell,
+  'Legs': Footprints,
+  'Back': AlignVerticalSpaceAround,
+  'Chest': CircleDot,
+  'Shoulders': Dumbbell,
+  'Abs': CircleDot,
+  'Cardio': Heart,
+  'Triceps': Zap,
+  'Biceps': Zap,
+};
 
 export default function Exercises() {
   const navigate = useNavigate();
@@ -97,20 +109,21 @@ export default function Exercises() {
         <CardContent className="p-4">
           <div className="overflow-x-auto scrollbar-hide">
             <div className="flex gap-2 pb-2 min-w-max">
-              {muscleGroups.map((group) => (
-                <Button
-                  key={group}
-                  variant={selectedMuscleGroup === group ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedMuscleGroup(group)}
-                  className="whitespace-nowrap flex-shrink-0 animate-fade-in hover-scale flex items-center gap-2"
-                >
-                  <div className="w-5 h-5">
-                    <MuscleGroupIcon group={group} className="w-full h-full" />
-                  </div>
-                  {group}
-                </Button>
-              ))}
+              {muscleGroups.map((group) => {
+                const Icon = muscleGroupIcons[group] || Dumbbell;
+                return (
+                  <Button
+                    key={group}
+                    variant={selectedMuscleGroup === group ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedMuscleGroup(group)}
+                    className="whitespace-nowrap flex-shrink-0 animate-fade-in hover-scale flex items-center gap-2"
+                  >
+                    <Icon className="w-4 h-4" />
+                    {group}
+                  </Button>
+                );
+              })}
             </div>
           </div>
           {/* Mobile swipe indicator */}
