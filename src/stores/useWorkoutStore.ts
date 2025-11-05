@@ -17,6 +17,9 @@ export interface WorkoutSession {
   planId: string;
   date: string;
   exercises: CompletedExercise[];
+  notes?: string;
+  duration?: number;
+  totalVolume?: number;
 }
 
 export interface SetData {

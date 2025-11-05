@@ -4,11 +4,15 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
 import { useState, useEffect } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
-import { Search, Dumbbell, TrendingUp, TrendingDown, Minus, Weight, Hash, Clock } from "lucide-react";
+import { Search, Dumbbell, TrendingUp, TrendingDown, Minus, Weight, Hash, Clock, Edit3, Save, X, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export default function History() {
   const { workoutSessions, workoutPlans, initializeUserData, getExerciseHistory } = useWorkoutStore();
@@ -16,6 +20,9 @@ export default function History() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesText, setNotesText] = useState("");
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
   // Refresh data when page loads
   useEffect(() => {
@@ -111,6 +118,47 @@ export default function History() {
       same,
       duration: session.duration || 0
     };
+  };
+
+  // Handle notes editing
+  const handleEditNotes = (session: any) => {
+    setCurrentSessionId(session.id);
+    setNotesText(session.notes || "");
+    setEditingNotes(true);
+  };
+
+  const handleSaveNotes = async () => {
+    if (!currentSessionId) return;
+
+    // Validate notes length
+    if (notesText.trim().length > 1000) {
+      toast.error("Notes must be less than 1000 characters");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('workout_sessions')
+        .update({ notes: notesText.trim() || null })
+        .eq('id', currentSessionId);
+
+      if (error) throw error;
+
+      // Update local state
+      await initializeUserData();
+      
+      toast.success("Notes saved successfully");
+      setEditingNotes(false);
+    } catch (error) {
+      console.error('Error saving notes:', error);
+      toast.error("Failed to save notes");
+    }
+  };
+
+  const handleCancelNotes = () => {
+    setEditingNotes(false);
+    setNotesText("");
+    setCurrentSessionId(null);
   };
 
   // Get workouts for a specific day
@@ -375,6 +423,74 @@ export default function History() {
                             </div>
                           );
                         })()}
+
+                        {/* Workout Notes Section */}
+                        <Card className="mt-4">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-primary" />
+                                <h3 className="text-sm font-semibold">Workout Notes</h3>
+                              </div>
+                              {!editingNotes && currentSessionId !== session.id && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditNotes(session)}
+                                  className="h-8"
+                                >
+                                  <Edit3 className="w-3 h-3 mr-1" />
+                                  {session.notes ? 'Edit' : 'Add'}
+                                </Button>
+                              )}
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            {editingNotes && currentSessionId === session.id ? (
+                              <div className="space-y-3">
+                                <Textarea
+                                  value={notesText}
+                                  onChange={(e) => setNotesText(e.target.value)}
+                                  placeholder="How did you feel during this workout? Any observations?"
+                                  className="min-h-[100px] resize-none"
+                                  maxLength={1000}
+                                />
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-muted-foreground">
+                                    {notesText.length}/1000 characters
+                                  </span>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={handleCancelNotes}
+                                    >
+                                      <X className="w-3 h-3 mr-1" />
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      onClick={handleSaveNotes}
+                                    >
+                                      <Save className="w-3 h-3 mr-1" />
+                                      Save
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <div>
+                                {session.notes ? (
+                                  <p className="text-sm text-foreground whitespace-pre-wrap">{session.notes}</p>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground italic">
+                                    No notes added yet. Click &quot;Add&quot; to record your thoughts about this workout.
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
                         
                         <div className="space-y-4 mt-6">
                           {session.exercises.map((exercise, index) => {
