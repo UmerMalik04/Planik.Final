@@ -23,24 +23,10 @@ export const exercisesData: Exercise[] = [
     "last_used": "2025-08-20"
   },
   {
-    "name": "Crunches",
-    "muscle_groups": ["Abs"],
-    "thumbnail": "assets/images/crunches_thumbnail.png",
-    "video_or_animation": "/assets/crunches.gif",
-    "instructions": [
-      "Lie flat on your back, knees bent, feet flat, hip-width apart.",
-      "Place hands behind head or across chest.",
-      "Contract abs to lift upper body toward knees, keeping neck neutral.",
-      "Slowly lower back to starting position.",
-      "Repeat for 12-15 reps."
-    ],
-    "last_used": "2025-08-22"
-  },
-  {
     "name": "Leg Raises",
     "muscle_groups": ["Abs"],
     "thumbnail": "assets/images/leg_raises_thumbnail.png",
-    "video_or_animation": "assets/animations/leg_raises.mp4",
+    "video_or_animation": "/assets/leg-raises.gif",
     "instructions": [
       "Lie flat on your back, hands under hips or by sides.",
       "Keep legs straight and lift them to a 90-degree angle.",
