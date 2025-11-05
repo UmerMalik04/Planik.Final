@@ -41,13 +41,13 @@ export default function History() {
     );
     
     if (currentSessionIndex === -1 || currentSessionIndex === history.length - 1) {
-      return { status: 'new', color: 'text-muted-foreground', icon: null };
+      return { status: 'new', color: 'text-muted-foreground', icon: null, volumeDiff: 0 };
     }
 
     const previousExercise = history[currentSessionIndex + 1];
     
     if (!previousExercise) {
-      return { status: 'new', color: 'text-muted-foreground', icon: null };
+      return { status: 'new', color: 'text-muted-foreground', icon: null, volumeDiff: 0 };
     }
 
     // Calculate total volume (weight × reps × sets)
@@ -62,13 +62,14 @@ export default function History() {
 
     const currentVolume = calculateVolume(exercise);
     const previousVolume = calculateVolume(previousExercise);
+    const volumeDiff = currentVolume - previousVolume;
 
-    if (currentVolume > previousVolume) {
-      return { status: 'improved', color: 'text-green-500', icon: TrendingUp };
-    } else if (currentVolume < previousVolume) {
-      return { status: 'decreased', color: 'text-red-500', icon: TrendingDown };
+    if (volumeDiff > 0) {
+      return { status: 'improved', color: 'text-green-500', icon: TrendingUp, volumeDiff };
+    } else if (volumeDiff < 0) {
+      return { status: 'decreased', color: 'text-red-500', icon: TrendingDown, volumeDiff };
     } else {
-      return { status: 'same', color: 'text-muted-foreground', icon: Minus };
+      return { status: 'same', color: 'text-muted-foreground', icon: Minus, volumeDiff: 0 };
     }
   };
 
@@ -264,13 +265,20 @@ export default function History() {
                                 <div className="flex items-center justify-between">
                                   <CardTitle className="text-lg">{exercise.name}</CardTitle>
                                   {ImprovementIcon && (
-                                    <div className={cn("flex items-center gap-1", improvement.color)}>
+                                    <div className={cn("flex items-center gap-1.5", improvement.color)}>
                                       <ImprovementIcon className="w-4 h-4" />
-                                      <span className="text-xs font-medium">
-                                        {improvement.status === 'improved' && 'Better'}
-                                        {improvement.status === 'decreased' && 'Lower'}
-                                        {improvement.status === 'same' && 'Same'}
-                                      </span>
+                                      <div className="flex flex-col items-end">
+                                        <span className="text-xs font-medium">
+                                          {improvement.status === 'improved' && 'Better'}
+                                          {improvement.status === 'decreased' && 'Lower'}
+                                          {improvement.status === 'same' && 'Same'}
+                                        </span>
+                                        {improvement.volumeDiff !== 0 && (
+                                          <span className="text-[10px] font-normal">
+                                            {improvement.volumeDiff > 0 ? '+' : ''}{formatWeight(Math.abs(improvement.volumeDiff))} vol
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
                                   )}
                                 </div>
