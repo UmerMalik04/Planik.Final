@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, Search, X } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { exercisesData, type Exercise } from '@/data/exercises_full';
+import { MuscleGroupIcon } from '@/components/MuscleGroupIcon';
 
 const muscleGroups = ['All', 'Legs', 'Back', 'Chest', 'Shoulders', 'Abs', 'Cardio', 'Triceps', 'Biceps'];
 
@@ -102,8 +103,11 @@ export default function Exercises() {
                   variant={selectedMuscleGroup === group ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedMuscleGroup(group)}
-                  className="whitespace-nowrap flex-shrink-0 animate-fade-in hover-scale"
+                  className="whitespace-nowrap flex-shrink-0 animate-fade-in hover-scale flex items-center gap-2"
                 >
+                  <div className="w-5 h-5">
+                    <MuscleGroupIcon group={group} className="w-full h-full" />
+                  </div>
                   {group}
                 </Button>
               ))}
