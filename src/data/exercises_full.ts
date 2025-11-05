@@ -12,7 +12,7 @@ export const exercisesData: Exercise[] = [
     "name": "Abdominal Crunch",
     "muscle_groups": ["Abs"],
     "thumbnail": "assets/images/abdominal_crunch_thumbnail.png",
-    "video_or_animation": "/assets/abdominal-crunch.gif",
+    "video_or_animation": "/assets/abdominal-crunch-cartoon.png",
     "instructions": [
       "Lie on your back with knees bent, feet flat on the floor, hip-width apart.",
       "Place hands behind head or across chest.",
