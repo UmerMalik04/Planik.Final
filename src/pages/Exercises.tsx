@@ -110,7 +110,7 @@ export default function Exercises() {
           <div className="overflow-x-auto scrollbar-hide">
             <div className="flex gap-2 pb-2 min-w-max">
               {muscleGroups.map((group) => {
-                const Icon = muscleGroupIcons[group] || Dumbbell;
+                const Icon = group === 'All' ? muscleGroupIcons[group] : null;
                 return (
                   <Button
                     key={group}
@@ -119,7 +119,7 @@ export default function Exercises() {
                     onClick={() => setSelectedMuscleGroup(group)}
                     className="whitespace-nowrap flex-shrink-0 animate-fade-in hover-scale flex items-center gap-2"
                   >
-                    <Icon className="w-4 h-4" />
+                    {Icon && <Icon className="w-4 h-4" />}
                     {group}
                   </Button>
                 );
