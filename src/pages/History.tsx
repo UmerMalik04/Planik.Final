@@ -7,11 +7,11 @@ import { Input } from "@/components/ui/input";
 import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
 import { useState, useEffect } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
-import { Search, Dumbbell } from "lucide-react";
+import { Search, Dumbbell, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function History() {
-  const { workoutSessions, workoutPlans, initializeUserData } = useWorkoutStore();
+  const { workoutSessions, workoutPlans, initializeUserData, getExerciseHistory } = useWorkoutStore();
   const { formatWeight, formatDate: formatAppDate, getText } = useSettings();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [searchQuery, setSearchQuery] = useState("");
@@ -29,6 +29,47 @@ export default function History() {
     const year = format(date, 'yyyy');
     
     return { dayOfWeek, dayNumber, month, year };
+  };
+
+  // Get improvement status for an exercise compared to previous session
+  const getExerciseImprovement = (exerciseName: string, currentSession: any, exercise: any) => {
+    const history = getExerciseHistory(exerciseName);
+    
+    // Find current session in history
+    const currentSessionIndex = history.findIndex(h => 
+      new Date(h.date).getTime() === new Date(currentSession.date).getTime()
+    );
+    
+    if (currentSessionIndex === -1 || currentSessionIndex === history.length - 1) {
+      return { status: 'new', color: 'text-muted-foreground', icon: null };
+    }
+
+    const previousExercise = history[currentSessionIndex + 1];
+    
+    if (!previousExercise) {
+      return { status: 'new', color: 'text-muted-foreground', icon: null };
+    }
+
+    // Calculate total volume (weight × reps × sets)
+    const calculateVolume = (ex: any) => {
+      if (ex.setData && ex.setData.length > 0) {
+        return ex.setData.reduce((total: number, set: any) => 
+          total + (set.weight * set.reps), 0
+        );
+      }
+      return ex.weight * ex.reps * ex.sets;
+    };
+
+    const currentVolume = calculateVolume(exercise);
+    const previousVolume = calculateVolume(previousExercise);
+
+    if (currentVolume > previousVolume) {
+      return { status: 'improved', color: 'text-green-500', icon: TrendingUp };
+    } else if (currentVolume < previousVolume) {
+      return { status: 'decreased', color: 'text-red-500', icon: TrendingDown };
+    } else {
+      return { status: 'same', color: 'text-muted-foreground', icon: Minus };
+    }
   };
 
   // Get workouts for a specific day
@@ -213,10 +254,26 @@ export default function History() {
                         </DialogHeader>
                         
                         <div className="space-y-4 mt-6">
-                          {session.exercises.map((exercise, index) => (
+                          {session.exercises.map((exercise, index) => {
+                            const improvement = getExerciseImprovement(exercise.name, session, exercise);
+                            const ImprovementIcon = improvement.icon;
+                            
+                            return (
                             <Card key={index} className="border">
                               <CardHeader className="pb-3">
-                                <CardTitle className="text-lg">{exercise.name}</CardTitle>
+                                <div className="flex items-center justify-between">
+                                  <CardTitle className="text-lg">{exercise.name}</CardTitle>
+                                  {ImprovementIcon && (
+                                    <div className={cn("flex items-center gap-1", improvement.color)}>
+                                      <ImprovementIcon className="w-4 h-4" />
+                                      <span className="text-xs font-medium">
+                                        {improvement.status === 'improved' && 'Better'}
+                                        {improvement.status === 'decreased' && 'Lower'}
+                                        {improvement.status === 'same' && 'Same'}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
                               </CardHeader>
                               <CardContent>
                                 <div className="grid gap-3">
@@ -245,7 +302,8 @@ export default function History() {
                                 </div>
                               </CardContent>
                             </Card>
-                          ))}
+                            );
+                          })}
                         </div>
                       </DialogContent>
                     </Dialog>
