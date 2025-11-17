@@ -139,27 +139,37 @@ export const exercisesData: Exercise[] = [
   },
   {
     "name": "Deadlift",
-    "muscle_groups": ["Back", "Legs"],
+    "muscle_groups": ["Back", "Legs", "Glutes"],
     "thumbnail": "/assets/deadlift-thumbnail.png",
     "video_or_animation": "assets/animations/deadlift.mp4",
     "instructions": [
-      "Stand with feet hip-width apart, barbell over mid-foot.",
-      "Grip bar, bend knees, keep back straight.",
-      "Lift bar by extending hips and knees, keeping bar close to body.",
-      "Lower bar back to ground with control.",
+      "Stand with feet hip-width apart, barbell positioned over the middle of your feet.",
+      "Bend at the hips and knees, grip the bar with hands just outside your legs.",
+      "Keep your back straight, chest up, and shoulders pulled back.",
+      "Brace your core and drive through your heels to lift the bar.",
+      "Extend your hips and knees simultaneously, keeping the bar close to your body.",
+      "Stand fully upright, squeezing your glutes at the top.",
+      "Lower the bar back to the ground with control by hinging at the hips.",
+      "Avoid rounding your back or jerking the weight up.",
       "Repeat for 6-10 reps."
     ],
     "last_used": "2025-08-24"
   },
   {
     "name": "Dumbbell Row",
-    "muscle_groups": ["Back"],
+    "muscle_groups": ["Back", "Biceps"],
     "thumbnail": "/assets/dumbbell-row-thumbnail.png",
     "video_or_animation": "assets/animations/dumbbell_row_lottie.json",
     "instructions": [
-      "Place one knee and hand on a bench, holding a dumbbell in the other hand.",
-      "Keep back flat, pull dumbbell to hip, squeezing shoulder blade.",
-      "Lower dumbbell back down.",
+      "Place your left knee and left hand on a flat bench for support.",
+      "Hold a dumbbell in your right hand with your arm fully extended.",
+      "Keep your back flat and parallel to the ground, core engaged.",
+      "Pull the dumbbell up toward your hip, driving your elbow back.",
+      "Squeeze your shoulder blade at the top of the movement.",
+      "Focus on pulling with your back muscles, not just your arm.",
+      "Lower the dumbbell back down with control to the starting position.",
+      "Avoid rotating your torso or using momentum.",
+      "Complete all reps on one side, then switch.",
       "Repeat for 10-12 reps per side."
     ],
     "last_used": "2025-08-20"
@@ -170,10 +180,15 @@ export const exercisesData: Exercise[] = [
     "thumbnail": "/assets/face-pulls-thumbnail.png",
     "video_or_animation": "assets/animations/face_pulls.mp4",
     "instructions": [
-      "Set a cable machine with a rope attachment at face height.",
-      "Grip rope with both hands, step back, and pull toward face.",
-      "Aim for ears, squeezing rear delts.",
-      "Return to starting position.",
+      "Set a cable machine with a rope attachment at upper chest or face height.",
+      "Grip the rope with both hands using an overhand grip, thumbs toward you.",
+      "Step back to create tension, arms fully extended in front.",
+      "Pull the rope toward your face, separating the rope ends as you pull.",
+      "Aim to bring your hands toward your ears, not your chin.",
+      "Squeeze your rear deltoids and upper back muscles at the peak contraction.",
+      "Keep your elbows high and flared out to the sides.",
+      "Slowly return to the starting position with control.",
+      "Avoid using your lower back or leaning back to pull the weight.",
       "Repeat for 12-15 reps."
     ],
     "last_used": "2025-08-16"
