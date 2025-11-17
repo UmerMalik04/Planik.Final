@@ -717,14 +717,20 @@ export const exercisesData: Exercise[] = [
     "name": "Skull Crushers (EZ-Bar or Dumbbell)",
     "muscle_groups": ["Triceps"],
     "thumbnail": "/assets/skull-crushers-thumbnail.png",
-    "video_or_animation": "assets/animations/skull_crushers.mp4",
+    "video_or_animation": "/assets/skull-crushers.gif",
     "instructions": [
-      "Lie on a bench, hold EZ-bar or dumbbells above chest.",
-      "Lower weight toward forehead, bending elbows.",
-      "Extend arms back to starting position.",
+      "Lie on a bench, hold EZ-bar or dumbbells above chest with arms extended.",
+      "Lower weight toward forehead by bending elbows, keeping upper arms stationary.",
+      "Extend arms back to starting position, focusing on tricep contraction.",
+      "Keep elbows pointed straight up throughout the movement.",
       "Repeat for 10-12 reps."
     ],
-    "last_used": "2025-08-24"
+    "last_used": "2025-08-24",
+    "step_images": [
+      "/assets/steps/skull-crushers-step-1.png",
+      "/assets/steps/skull-crushers-step-2.png",
+      "/assets/steps/skull-crushers-step-3.png"
+    ]
   },
   {
     "name": "Overhead Tricep Extension",
