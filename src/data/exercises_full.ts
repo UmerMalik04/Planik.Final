@@ -5,6 +5,7 @@ export interface Exercise {
   video_or_animation: string;
   instructions: string[];
   last_used: string;
+  step_images?: string[]; // 3-step instructional images
 }
 
 export const exercisesData: Exercise[] = [
@@ -20,7 +21,12 @@ export const exercisesData: Exercise[] = [
       "Lower back down with control.",
       "Repeat for 12-15 reps."
     ],
-    "last_used": "2025-08-20"
+    "last_used": "2025-08-20",
+    "step_images": [
+      "/assets/steps/abdominal-crunch-step-1.png",
+      "/assets/steps/abdominal-crunch-step-2.png",
+      "/assets/steps/abdominal-crunch-step-3.png"
+    ]
   },
   {
     "name": "Leg Raises",
@@ -34,7 +40,12 @@ export const exercisesData: Exercise[] = [
       "Engage core throughout.",
       "Repeat for 10-15 reps."
     ],
-    "last_used": "2025-08-18"
+    "last_used": "2025-08-18",
+    "step_images": [
+      "/assets/steps/leg-raises-step-1.png",
+      "/assets/steps/leg-raises-step-2.png",
+      "/assets/steps/leg-raises-step-3.png"
+    ]
   },
   {
     "name": "Leg Sits",
@@ -394,7 +405,12 @@ export const exercisesData: Exercise[] = [
       "Push bar back up to starting position.",
       "Repeat for 8-12 reps."
     ],
-    "last_used": "2025-08-26"
+    "last_used": "2025-08-26",
+    "step_images": [
+      "/assets/steps/barbell-bench-press-step-1.png",
+      "/assets/steps/barbell-bench-press-step-2.png",
+      "/assets/steps/barbell-bench-press-step-3.png"
+    ]
   },
   {
     "name": "Dumbbell Bench Press",
