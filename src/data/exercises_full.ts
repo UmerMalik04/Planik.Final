@@ -11,7 +11,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Abdominal Crunch",
     "muscle_groups": ["Abs"],
-    "thumbnail": "assets/images/abdominal_crunch_thumbnail.png",
+    "thumbnail": "/assets/abdominal-crunch-thumbnail.png",
     "video_or_animation": "/assets/abdominal-crunch.gif",
     "instructions": [
       "Lie on your back with knees bent, feet flat on the floor, hip-width apart.",
@@ -25,7 +25,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Leg Raises",
     "muscle_groups": ["Abs"],
-    "thumbnail": "assets/images/leg_raises_thumbnail.png",
+    "thumbnail": "/assets/leg-raises-thumbnail.png",
     "video_or_animation": "/assets/leg-raises.gif",
     "instructions": [
       "Lie flat on your back, hands under hips or by sides.",
@@ -39,7 +39,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Leg Sits",
     "muscle_groups": ["Abs"],
-    "thumbnail": "assets/images/leg_sits_thumbnail.png",
+    "thumbnail": "/assets/leg-sits-thumbnail.png",
     "video_or_animation": "assets/animations/leg_sits_lottie.json",
     "instructions": [
       "Sit on the floor, knees bent, feet flat.",
@@ -52,7 +52,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Wall Leg Sits",
     "muscle_groups": ["Abs", "Legs"],
-    "thumbnail": "assets/images/wall_leg_sits_thumbnail.png",
+    "thumbnail": "/assets/wall-leg-sits-thumbnail.png",
     "video_or_animation": "assets/animations/wall_leg_sits.mp4",
     "instructions": [
       "Stand with back against a wall, feet 2 feet away.",
@@ -79,7 +79,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Barbell Row",
     "muscle_groups": ["Back"],
-    "thumbnail": "assets/images/barbell_row_thumbnail.png",
+    "thumbnail": "/assets/barbell-row-thumbnail.png",
     "video_or_animation": "assets/animations/barbell_row_lottie.json",
     "instructions": [
       "Stand with feet shoulder-width apart, holding a barbell with an overhand grip.",
@@ -93,7 +93,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Lat Pulldown",
     "muscle_groups": ["Back"],
-    "thumbnail": "assets/images/lat_pulldown_thumbnail.png",
+    "thumbnail": "/assets/lat-pulldown-thumbnail.png",
     "video_or_animation": "assets/animations/lat_pulldown.mp4",
     "instructions": [
       "Sit at a lat pulldown machine, grip bar wider than shoulder-width.",
@@ -106,7 +106,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "T-Bar Row",
     "muscle_groups": ["Back"],
-    "thumbnail": "assets/images/t_bar_row_thumbnail.png",
+    "thumbnail": "/assets/t-bar-row-thumbnail.png",
     "video_or_animation": "assets/animations/t_bar_row_lottie.json",
     "instructions": [
       "Stand over a T-bar row machine, feet shoulder-width apart.",
@@ -120,7 +120,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Deadlift",
     "muscle_groups": ["Back", "Legs"],
-    "thumbnail": "assets/images/deadlift_thumbnail.png",
+    "thumbnail": "/assets/deadlift-thumbnail.png",
     "video_or_animation": "assets/animations/deadlift.mp4",
     "instructions": [
       "Stand with feet hip-width apart, barbell over mid-foot.",
@@ -134,7 +134,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Dumbbell Row",
     "muscle_groups": ["Back"],
-    "thumbnail": "assets/images/dumbbell_row_thumbnail.png",
+    "thumbnail": "/assets/dumbbell-row-thumbnail.png",
     "video_or_animation": "assets/animations/dumbbell_row_lottie.json",
     "instructions": [
       "Place one knee and hand on a bench, holding a dumbbell in the other hand.",
@@ -147,7 +147,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Face Pulls",
     "muscle_groups": ["Back", "Shoulders"],
-    "thumbnail": "assets/images/face_pulls_thumbnail.png",
+    "thumbnail": "/assets/face-pulls-thumbnail.png",
     "video_or_animation": "assets/animations/face_pulls.mp4",
     "instructions": [
       "Set a cable machine with a rope attachment at face height.",
@@ -161,7 +161,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Cable Row",
     "muscle_groups": ["Back"],
-    "thumbnail": "assets/images/cable_row_thumbnail.png",
+    "thumbnail": "/assets/cable-row-thumbnail.png",
     "video_or_animation": "assets/animations/cable_row_lottie.json",
     "instructions": [
       "Sit at a cable row machine, feet braced, grip handle.",
@@ -175,7 +175,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Barbell Curl",
     "muscle_groups": ["Biceps"],
-    "thumbnail": "assets/images/barbell_curl_thumbnail.png",
+    "thumbnail": "/assets/barbell-curl-thumbnail.png",
     "video_or_animation": "assets/animations/barbell_curl.mp4",
     "instructions": [
       "Stand with feet shoulder-width apart, holding a barbell with an underhand grip.",
@@ -188,7 +188,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Dumbbell Curl",
     "muscle_groups": ["Biceps"],
-    "thumbnail": "assets/images/dumbbell_curl_thumbnail.png",
+    "thumbnail": "/assets/dumbbell-curl-thumbnail.png",
     "video_or_animation": "assets/animations/dumbbell_curl_lottie.json",
     "instructions": [
       "Stand with feet shoulder-width apart, dumbbell in each hand, palms up.",
@@ -201,7 +201,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Hammer Curl",
     "muscle_groups": ["Biceps"],
-    "thumbnail": "assets/images/hammer_curl_thumbnail.png",
+    "thumbnail": "/assets/hammer-curl-thumbnail.png",
     "video_or_animation": "assets/animations/hammer_curl.mp4",
     "instructions": [
       "Hold dumbbells with palms facing inward, feet shoulder-width apart.",
@@ -214,7 +214,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Preacher Curl",
     "muscle_groups": ["Biceps"],
-    "thumbnail": "assets/images/preacher_curl_thumbnail.png",
+    "thumbnail": "/assets/preacher-curl-thumbnail.png",
     "video_or_animation": "assets/animations/preacher_curl_lottie.json",
     "instructions": [
       "Sit at a preacher bench, hold an EZ-bar or dumbbells.",
@@ -227,7 +227,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Concentration Curl",
     "muscle_groups": ["Biceps"],
-    "thumbnail": "assets/images/concentration_curl_thumbnail.png",
+    "thumbnail": "/assets/concentration-curl-thumbnail.png",
     "video_or_animation": "assets/animations/concentration_curl.mp4",
     "instructions": [
       "Sit on a bench, hold a dumbbell, rest elbow on inner thigh.",
@@ -240,7 +240,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Cable Curl",
     "muscle_groups": ["Biceps"],
-    "thumbnail": "assets/images/cable_curl_thumbnail.png",
+    "thumbnail": "/assets/cable-curl-thumbnail.png",
     "video_or_animation": "assets/animations/cable_curl_lottie.json",
     "instructions": [
       "Stand at a cable machine with a low pulley, grip handle.",
@@ -253,7 +253,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Incline Dumbbell Curl",
     "muscle_groups": ["Biceps"],
-    "thumbnail": "assets/images/incline_dumbbell_curl_thumbnail.png",
+    "thumbnail": "/assets/incline-dumbbell-curl-thumbnail.png",
     "video_or_animation": "assets/animations/incline_dumbbell_curl.mp4",
     "instructions": [
       "Sit on an incline bench, dumbbells in each hand, palms up.",
@@ -266,7 +266,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "EZ-Bar Curl",
     "muscle_groups": ["Biceps"],
-    "thumbnail": "assets/images/ez_bar_curl_thumbnail.png",
+    "thumbnail": "/assets/ez-bar-curl-thumbnail.png",
     "video_or_animation": "assets/animations/ez_bar_curl_lottie.json",
     "instructions": [
       "Stand with feet shoulder-width apart, grip an EZ-bar.",
@@ -279,7 +279,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Running (Treadmill or Outdoor)",
     "muscle_groups": ["Cardio", "Legs"],
-    "thumbnail": "assets/images/running_thumbnail.png",
+    "thumbnail": "/assets/running-thumbnail.png",
     "video_or_animation": "assets/animations/running.mp4",
     "instructions": [
       "Set treadmill to desired speed or choose a flat outdoor path.",
@@ -293,7 +293,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Jump Rope",
     "muscle_groups": ["Cardio"],
-    "thumbnail": "assets/images/jump_rope_thumbnail.png",
+    "thumbnail": "/assets/jump-rope-thumbnail.png",
     "video_or_animation": "assets/animations/jump_rope_lottie.json",
     "instructions": [
       "Hold jump rope handles, stand with feet together.",
@@ -306,7 +306,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Cycling (Stationary or Outdoor)",
     "muscle_groups": ["Cardio", "Legs"],
-    "thumbnail": "assets/images/cycling_thumbnail.png",
+    "thumbnail": "/assets/cycling-thumbnail.png",
     "video_or_animation": "assets/animations/cycling.mp4",
     "instructions": [
       "Adjust bike seat to hip height.",
@@ -319,7 +319,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Rowing Machine",
     "muscle_groups": ["Cardio", "Back"],
-    "thumbnail": "assets/images/rowing_machine_thumbnail.png",
+    "thumbnail": "/assets/rowing-machine-thumbnail.png",
     "video_or_animation": "assets/animations/rowing_machine_lottie.json",
     "instructions": [
       "Sit on rowing machine, feet strapped in, grip handle.",
@@ -332,7 +332,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Stair Climber",
     "muscle_groups": ["Cardio", "Legs"],
-    "thumbnail": "assets/images/stair_climber_thumbnail.png",
+    "thumbnail": "/assets/stair-climber-thumbnail.png",
     "video_or_animation": "assets/animations/stair_climber.mp4",
     "instructions": [
       "Step onto stair climber, hold rails lightly for balance.",
@@ -345,7 +345,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "High Knees",
     "muscle_groups": ["Cardio", "Abs"],
-    "thumbnail": "assets/images/high_knees_thumbnail.png",
+    "thumbnail": "/assets/high-knees-thumbnail.png",
     "video_or_animation": "assets/animations/high_knees_lottie.json",
     "instructions": [
       "Stand with feet hip-width apart.",
@@ -358,7 +358,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Burpees",
     "muscle_groups": ["Cardio", "Chest", "Legs"],
-    "thumbnail": "assets/images/burpees_thumbnail.png",
+    "thumbnail": "/assets/burpees-thumbnail.png",
     "video_or_animation": "assets/animations/burpees.mp4",
     "instructions": [
       "Stand, then squat and place hands on floor.",
@@ -372,7 +372,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Jumping Jacks",
     "muscle_groups": ["Cardio"],
-    "thumbnail": "assets/images/jumping_jacks_thumbnail.png",
+    "thumbnail": "/assets/jumping-jacks-thumbnail.png",
     "video_or_animation": "assets/animations/jumping_jacks_lottie.json",
     "instructions": [
       "Stand with feet together, arms at sides.",
@@ -385,7 +385,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Barbell Bench Press",
     "muscle_groups": ["Chest", "Triceps", "Shoulders"],
-    "thumbnail": "assets/images/barbell_bench_press_thumbnail.png",
+    "thumbnail": "/assets/barbell-bench-press-thumbnail.png",
     "video_or_animation": "assets/animations/barbell_bench_press.mp4",
     "instructions": [
       "Lie on a flat bench, feet flat on the floor.",
@@ -399,7 +399,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Dumbbell Bench Press",
     "muscle_groups": ["Chest", "Triceps"],
-    "thumbnail": "assets/images/dumbbell_bench_press_thumbnail.png",
+    "thumbnail": "/assets/dumbbell-bench-press-thumbnail.png",
     "video_or_animation": "assets/animations/dumbbell_bench_press_lottie.json",
     "instructions": [
       "Lie on a flat bench, dumbbells in each hand at chest level.",
@@ -412,7 +412,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Incline Bench Press",
     "muscle_groups": ["Chest", "Triceps"],
-    "thumbnail": "assets/images/incline_bench_press_thumbnail.png",
+    "thumbnail": "/assets/incline-bench-press-thumbnail.png",
     "video_or_animation": "assets/animations/incline_bench_press.mp4",
     "instructions": [
       "Lie on an incline bench, grip barbell wider than shoulder-width.",
@@ -425,7 +425,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Decline Bench Press",
     "muscle_groups": ["Chest", "Triceps"],
-    "thumbnail": "assets/images/decline_bench_press_thumbnail.png",
+    "thumbnail": "/assets/decline-bench-press-thumbnail.png",
     "video_or_animation": "assets/animations/decline_bench_press_lottie.json",
     "instructions": [
       "Lie on a decline bench, grip barbell wider than shoulder-width.",
@@ -438,7 +438,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Chest Fly (Machine or Dumbbell)",
     "muscle_groups": ["Chest"],
-    "thumbnail": "assets/images/chest_fly_thumbnail.png",
+    "thumbnail": "/assets/chest-fly-thumbnail.png",
     "video_or_animation": "assets/animations/chest_fly.mp4",
     "instructions": [
       "Sit at a chest fly machine or lie on a bench with dumbbells.",
@@ -452,7 +452,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Push-Ups",
     "muscle_groups": ["Chest", "Triceps"],
-    "thumbnail": "assets/images/push_ups_thumbnail.png",
+    "thumbnail": "/assets/push-ups-thumbnail.png",
     "video_or_animation": "assets/animations/push_ups_lottie.json",
     "instructions": [
       "Start in a plank position, hands shoulder-width apart.",
@@ -465,7 +465,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Cable Crossover",
     "muscle_groups": ["Chest"],
-    "thumbnail": "assets/images/cable_crossover_thumbnail.png",
+    "thumbnail": "/assets/cable-crossover-thumbnail.png",
     "video_or_animation": "assets/animations/cable_crossover.mp4",
     "instructions": [
       "Stand between two cable machines, pulleys set high.",
@@ -479,7 +479,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Pec Deck Machine",
     "muscle_groups": ["Chest"],
-    "thumbnail": "assets/images/pec_deck_thumbnail.png",
+    "thumbnail": "/assets/pec-deck-thumbnail.png",
     "video_or_animation": "assets/animations/pec_deck_lottie.json",
     "instructions": [
       "Sit at a pec deck machine, adjust seat height.",
@@ -493,7 +493,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Barbell Squat",
     "muscle_groups": ["Legs", "Glutes"],
-    "thumbnail": "assets/images/barbell_squat_thumbnail.png",
+    "thumbnail": "/assets/barbell-squat-thumbnail.png",
     "video_or_animation": "assets/animations/barbell_squat.mp4",
     "instructions": [
       "Stand with feet shoulder-width apart, barbell on upper back.",
@@ -507,7 +507,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Leg Press",
     "muscle_groups": ["Legs"],
-    "thumbnail": "assets/images/leg_press_thumbnail.png",
+    "thumbnail": "/assets/leg-press-thumbnail.png",
     "video_or_animation": "assets/animations/leg_press_lottie.json",
     "instructions": [
       "Sit in a leg press machine, feet shoulder-width on platform.",
@@ -520,7 +520,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Romanian Deadlift",
     "muscle_groups": ["Legs", "Back"],
-    "thumbnail": "assets/images/romanian_deadlift_thumbnail.png",
+    "thumbnail": "/assets/romanian-deadlift-thumbnail.png",
     "video_or_animation": "assets/animations/romanian_deadlift.mp4",
     "instructions": [
       "Hold a barbell, feet hip-width apart.",
@@ -533,7 +533,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Walking Lunges",
     "muscle_groups": ["Legs", "Glutes"],
-    "thumbnail": "assets/images/walking_lunges_thumbnail.png",
+    "thumbnail": "/assets/walking-lunges-thumbnail.png",
     "video_or_animation": "assets/animations/walking_lunges_lottie.json",
     "instructions": [
       "Stand with feet together, optional dumbbells in hands.",
@@ -546,7 +546,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Leg Curl (Machine)",
     "muscle_groups": ["Legs"],
-    "thumbnail": "assets/images/leg_curl_thumbnail.png",
+    "thumbnail": "/assets/leg-curl-thumbnail.png",
     "video_or_animation": "assets/animations/leg_curl.mp4",
     "instructions": [
       "Lie face-down on a leg curl machine, adjust pad to ankles.",
@@ -559,7 +559,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Leg Extension (Machine)",
     "muscle_groups": ["Legs"],
-    "thumbnail": "assets/images/leg_extension_thumbnail.png",
+    "thumbnail": "/assets/leg-extension-thumbnail.png",
     "video_or_animation": "assets/animations/leg_extension_lottie.json",
     "instructions": [
       "Sit on a leg extension machine, adjust pad to shins.",
@@ -572,7 +572,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Calf Raises",
     "muscle_groups": ["Legs"],
-    "thumbnail": "assets/images/calf_raises_thumbnail.png",
+    "thumbnail": "/assets/calf-raises-thumbnail.png",
     "video_or_animation": "assets/animations/calf_raises.mp4",
     "instructions": [
       "Stand with feet hip-width apart, optional weight in hands.",
@@ -585,7 +585,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Bulgarian Split Squat",
     "muscle_groups": ["Legs", "Glutes"],
-    "thumbnail": "assets/images/bulgarian_split_squat_thumbnail.png",
+    "thumbnail": "/assets/bulgarian-split-squat-thumbnail.png",
     "video_or_animation": "assets/animations/bulgarian_split_squat_lottie.json",
     "instructions": [
       "Stand 2 feet in front of a bench, one foot resting on it.",
@@ -598,7 +598,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Overhead Press (Barbell or Dumbbell)",
     "muscle_groups": ["Shoulders", "Triceps"],
-    "thumbnail": "assets/images/overhead_press_thumbnail.png",
+    "thumbnail": "/assets/overhead-press-thumbnail.png",
     "video_or_animation": "assets/animations/overhead_press.mp4",
     "instructions": [
       "Stand or sit, hold barbell/dumbbells at shoulder height, palms forward.",
@@ -611,7 +611,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Arnold Press",
     "muscle_groups": ["Shoulders"],
-    "thumbnail": "assets/images/arnold_press_thumbnail.png",
+    "thumbnail": "/assets/arnold-press-thumbnail.png",
     "video_or_animation": "assets/animations/arnold_press_lottie.json",
     "instructions": [
       "Sit or stand, hold dumbbells at shoulder height, palms facing you.",
@@ -624,7 +624,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Lateral Raises",
     "muscle_groups": ["Shoulders"],
-    "thumbnail": "assets/images/lateral_raises_thumbnail.png",
+    "thumbnail": "/assets/lateral-raises-thumbnail.png",
     "video_or_animation": "assets/animations/lateral_raises.mp4",
     "instructions": [
       "Stand with feet hip-width apart, dumbbells at sides.",
@@ -637,7 +637,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Front Raises",
     "muscle_groups": ["Shoulders"],
-    "thumbnail": "assets/images/front_raises_thumbnail.png",
+    "thumbnail": "/assets/front-raises-thumbnail.png",
     "video_or_animation": "assets/animations/front_raises_lottie.json",
     "instructions": [
       "Stand with feet hip-width apart, dumbbells in hands, palms down.",
@@ -650,7 +650,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Rear Delt Fly",
     "muscle_groups": ["Shoulders"],
-    "thumbnail": "assets/images/rear_delt_fly_thumbnail.png",
+    "thumbnail": "/assets/rear-delt-fly-thumbnail.png",
     "video_or_animation": "assets/animations/rear_delt_fly.mp4",
     "instructions": [
       "Bend forward at hips, dumbbells in hands, palms facing in.",
@@ -663,7 +663,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Upright Row",
     "muscle_groups": ["Shoulders", "Back"],
-    "thumbnail": "assets/images/upright_row_thumbnail.png",
+    "thumbnail": "/assets/upright-row-thumbnail.png",
     "video_or_animation": "assets/animations/upright_row_lottie.json",
     "instructions": [
       "Stand with feet shoulder-width apart, hold barbell with overhand grip.",
@@ -676,7 +676,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Shoulder Press Machine",
     "muscle_groups": ["Shoulders"],
-    "thumbnail": "assets/images/shoulder_press_machine_thumbnail.png",
+    "thumbnail": "/assets/shoulder-press-machine-thumbnail.png",
     "video_or_animation": "assets/animations/shoulder_press_machine.mp4",
     "instructions": [
       "Sit on a shoulder press machine, adjust seat height.",
@@ -689,7 +689,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Face Pulls",
     "muscle_groups": ["Shoulders", "Back"],
-    "thumbnail": "assets/images/face_pulls_thumbnail.png",
+    "thumbnail": "/assets/face-pulls-thumbnail.png",
     "video_or_animation": "assets/animations/face_pulls.mp4",
     "instructions": [
       "Set a cable machine with a rope attachment at face height.",
@@ -702,7 +702,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Tricep Pushdown (Cable)",
     "muscle_groups": ["Triceps"],
-    "thumbnail": "assets/images/tricep_pushdown_thumbnail.png",
+    "thumbnail": "/assets/tricep-pushdown-thumbnail.png",
     "video_or_animation": "assets/animations/tricep_pushdown_lottie.json",
     "instructions": [
       "Stand at a cable machine with a high pulley, grip bar or rope.",
@@ -715,7 +715,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Skull Crushers (EZ-Bar or Dumbbell)",
     "muscle_groups": ["Triceps"],
-    "thumbnail": "assets/images/skull_crushers_thumbnail.png",
+    "thumbnail": "/assets/skull-crushers-thumbnail.png",
     "video_or_animation": "assets/animations/skull_crushers.mp4",
     "instructions": [
       "Lie on a bench, hold EZ-bar or dumbbells above chest.",
@@ -728,7 +728,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Overhead Tricep Extension",
     "muscle_groups": ["Triceps"],
-    "thumbnail": "assets/images/overhead_tricep_extension_thumbnail.png",
+    "thumbnail": "/assets/overhead-tricep-extension-thumbnail.png",
     "video_or_animation": "assets/animations/overhead_tricep_extension_lottie.json",
     "instructions": [
       "Stand or sit, hold a dumbbell overhead with both hands.",
@@ -741,7 +741,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Dips (Parallel Bars or Bench)",
     "muscle_groups": ["Triceps", "Chest"],
-    "thumbnail": "assets/images/dips_thumbnail.png",
+    "thumbnail": "/assets/dips-thumbnail.png",
     "video_or_animation": "assets/animations/dips.mp4",
     "instructions": [
       "On parallel bars or a bench, grip handles or edge.",
@@ -754,7 +754,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Close-Grip Bench Press",
     "muscle_groups": ["Triceps", "Chest"],
-    "thumbnail": "assets/images/close_grip_bench_press_thumbnail.png",
+    "thumbnail": "/assets/close-grip-bench-press-thumbnail.png",
     "video_or_animation": "assets/animations/close_grip_bench_press_lottie.json",
     "instructions": [
       "Lie on a bench, grip barbell with hands closer than shoulder-width.",
@@ -767,7 +767,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Tricep Kickbacks",
     "muscle_groups": ["Triceps"],
-    "thumbnail": "assets/images/tricep_kickbacks_thumbnail.png",
+    "thumbnail": "/assets/tricep-kickbacks-thumbnail.png",
     "video_or_animation": "assets/animations/tricep_kickbacks.mp4",
     "instructions": [
       "Bend forward at hips, hold dumbbells, elbows bent at 90 degrees.",
@@ -780,7 +780,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Rope Pushdowns",
     "muscle_groups": ["Triceps"],
-    "thumbnail": "assets/images/rope_pushdowns_thumbnail.png",
+    "thumbnail": "/assets/rope-pushdowns-thumbnail.png",
     "video_or_animation": "assets/animations/rope_pushdowns_lottie.json",
     "instructions": [
       "Stand at a cable machine with a rope attachment, high pulley.",
@@ -793,7 +793,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Diamond Push-Ups",
     "muscle_groups": ["Triceps", "Chest"],
-    "thumbnail": "assets/images/diamond_push_ups_thumbnail.png",
+    "thumbnail": "/assets/diamond-push-ups-thumbnail.png",
     "video_or_animation": "assets/animations/diamond_push_ups.mp4",
     "instructions": [
       "Start in a plank, hands close together forming a diamond shape.",
