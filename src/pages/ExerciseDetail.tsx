@@ -2,10 +2,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { exercisesData } from '@/data/exercises_full';
-import { ExerciseStepsCarousel } from '@/components/ExerciseStepsCarousel';
 
 export default function ExerciseDetail() {
   const navigate = useNavigate();
@@ -54,55 +53,6 @@ export default function ExerciseDetail() {
     return `${Math.ceil(diffDays / 30)}mo ago`;
   };
 
-  const renderMedia = () => {
-    const mediaUrl = exercise.video_or_animation;
-    
-    // If step images are available, show them in carousel
-    if (exercise.step_images && exercise.step_images.length > 0) {
-      return (
-        <div className="mb-6">
-          <ExerciseStepsCarousel 
-            stepImages={exercise.step_images} 
-            exerciseName={exercise.name}
-          />
-        </div>
-      );
-    }
-    
-    // Skip rendering if it's a JSON file (no media available)
-    if (mediaUrl.endsWith('.json')) {
-      return null;
-    }
-    
-    if (mediaUrl.endsWith('.mp4')) {
-      // Video
-      return (
-        <div className="flex justify-center mb-6">
-          <video
-            autoPlay
-            loop
-            muted
-            className="h-[300px] w-[300px] object-cover rounded-lg bg-muted"
-          >
-            <source src={mediaUrl} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        </div>
-      );
-    } else {
-      // GIF or image fallback
-      return (
-        <div className="flex justify-center mb-6">
-          <img
-            src={mediaUrl}
-            alt={exercise.name}
-            className="h-[300px] w-[300px] object-cover rounded-lg bg-muted"
-          />
-        </div>
-      );
-    }
-  };
-
   return (
     <div className="min-h-screen p-6 space-y-6">
       {/* Header */}
@@ -122,13 +72,6 @@ export default function ExerciseDetail() {
           </p>
         </div>
       </div>
-
-      {/* Exercise Demo */}
-      <Card className="border-2 border-[hsl(var(--widget-border))]">
-        <CardContent className="p-6">
-          {renderMedia()}
-        </CardContent>
-      </Card>
 
       {/* Muscle Groups */}
       <Card className="border-2 border-[hsl(var(--widget-border))]">
