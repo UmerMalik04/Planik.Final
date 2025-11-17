@@ -51,10 +51,10 @@ export default function StepHistory() {
   };
 
   const getStepColor = (steps: number) => {
-    if (steps >= 14000) return "text-[hsl(142,76%,45%)]"; // Green
-    if (steps >= 10000) return "text-[hsl(188,78%,41%)]"; // Cyan
-    if (steps >= 5000) return "text-[hsl(211,100%,65%)]"; // Light blue
-    if (steps >= 2000) return "text-[hsl(211,100%,50%)]"; // Blue
+    if (steps >= 14000) return "text-success"; // Green
+    if (steps >= 10000) return "text-primary"; // Primary blue
+    if (steps >= 5000) return "text-accent"; // Accent
+    if (steps >= 2000) return "text-primary/70"; // Light primary
     return "text-muted-foreground";
   };
 
@@ -70,15 +70,15 @@ export default function StepHistory() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[hsl(188,78%,41%)] to-background">
+    <div className="min-h-screen bg-gradient-to-b from-primary to-background">
       {/* Header */}
-      <div className="bg-[hsl(188,78%,41%)] text-white p-6 pb-8">
+      <div className="bg-primary text-primary-foreground p-6 pb-8">
         <div className="flex items-center justify-between mb-6">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
-            className="text-white hover:bg-white/20"
+            className="text-primary-foreground hover:bg-primary-foreground/20"
           >
             <ArrowLeft className="h-6 w-6" />
           </Button>
@@ -93,7 +93,7 @@ export default function StepHistory() {
           <Button
             variant="ghost"
             size="icon"
-            className="text-white hover:bg-white/20"
+            className="text-primary-foreground hover:bg-primary-foreground/20"
           >
             <CalendarIcon className="h-6 w-6" />
           </Button>
@@ -102,14 +102,14 @@ export default function StepHistory() {
         {/* Stats */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-white/90">Daily goal:</span>
+            <span className="text-primary-foreground/90">Daily goal:</span>
             <div className="flex items-center gap-2">
               {isEditingGoal ? (
                 <input
                   type="number"
                   value={dailyGoal}
                   onChange={(e) => setDailyGoal(Number(e.target.value))}
-                  className="bg-white/20 text-white px-3 py-1 rounded w-32 text-right"
+                  className="bg-primary-foreground/20 text-primary-foreground px-3 py-1 rounded w-32 text-right"
                   onBlur={() => setIsEditingGoal(false)}
                   autoFocus
                 />
@@ -118,12 +118,12 @@ export default function StepHistory() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 text-[hsl(142,76%,70%)] hover:bg-white/20"
+                    className="h-6 w-6 text-success hover:bg-primary-foreground/20"
                     onClick={() => setIsEditingGoal(true)}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <span className="text-[hsl(142,76%,70%)] font-medium">
+                  <span className="text-success font-medium">
                     {dailyGoal.toLocaleString()} steps
                   </span>
                 </>
@@ -131,30 +131,27 @@ export default function StepHistory() {
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-white/90">Longest streak:</span>
-            <span className="text-white font-medium">{longestStreak} days</span>
+            <span className="text-primary-foreground/90">Longest streak:</span>
+            <span className="text-primary-foreground font-medium">{longestStreak} days</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-white/90">Best month:</span>
-            <span className="text-white font-medium">{bestMonth}</span>
+            <span className="text-primary-foreground/90">Best month:</span>
+            <span className="text-primary-foreground font-medium">{bestMonth}</span>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
       <Tabs defaultValue="month" className="w-full">
-        <TabsList className="w-full grid grid-cols-4 bg-[hsl(188,78%,41%)] rounded-none border-t border-white/20">
-          <TabsTrigger value="day" className="data-[state=active]:bg-[hsl(188,78%,35%)] text-white">
+        <TabsList className="w-full grid grid-cols-3 bg-primary rounded-none border-t border-primary-foreground/20">
+          <TabsTrigger value="day" className="data-[state=active]:bg-primary/80 text-primary-foreground">
             Day
           </TabsTrigger>
-          <TabsTrigger value="week" className="data-[state=active]:bg-[hsl(188,78%,35%)] text-white">
+          <TabsTrigger value="week" className="data-[state=active]:bg-primary/80 text-primary-foreground">
             Week
           </TabsTrigger>
-          <TabsTrigger value="month" className="data-[state=active]:bg-[hsl(188,78%,35%)] text-white">
+          <TabsTrigger value="month" className="data-[state=active]:bg-primary/80 text-primary-foreground">
             Month
-          </TabsTrigger>
-          <TabsTrigger value="calendar" className="data-[state=active]:bg-[hsl(188,78%,35%)] text-white">
-            <CalendarIcon className="h-4 w-4" />
           </TabsTrigger>
         </TabsList>
 
@@ -208,10 +205,10 @@ export default function StepHistory() {
                 {monthlySteps.map((day) => {
                   const isToday = isSameDay(day.date, new Date());
                   return (
-                    <div
+                  <div
                       key={day.date.toISOString()}
                       className={`aspect-square flex flex-col items-center justify-center rounded-lg ${
-                        isToday ? "bg-[hsl(211,100%,50%)]/20 ring-2 ring-[hsl(211,100%,50%)]" : ""
+                        isToday ? "bg-primary/20 ring-2 ring-primary" : ""
                       }`}
                     >
                       <div className={`text-sm font-medium ${getStepColor(day.steps)}`}>
@@ -254,22 +251,11 @@ export default function StepHistory() {
         <TabsContent value="day" className="mt-0 bg-background p-4">
           <Card className="p-6 text-center">
             <h2 className="text-2xl font-bold text-foreground mb-2">Today</h2>
-            <p className="text-4xl font-bold text-[hsl(188,78%,41%)]">
+            <p className="text-4xl font-bold text-primary">
               {weeklySteps[weeklySteps.length - 1]?.steps.toLocaleString() || 0}
             </p>
             <p className="text-muted-foreground mt-2">steps</p>
           </Card>
-        </TabsContent>
-
-        {/* Calendar View */}
-        <TabsContent value="calendar" className="mt-0 bg-background">
-          <div className="p-4">
-            <Card className="p-4">
-              <p className="text-center text-muted-foreground">
-                Calendar picker view - Coming soon
-              </p>
-            </Card>
-          </div>
         </TabsContent>
       </Tabs>
     </div>
