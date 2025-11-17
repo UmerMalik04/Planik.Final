@@ -20,7 +20,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 15%;
 
-    --primary: 211 100% 50%;  /* #007BFF blue */
+    --primary: 211 65% 55%;  /* Softer, easier on eyes blue */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 93%;
@@ -29,7 +29,7 @@ All colors MUST be HSL.
     --muted: 0 0% 95%;
     --muted-foreground: 0 0% 40%;  /* Better contrast for small text */
 
-    --accent: 211 100% 50%;
+    --accent: 211 65% 55%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
@@ -37,7 +37,7 @@ All colors MUST be HSL.
 
     --border: 0 0% 88%;
     --input: 0 0% 100%;
-    --ring: 211 100% 50%;
+    --ring: 211 65% 55%;
 
     /* Performance colors */
     --success: 142 76% 36%;  /* Green for improvements */
@@ -59,12 +59,12 @@ All colors MUST be HSL.
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 0 0% 15%;  /* Better contrast */
-    --sidebar-primary: 211 100% 50%;  /* Match primary */
+    --sidebar-primary: 211 65% 55%;  /* Match primary */
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 95%;
     --sidebar-accent-foreground: 0 0% 15%;
     --sidebar-border: 0 0% 88%;
-    --sidebar-ring: 211 100% 50%;
+    --sidebar-ring: 211 65% 55%;
   }
 
   .dark {
