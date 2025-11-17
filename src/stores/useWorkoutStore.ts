@@ -7,6 +7,7 @@ export interface Exercise {
   weight?: number;
   reps: number;
   sets: number;
+  notes?: string;
   date?: string;
   planId: string;
   hasWarmup?: boolean;
@@ -47,6 +48,7 @@ export interface WorkoutPlan {
   id: string;
   name: string;
   type: string;
+  description?: string;
   exercises: Exercise[];
   restTimer?: number;
 }
@@ -213,7 +215,16 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
 
   addWorkoutPlan: async (plan) => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) throw new Error('User not authenticated');
+
+    // Validate input
+    const { workoutPlanSchema } = await import('@/lib/validation');
+    const validated = workoutPlanSchema.parse({
+      name: plan.name,
+      type: plan.type,
+      description: plan.description,
+      restTimer: plan.restTimer
+    });
 
     const { data, error } = await supabase
       .from('workout_plans')
@@ -265,17 +276,28 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
 
   addExercise: async (planId, exercise) => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) throw new Error('User not authenticated');
+
+    // Validate input
+    const { exerciseSchema } = await import('@/lib/validation');
+    const validated = exerciseSchema.parse({
+      name: exercise.name,
+      weight: exercise.weight,
+      reps: exercise.reps,
+      sets: exercise.sets,
+      notes: exercise.notes
+    });
 
     const { data, error } = await supabase
       .from('exercises')
       .insert({
         user_id: user.id,
         workout_plan_id: planId,
-        name: exercise.name,
-        weight: exercise.weight,
-        reps: exercise.reps,
-        sets: exercise.sets,
+        name: validated.name,
+        weight: validated.weight,
+        reps: validated.reps,
+        sets: validated.sets,
+        notes: validated.notes,
         has_warmup: exercise.hasWarmup
       })
       .select()
@@ -487,7 +509,16 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
 
   updatePersonalRecord: async (exerciseName, weight, reps) => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) throw new Error('User not authenticated');
+
+    // Validate input
+    const { personalRecordSchema } = await import('@/lib/validation');
+    personalRecordSchema.parse({
+      exerciseName,
+      weight,
+      reps,
+      date: new Date().toISOString()
+    });
 
     await supabase
       .from('personal_records')

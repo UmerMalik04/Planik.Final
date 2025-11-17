@@ -2,3 +2,12 @@ project_id = "twtvzmyvhthvhvulaxfc"
 
 [functions.request-password-reset]
 verify_jwt = false
+
+[functions.recognize-food]
+verify_jwt = true
+
+[functions.send-email]
+verify_jwt = true
+
+[functions.send-feedback]
+verify_jwt = true
