@@ -29,6 +29,7 @@ import Demo from "./pages/Demo";
 import Profile from "./pages/Profile";
 import ExerciseDetail from "./pages/ExerciseDetail";
 import BodyMap from "./pages/BodyMap";
+import StepHistory from "./pages/StepHistory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -174,6 +175,13 @@ function App() {
               <AuthGuard>
                 <Layout>
                   <BodyMap />
+                </Layout>
+              </AuthGuard>
+            } />
+            <Route path="/step-history" element={
+              <AuthGuard>
+                <Layout>
+                  <StepHistory />
                 </Layout>
               </AuthGuard>
             } />
