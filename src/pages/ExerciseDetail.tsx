@@ -69,16 +69,12 @@ export default function ExerciseDetail() {
       );
     }
     
+    // Skip rendering if it's a JSON file (no media available)
     if (mediaUrl.endsWith('.json')) {
-      // Lottie animation - placeholder for now
-      return (
-        <div className="flex justify-center mb-6">
-          <div className="h-[300px] w-[300px] bg-muted rounded-lg flex items-center justify-center">
-            <p className="text-muted-foreground">Lottie Animation</p>
-          </div>
-        </div>
-      );
-    } else if (mediaUrl.endsWith('.mp4')) {
+      return null;
+    }
+    
+    if (mediaUrl.endsWith('.mp4')) {
       // Video
       return (
         <div className="flex justify-center mb-6">
