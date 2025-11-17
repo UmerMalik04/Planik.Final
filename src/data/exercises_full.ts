@@ -43,10 +43,14 @@ export const exercisesData: Exercise[] = [
     "thumbnail": "/assets/leg-sits-thumbnail.png",
     "video_or_animation": "assets/animations/leg_sits_lottie.json",
     "instructions": [
-      "Sit on the floor, knees bent, feet flat.",
-      "Lean back slightly, engage core, and lift feet off the ground.",
-      "Hold legs at a 45-degree angle for 20-30 seconds.",
-      "Rest and repeat for 3-4 sets."
+      "Sit on the floor with knees bent and feet flat on the ground.",
+      "Place your hands beside your hips or slightly behind you for balance.",
+      "Lean back slightly at about 45 degrees while engaging your core muscles.",
+      "Lift your feet off the ground, keeping knees bent at 90 degrees.",
+      "Hold this V-sit position, maintaining balance and core tension.",
+      "Keep your back straight and avoid rounding your spine.",
+      "Hold for 20-30 seconds, breathing steadily.",
+      "Lower feet to rest, then repeat for 3-4 sets."
     ],
     "last_used": "2025-08-15"
   },
@@ -83,10 +87,14 @@ export const exercisesData: Exercise[] = [
     "thumbnail": "/assets/barbell-row-thumbnail.png",
     "video_or_animation": "assets/animations/barbell_row_lottie.json",
     "instructions": [
-      "Stand with feet shoulder-width apart, holding a barbell with an overhand grip.",
-      "Bend knees slightly, hinge at hips, keep back straight.",
-      "Pull barbell to lower chest, squeezing shoulder blades.",
-      "Lower barbell back down.",
+      "Stand with feet shoulder-width apart, holding a barbell with an overhand grip (palms facing down).",
+      "Bend your knees slightly and hinge forward at the hips, keeping your back straight and chest up.",
+      "Let the barbell hang at arm's length, maintaining a neutral spine position.",
+      "Brace your core and pull the barbell up to your lower chest or upper abdomen.",
+      "Focus on squeezing your shoulder blades together at the top of the movement.",
+      "Keep your elbows close to your body, pulling them back rather than out to the sides.",
+      "Lower the barbell back down with control to the starting position.",
+      "Avoid using momentum or rounding your back throughout the exercise.",
       "Repeat for 8-12 reps."
     ],
     "last_used": "2025-08-23"
@@ -97,9 +105,15 @@ export const exercisesData: Exercise[] = [
     "thumbnail": "/assets/lat-pulldown-thumbnail.png",
     "video_or_animation": "assets/animations/lat_pulldown.mp4",
     "instructions": [
-      "Sit at a lat pulldown machine, grip bar wider than shoulder-width.",
-      "Pull bar down to upper chest, keeping torso upright.",
-      "Slowly return bar to starting position.",
+      "Sit at a lat pulldown machine and adjust the knee pad to secure your legs.",
+      "Reach up and grip the bar with a wide overhand grip, hands wider than shoulder-width.",
+      "Sit down and let your arms fully extend overhead, feeling a stretch in your lats.",
+      "Keep your torso upright with a slight lean back (about 10-15 degrees).",
+      "Pull the bar down towards your upper chest by driving your elbows down and back.",
+      "Squeeze your shoulder blades together at the bottom of the movement.",
+      "Avoid pulling the bar behind your neck, which can strain shoulders.",
+      "Slowly return the bar to the starting position with control, fully extending your arms.",
+      "Don't use momentum or lean back excessively to pull the weight.",
       "Repeat for 10-12 reps."
     ],
     "last_used": "2025-08-19"
@@ -110,10 +124,15 @@ export const exercisesData: Exercise[] = [
     "thumbnail": "/assets/t-bar-row-thumbnail.png",
     "video_or_animation": "assets/animations/t_bar_row_lottie.json",
     "instructions": [
-      "Stand over a T-bar row machine, feet shoulder-width apart.",
-      "Grip handles, bend knees slightly, hinge at hips.",
-      "Pull bar to chest, squeezing shoulder blades.",
-      "Lower bar with control.",
+      "Stand over a T-bar row machine with feet shoulder-width apart, straddling the bar.",
+      "Bend your knees slightly and hinge at the hips, keeping your back straight.",
+      "Grip the handles with both hands, allowing your arms to hang fully extended.",
+      "Brace your core and maintain a neutral spine throughout the movement.",
+      "Pull the bar up towards your chest by driving your elbows back.",
+      "Squeeze your shoulder blades together at the top of the movement.",
+      "Keep the bar close to your body and avoid using your lower back to lift.",
+      "Lower the bar back down with control until your arms are fully extended.",
+      "Avoid rounding your back or using momentum to swing the weight.",
       "Repeat for 8-12 reps."
     ],
     "last_used": "2025-08-17"
