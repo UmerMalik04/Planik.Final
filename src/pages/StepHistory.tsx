@@ -118,7 +118,7 @@ export default function StepHistory() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 text-success hover:bg-primary-foreground/20"
+                    className="h-6 w-6 text-primary-foreground hover:bg-primary-foreground/20"
                     onClick={() => setIsEditingGoal(true)}
                   >
                     <Edit className="h-4 w-4" />
