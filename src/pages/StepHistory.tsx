@@ -123,7 +123,7 @@ export default function StepHistory() {
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <span className="text-success font-medium">
+                  <span className="text-primary-foreground font-medium">
                     {dailyGoal.toLocaleString()} steps
                   </span>
                 </>
