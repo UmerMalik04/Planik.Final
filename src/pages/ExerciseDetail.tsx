@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { exercisesData } from '@/data/exercises_full';
+import { ExerciseStepsCarousel } from '@/components/ExerciseStepsCarousel';
 
 export default function ExerciseDetail() {
   const navigate = useNavigate();
@@ -55,6 +56,18 @@ export default function ExerciseDetail() {
 
   const renderMedia = () => {
     const mediaUrl = exercise.video_or_animation;
+    
+    // If step images are available, show them in carousel
+    if (exercise.step_images && exercise.step_images.length > 0) {
+      return (
+        <div className="mb-6">
+          <ExerciseStepsCarousel 
+            stepImages={exercise.step_images} 
+            exerciseName={exercise.name}
+          />
+        </div>
+      );
+    }
     
     if (mediaUrl.endsWith('.json')) {
       // Lottie animation - placeholder for now
