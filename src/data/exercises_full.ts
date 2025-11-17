@@ -65,7 +65,7 @@ export const exercisesData: Exercise[] = [
   {
     "name": "Pull-Up",
     "muscle_groups": ["Back", "Biceps"],
-    "thumbnail": "",
+    "thumbnail": "/assets/pull-up-thumbnail.png",
     "video_or_animation": "/assets/pull-up.gif",
     "instructions": [
       "Grip a pull-up bar, palms facing away, hands shoulder-width apart.",
