@@ -154,6 +154,11 @@ export default function Exercises() {
           >
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
+                <img
+                  src={exercise.thumbnail}
+                  alt={exercise.name}
+                  className="w-12 h-12 rounded-lg object-cover bg-muted"
+                />
                 <div className="flex-1">
                   <h3 className="font-semibold text-foreground">{exercise.name}</h3>
                   <div className="flex flex-wrap gap-1 mt-1">
