@@ -26,25 +26,19 @@ export class FoodRecognitionService {
       // Convert image to base64
       const base64Image = await this.fileToBase64(imageFile);
       
-      // Call the edge function for AI recognition
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      
-      const response = await fetch(`${supabaseUrl}/functions/v1/recognize-food`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseKey}`,
-        },
-        body: JSON.stringify({ imageBase64: base64Image }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Recognition failed: ${response.status}`);
+      // Call the edge function for AI recognition with authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('User must be authenticated to use food recognition');
       }
 
-      const result = await response.json();
-      console.log('AI recognition result:', result);
+      const { data, error } = await supabase.functions.invoke('recognize-food', {
+        body: { imageBase64: base64Image }
+      });
+
+      if (error) throw error;
+      const result = data;
+
       
       return result.fallback || result;
     } catch (error) {

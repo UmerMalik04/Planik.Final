@@ -93,25 +93,42 @@ export const useDietStore = create<DietStore>()((set, get) => ({
 
   addFood: async (food) => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) throw new Error('User not authenticated');
+
+    // Validate input
+    const { foodItemSchema } = await import('@/lib/validation');
+    const validated = foodItemSchema.parse({
+      name: food.name,
+      calories: food.calories,
+      protein: food.protein,
+      carbs: food.carbs,
+      fat: food.fat,
+      fiber: food.fiber,
+      sugar: food.sugar,
+      quantity: food.quantity,
+      unit: food.unit,
+      date: food.date
+    });
 
     const { data, error } = await supabase
       .from('food_items')
       .insert({
         user_id: user.id,
-        name: food.name,
-        calories: food.calories,
-        protein: food.protein,
-        carbs: food.carbs,
-        fat: food.fat,
-        fiber: food.fiber,
-        sugar: food.sugar,
-        date: food.date,
-        quantity: food.quantity,
-        unit: food.unit
+        name: validated.name,
+        calories: validated.calories,
+        protein: validated.protein,
+        carbs: validated.carbs,
+        fat: validated.fat,
+        fiber: validated.fiber,
+        sugar: validated.sugar,
+        date: validated.date,
+        quantity: validated.quantity,
+        unit: validated.unit
       })
       .select()
       .single();
+    
+    if (error) throw error;
 
     if (data && !error) {
       const foodWithId: FoodItem = {
