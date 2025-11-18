@@ -198,15 +198,36 @@ export default function Profile() {
           .getPublicUrl(filePath);
 
         // Update user profile in database
-        const { error: updateError } = await supabase
+        // First, check if profile exists
+        const { data: existingProfile } = await supabase
           .from('user_profiles')
-          .upsert({
-            id: currentUser.id,
-            avatar_url: publicUrl,
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'id' });
+          .select('id')
+          .eq('id', currentUser.id)
+          .maybeSingle();
 
-        if (updateError) throw updateError;
+        if (existingProfile) {
+          // Profile exists, update it
+          const { error: updateError } = await supabase
+            .from('user_profiles')
+            .update({
+              avatar_url: publicUrl,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', currentUser.id);
+
+          if (updateError) throw updateError;
+        } else {
+          // Profile doesn't exist, create it
+          const { error: insertError } = await supabase
+            .from('user_profiles')
+            .insert({
+              id: currentUser.id,
+              avatar_url: publicUrl,
+              display_name: currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || 'User'
+            });
+
+          if (insertError) throw insertError;
+        }
 
         // Update local state
         const updatedUser = {
