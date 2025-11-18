@@ -1,12 +1,10 @@
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
-import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 export class BarcodeService {
   static async isAvailable(): Promise<boolean> {
-    // On web, we can use the Camera API to take a photo and scan it
     if (!Capacitor.isNativePlatform()) {
-      return true; // Camera API works on web
+      return false; // Only works on native platforms
     }
     
     try {
@@ -18,15 +16,13 @@ export class BarcodeService {
   }
 
   static async requestPermissions(): Promise<boolean> {
+    if (!Capacitor.isNativePlatform()) {
+      return false;
+    }
+    
     try {
-      // On native platforms, request barcode scanner permissions
-      if (Capacitor.isNativePlatform()) {
-        const { camera } = await BarcodeScanner.requestPermissions();
-        return camera === 'granted' || camera === 'limited';
-      }
-      
-      // On web, Camera plugin will handle permission requests
-      return true;
+      const { camera } = await BarcodeScanner.requestPermissions();
+      return camera === 'granted' || camera === 'limited';
     } catch {
       return false;
     }
@@ -34,7 +30,7 @@ export class BarcodeService {
 
   static async scanBarcode(): Promise<string | null> {
     try {
-      // On web browsers, camera scanning is not available
+      // Only works on native platforms
       if (!Capacitor.isNativePlatform()) {
         throw new Error('Camera scanning requires the native app. Please use manual entry or build the native app.');
       }
@@ -58,7 +54,7 @@ export class BarcodeService {
     }
   }
 
-  // Fallback web-based barcode input
+  // Manual barcode input
   static async promptBarcodeInput(): Promise<string | null> {
     const barcode = prompt('Enter barcode number:');
     return barcode || null;
