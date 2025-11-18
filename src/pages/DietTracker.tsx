@@ -39,15 +39,32 @@ export default function DietTracker() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid File",
+        description: "Please select an image file",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
+
     setIsScanning(true);
+    toast({
+      title: "Scanning...",
+      description: "Analyzing your food image",
+      duration: 2000,
+    });
+
     try {
       const scannedResult = await scanFood(file);
       
-      if (scannedResult) {
+      if (scannedResult && scannedResult.name && scannedResult.name !== "Food Item") {
         setScannedFood(scannedResult);
         toast({
           title: "Food Recognized!",
-          description: `Detected: ${scannedResult.name} with ${scannedResult.calories} calories`,
+          description: `Detected: ${scannedResult.name} (${scannedResult.calories} cal)`,
           duration: 3000,
         });
       } else {
@@ -68,6 +85,10 @@ export default function DietTracker() {
       });
     } finally {
       setIsScanning(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
