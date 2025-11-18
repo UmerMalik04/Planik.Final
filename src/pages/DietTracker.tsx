@@ -5,11 +5,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeft, Camera, Plus, Trash2, Calendar, Barcode } from 'lucide-react';
+import { ArrowLeft, Camera, Plus, Trash2, Calendar, Barcode, Keyboard } from 'lucide-react';
 import { useDietStore, FoodItem } from '@/stores/useDietStore';
 import { useToast } from '@/hooks/use-toast';
 import { useSettings } from '@/contexts/SettingsContext';
 import { BarcodeService } from '@/services/BarcodeService';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function DietTracker() {
   const navigate = useNavigate();
@@ -18,6 +28,7 @@ export default function DietTracker() {
   const { addFood, removeFood, getDailyNutrition, scanFood, scanBarcode } = useDietStore();
   const [isScanning, setIsScanning] = useState(false);
   const [isScanningBarcode, setIsScanningBarcode] = useState(false);
+  const [showBarcodeDialog, setShowBarcodeDialog] = useState(false);
   const [showAddFood, setShowAddFood] = useState(false);
   const [scannedFood, setScannedFood] = useState<FoodItem | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -129,20 +140,18 @@ export default function DietTracker() {
     }
   };
 
-  const handleBarcodeClick = async () => {
-    // Show dialog to choose between camera or manual input
-    const choice = window.confirm(
-      "Choose how to enter barcode:\n\n" +
-      "OK = Scan with Camera\n" +
-      "Cancel = Enter Manually"
-    );
-    
+  const handleBarcodeClick = () => {
+    setShowBarcodeDialog(true);
+  };
+
+  const handleBarcodeMethod = async (useCamera: boolean) => {
+    setShowBarcodeDialog(false);
     setIsScanningBarcode(true);
     
     try {
       let barcode: string | null = null;
       
-      if (choice) {
+      if (useCamera) {
         // User chose to scan with camera
         const isAvailable = await BarcodeService.isAvailable();
         
@@ -177,25 +186,17 @@ export default function DietTracker() {
       }
 
       toast({
-        title: "Looking up product...",
-        description: "Fetching nutrition information",
+        title: "Looking Up Barcode...",
+        description: "Fetching product information",
         duration: 2000,
       });
 
       const result = await scanBarcode(barcode);
-
+      
       if (result) {
-        setScannedFood(result);
         toast({
           title: "Product Found!",
-          description: `${result.name} (${result.calories} cal)`,
-          duration: 3000,
-        });
-      } else {
-        toast({
-          title: "Product Not Found",
-          description: "Couldn't find nutrition data for this barcode",
-          variant: "destructive",
+          description: `${result.name} - ${result.calories} cal`,
           duration: 3000,
         });
       }
@@ -507,6 +508,45 @@ export default function DietTracker() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Barcode Method Selection Dialog */}
+      <AlertDialog open={showBarcodeDialog} onOpenChange={setShowBarcodeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Scan Barcode</AlertDialogTitle>
+            <AlertDialogDescription>
+              Choose how you'd like to add the barcode
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="grid gap-3 py-4">
+            <Button
+              onClick={() => handleBarcodeMethod(true)}
+              className="w-full justify-start gap-3 h-auto py-4"
+              variant="outline"
+            >
+              <Camera className="h-5 w-5" />
+              <div className="text-left">
+                <div className="font-semibold">Scan with Camera</div>
+                <div className="text-sm text-muted-foreground">Use your device camera to scan</div>
+              </div>
+            </Button>
+            <Button
+              onClick={() => handleBarcodeMethod(false)}
+              className="w-full justify-start gap-3 h-auto py-4"
+              variant="outline"
+            >
+              <Keyboard className="h-5 w-5" />
+              <div className="text-left">
+                <div className="font-semibold">Enter Manually</div>
+                <div className="text-sm text-muted-foreground">Type the barcode number</div>
+              </div>
+            </Button>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Hidden file input */}
       <input
