@@ -56,13 +56,15 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
+        max_tokens: 150,
+        temperature: 0.3,
         messages: [
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: "Analyze this food image and provide nutritional information. Respond with ONLY a valid JSON object in this exact format (no markdown, no extra text): {\"name\": \"food name\", \"calories\": number, \"protein\": number, \"carbs\": number, \"fat\": number, \"fiber\": number, \"sugar\": number, \"confidence\": number between 0-1}. Use typical values for a standard serving size (100g)."
+                text: "Identify this food and give nutrition per 100g serving. Reply ONLY with JSON: {\"name\":\"food name\",\"calories\":0,\"protein\":0,\"carbs\":0,\"fat\":0,\"fiber\":0,\"sugar\":0,\"confidence\":0.9}"
               },
               {
                 type: "image_url",

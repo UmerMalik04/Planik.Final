@@ -23,6 +23,13 @@ export class FoodRecognitionService {
     try {
       console.log('Starting food recognition with AI...');
       
+      // Check file size (limit to 2MB for faster processing)
+      const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+      if (imageFile.size > MAX_SIZE) {
+        console.log('Compressing large image...');
+        imageFile = await this.compressImage(imageFile, MAX_SIZE);
+      }
+      
       // Convert image to base64
       const base64Image = await this.fileToBase64(imageFile);
       
@@ -32,19 +39,77 @@ export class FoodRecognitionService {
         throw new Error('User must be authenticated to use food recognition');
       }
 
+      console.log('Sending request to AI...');
       const { data, error } = await supabase.functions.invoke('recognize-food', {
         body: { imageBase64: base64Image }
       });
 
-      if (error) throw error;
-      const result = data;
-
+      if (error) {
+        console.error('Edge function error:', error);
+        throw error;
+      }
       
-      return result.fallback || result;
+      console.log('AI Response:', data);
+      
+      // Return the data or fallback
+      if (data && data.name && data.calories) {
+        return {
+          name: data.name,
+          confidence: data.confidence || 0.5,
+          calories: data.calories,
+          protein: data.protein || 0,
+          carbs: data.carbs || 0,
+          fat: data.fat || 0,
+          fiber: data.fiber || 0,
+          sugar: data.sugar || 0
+        };
+      }
+      
+      return data.fallback || this.getFallbackFood();
     } catch (error) {
       console.error('Error recognizing food:', error);
       return this.getFallbackFood();
     }
+  }
+
+  private static async compressImage(file: File, maxSize: number): Promise<File> {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          // Calculate new dimensions (max 800px width/height)
+          const maxDim = 800;
+          if (width > height && width > maxDim) {
+            height = (height * maxDim) / width;
+            width = maxDim;
+          } else if (height > maxDim) {
+            width = (width * maxDim) / height;
+            height = maxDim;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+            } else {
+              resolve(file);
+            }
+          }, 'image/jpeg', 0.7);
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   static async recognizeWithSpoonacular(imageFile: File, apiKey: string): Promise<FoodItem> {
