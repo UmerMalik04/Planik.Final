@@ -762,9 +762,17 @@ export default function Settings() {
               <Button 
                 variant="ghost" 
                 className="w-full justify-start text-foreground hover:bg-accent"
-                onClick={() => setSupportDialogOpen(true)}
+                onClick={() => navigate('/help')}
               >
                 <HelpCircle className="h-4 w-4 mr-2" />
+                Help & Tutorials
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-foreground hover:bg-accent"
+                onClick={() => setSupportDialogOpen(true)}
+              >
+                <Mail className="h-4 w-4 mr-2" />
                 {getText('contact_support')}
               </Button>
             </div>
