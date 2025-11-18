@@ -1,10 +1,12 @@
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 export class BarcodeService {
   static async isAvailable(): Promise<boolean> {
+    // On web, we can use the Camera API to take a photo and scan it
     if (!Capacitor.isNativePlatform()) {
-      return false;
+      return true; // Camera API works on web
     }
     
     try {
@@ -17,8 +19,14 @@ export class BarcodeService {
 
   static async requestPermissions(): Promise<boolean> {
     try {
-      const { camera } = await BarcodeScanner.requestPermissions();
-      return camera === 'granted' || camera === 'limited';
+      // On native platforms, request barcode scanner permissions
+      if (Capacitor.isNativePlatform()) {
+        const { camera } = await BarcodeScanner.requestPermissions();
+        return camera === 'granted' || camera === 'limited';
+      }
+      
+      // On web, Camera plugin will handle permission requests
+      return true;
     } catch {
       return false;
     }
@@ -31,13 +39,40 @@ export class BarcodeService {
         throw new Error('Camera permission denied');
       }
 
-      const { barcodes } = await BarcodeScanner.scan();
-      
+      // On native platforms, use the native barcode scanner
+      if (Capacitor.isNativePlatform()) {
+        const { barcodes } = await BarcodeScanner.scan();
+        
+        if (barcodes && barcodes.length > 0) {
+          return barcodes[0].rawValue;
+        }
+        
+        return null;
+      }
+
+      // On web, use Camera to take a photo, then scan it
+      const photo = await Camera.getPhoto({
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Camera,
+        quality: 90,
+        allowEditing: false,
+        correctOrientation: true,
+      });
+
+      if (!photo.webPath) {
+        throw new Error('No photo captured');
+      }
+
+      // Read barcode from the captured image
+      const { barcodes } = await BarcodeScanner.readBarcodesFromImage({
+        path: photo.webPath,
+      });
+
       if (barcodes && barcodes.length > 0) {
         return barcodes[0].rawValue;
       }
-      
-      return null;
+
+      throw new Error('No barcode detected in image');
     } catch (error) {
       console.error('Barcode scan error:', error);
       throw error;
