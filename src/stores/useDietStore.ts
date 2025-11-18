@@ -34,6 +34,7 @@ interface DietStore {
   removeFood: (foodId: string, date: string) => Promise<void>;
   getDailyNutrition: (date: string) => DailyNutrition;
   scanFood: (file: File) => Promise<FoodItem | null>;
+  scanBarcode: (barcode: string) => Promise<FoodItem | null>;
 }
 
 export const useDietStore = create<DietStore>()((set, get) => ({
@@ -286,6 +287,37 @@ export const useDietStore = create<DietStore>()((set, get) => ({
         quantity: 1,
         unit: 'serving (100g)'
       };
+    }
+  },
+
+  scanBarcode: async (barcode: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('lookup-barcode', {
+        body: { barcode }
+      });
+
+      if (error) throw error;
+
+      if (data && data.name) {
+        return {
+          id: crypto.randomUUID(),
+          name: data.name,
+          calories: data.calories,
+          protein: data.protein,
+          carbs: data.carbs,
+          fat: data.fat,
+          fiber: data.fiber || 0,
+          sugar: data.sugar || 0,
+          date: new Date().toISOString().split('T')[0],
+          quantity: 1,
+          unit: data.servingSize || 'serving (100g)'
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Barcode lookup failed:', error);
+      throw error;
     }
   },
 }));

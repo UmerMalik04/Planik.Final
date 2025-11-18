@@ -5,17 +5,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeft, Camera, Plus, Trash2, Calendar } from 'lucide-react';
+import { ArrowLeft, Camera, Plus, Trash2, Calendar, Barcode } from 'lucide-react';
 import { useDietStore, FoodItem } from '@/stores/useDietStore';
 import { useToast } from '@/hooks/use-toast';
 import { useSettings } from '@/contexts/SettingsContext';
+import { BarcodeService } from '@/services/BarcodeService';
 
 export default function DietTracker() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { formatDateWithOptions, getText } = useSettings();
-  const { addFood, removeFood, getDailyNutrition, scanFood } = useDietStore();
+  const { addFood, removeFood, getDailyNutrition, scanFood, scanBarcode } = useDietStore();
   const [isScanning, setIsScanning] = useState(false);
+  const [isScanningBarcode, setIsScanningBarcode] = useState(false);
   const [showAddFood, setShowAddFood] = useState(false);
   const [scannedFood, setScannedFood] = useState<FoodItem | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -124,6 +126,70 @@ export default function DietTracker() {
         duration: 2000,
       });
       setScannedFood(null);
+    }
+  };
+
+  const handleBarcodeClick = async () => {
+    setIsScanningBarcode(true);
+    
+    try {
+      const isAvailable = await BarcodeService.isAvailable();
+      let barcode: string | null = null;
+
+      if (isAvailable) {
+        toast({
+          title: "Camera Opening...",
+          description: "Point your camera at a barcode",
+          duration: 2000,
+        });
+        barcode = await BarcodeService.scanBarcode();
+      } else {
+        // Fallback for web browsers
+        barcode = await BarcodeService.promptBarcodeInput();
+      }
+
+      if (!barcode) {
+        toast({
+          title: "Scan Cancelled",
+          description: "No barcode was scanned",
+          duration: 2000,
+        });
+        return;
+      }
+
+      toast({
+        title: "Looking up product...",
+        description: "Fetching nutrition information",
+        duration: 2000,
+      });
+
+      const result = await scanBarcode(barcode);
+
+      if (result) {
+        setScannedFood(result);
+        toast({
+          title: "Product Found!",
+          description: `${result.name} (${result.calories} cal)`,
+          duration: 3000,
+        });
+      } else {
+        toast({
+          title: "Product Not Found",
+          description: "Couldn't find nutrition data for this barcode",
+          variant: "destructive",
+          duration: 3000,
+        });
+      }
+    } catch (error) {
+      console.error('Barcode scan error:', error);
+      toast({
+        title: "Scan Failed",
+        description: "Failed to scan barcode. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsScanningBarcode(false);
     }
   };
 
@@ -314,19 +380,31 @@ export default function DietTracker() {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3">
-        <Button
-          onClick={() => fileInputRef.current?.click()}
-          className="flex-1"
-          disabled={isScanning}
-        >
-          <Camera className="w-4 h-4 mr-2" />
-          {isScanning ? getText('scanning') : getText('scan_food')}
-        </Button>
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isScanning}
+            className="flex-1"
+          >
+            <Camera className="w-4 h-4 mr-2" />
+            {isScanning ? getText('scanning') : getText('scan_food')}
+          </Button>
+
+          <Button
+            onClick={handleBarcodeClick}
+            disabled={isScanningBarcode}
+            variant="outline"
+            className="flex-1"
+          >
+            <Barcode className="w-4 h-4 mr-2" />
+            {isScanningBarcode ? 'Scanning...' : 'Scan Barcode'}
+          </Button>
+        </div>
         
         <Dialog open={showAddFood} onOpenChange={setShowAddFood}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="flex-1">
+            <Button variant="outline" className="w-full">
               <Plus className="w-4 h-4 mr-2" />
               {getText('add_manually')}
             </Button>
