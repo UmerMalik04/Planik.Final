@@ -64,7 +64,7 @@ serve(async (req) => {
             content: [
               {
                 type: "text",
-                text: "Identify this food and give nutrition per 100g serving. Reply ONLY with JSON: {\"name\":\"food name\",\"calories\":0,\"protein\":0,\"carbs\":0,\"fat\":0,\"fiber\":0,\"sugar\":0,\"confidence\":0.9}"
+                text: "Identify this food dish from ANY cuisine (Asian, African, Middle Eastern, European, Latin American, etc.). Recognize traditional dishes, street food, home-cooked meals, and restaurant dishes. Give nutrition per 100g serving. Reply ONLY with JSON: {\"name\":\"specific dish name\",\"calories\":0,\"protein\":0,\"carbs\":0,\"fat\":0,\"fiber\":0,\"sugar\":0,\"confidence\":0.9}. Use the actual dish name (e.g., 'Jollof Rice', 'Pad Thai', 'Shawarma', 'Biryani', 'Injera', 'Pho') not generic terms."
               },
               {
                 type: "image_url",
