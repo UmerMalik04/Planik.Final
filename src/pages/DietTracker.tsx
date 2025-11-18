@@ -130,28 +130,47 @@ export default function DietTracker() {
   };
 
   const handleBarcodeClick = async () => {
+    // Show dialog to choose between camera or manual input
+    const choice = window.confirm(
+      "Choose how to enter barcode:\n\n" +
+      "OK = Scan with Camera\n" +
+      "Cancel = Enter Manually"
+    );
+    
     setIsScanningBarcode(true);
     
     try {
-      const isAvailable = await BarcodeService.isAvailable();
       let barcode: string | null = null;
-
-      if (isAvailable) {
-        toast({
-          title: "Camera Opening...",
-          description: "Point your camera at a barcode",
-          duration: 2000,
-        });
-        barcode = await BarcodeService.scanBarcode();
+      
+      if (choice) {
+        // User chose to scan with camera
+        const isAvailable = await BarcodeService.isAvailable();
+        
+        if (isAvailable) {
+          toast({
+            title: "Camera Opening...",
+            description: "Point your camera at a barcode",
+            duration: 2000,
+          });
+          barcode = await BarcodeService.scanBarcode();
+        } else {
+          toast({
+            title: "Camera Not Available",
+            description: "Camera scanning is not available. Please enter manually.",
+            variant: "destructive",
+            duration: 2000,
+          });
+          barcode = await BarcodeService.promptBarcodeInput();
+        }
       } else {
-        // Fallback for web browsers
+        // User chose to enter manually
         barcode = await BarcodeService.promptBarcodeInput();
       }
 
       if (!barcode) {
         toast({
-          title: "Scan Cancelled",
-          description: "No barcode was scanned",
+          title: "Cancelled",
+          description: "No barcode was entered",
           duration: 2000,
         });
         return;
@@ -184,7 +203,7 @@ export default function DietTracker() {
       console.error('Barcode scan error:', error);
       toast({
         title: "Scan Failed",
-        description: "Failed to scan barcode. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to scan barcode. Please try again.",
         variant: "destructive",
         duration: 3000,
       });

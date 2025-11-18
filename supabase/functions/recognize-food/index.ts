@@ -56,15 +56,13 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
-        max_tokens: 150,
-        temperature: 0.3,
         messages: [
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: "Identify this food dish from ANY cuisine (Asian, African, Middle Eastern, European, Latin American, etc.). Recognize traditional dishes, street food, home-cooked meals, and restaurant dishes. Give nutrition per 100g serving. Reply ONLY with JSON: {\"name\":\"specific dish name\",\"calories\":0,\"protein\":0,\"carbs\":0,\"fat\":0,\"fiber\":0,\"sugar\":0,\"confidence\":0.9}. Use the actual dish name (e.g., 'Jollof Rice', 'Pad Thai', 'Shawarma', 'Biryani', 'Injera', 'Pho') not generic terms."
+                text: "You are a food recognition expert. Identify this food item from ANY cuisine worldwide (Asian, African, Middle Eastern, European, Latin American, etc.). Recognize snacks, packaged foods, traditional dishes, street food, home-cooked meals, and restaurant dishes. For packaged items like crisps/chips, identify the brand and type if visible. Give nutrition values per 100g. Reply ONLY with valid JSON (no markdown): {\"name\":\"specific food name\",\"calories\":150,\"protein\":5,\"carbs\":20,\"fat\":8,\"fiber\":2,\"sugar\":1,\"confidence\":0.9}. Use specific names like 'Salt & Vinegar Crisps', 'Jollof Rice', 'Pad Thai', 'Shawarma', 'Biryani' not generic terms like 'chips' or 'food'."
               },
               {
                 type: "image_url",
