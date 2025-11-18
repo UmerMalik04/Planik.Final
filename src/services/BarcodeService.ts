@@ -34,45 +34,24 @@ export class BarcodeService {
 
   static async scanBarcode(): Promise<string | null> {
     try {
+      // On web browsers, camera scanning is not available
+      if (!Capacitor.isNativePlatform()) {
+        throw new Error('Camera scanning requires the native app. Please use manual entry or build the native app.');
+      }
+
       const granted = await this.requestPermissions();
       if (!granted) {
         throw new Error('Camera permission denied');
       }
 
-      // On native platforms, use the native barcode scanner
-      if (Capacitor.isNativePlatform()) {
-        const { barcodes } = await BarcodeScanner.scan();
-        
-        if (barcodes && barcodes.length > 0) {
-          return barcodes[0].rawValue;
-        }
-        
-        return null;
-      }
-
-      // On web, use Camera to take a photo, then scan it
-      const photo = await Camera.getPhoto({
-        resultType: CameraResultType.Uri,
-        source: CameraSource.Camera,
-        quality: 90,
-        allowEditing: false,
-        correctOrientation: true,
-      });
-
-      if (!photo.webPath) {
-        throw new Error('No photo captured');
-      }
-
-      // Read barcode from the captured image
-      const { barcodes } = await BarcodeScanner.readBarcodesFromImage({
-        path: photo.webPath,
-      });
-
+      // Use the native barcode scanner
+      const { barcodes } = await BarcodeScanner.scan();
+      
       if (barcodes && barcodes.length > 0) {
         return barcodes[0].rawValue;
       }
-
-      throw new Error('No barcode detected in image');
+      
+      return null;
     } catch (error) {
       console.error('Barcode scan error:', error);
       throw error;
