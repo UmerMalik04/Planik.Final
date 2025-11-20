@@ -20,10 +20,19 @@ export default function StepHistory() {
   const [monthlySteps, setMonthlySteps] = useState<DaySteps[]>([]);
   const [weeklySteps, setWeeklySteps] = useState<{ date: string; steps: number }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [longestStreak, setLongestStreak] = useState(0);
+  const [bestMonth, setBestMonth] = useState<{ month: string; steps: number }>({ month: '', steps: 0 });
 
   useEffect(() => {
     loadStepData();
+    loadStats();
   }, [currentMonth]);
+
+  const loadStats = async () => {
+    const stats = await HealthService.getStepStats();
+    setLongestStreak(stats.longestStreak);
+    setBestMonth(stats.bestMonth);
+  };
 
   const loadStepData = async () => {
     setLoading(true);
@@ -60,9 +69,6 @@ export default function StepHistory() {
 
   const totalMonthSteps = monthlySteps.reduce((sum, day) => sum + day.steps, 0);
   const totalWeekSteps = weeklySteps.reduce((sum, day) => sum + day.steps, 0);
-  
-  const longestStreak = 7; // Calculate from data
-  const bestMonth = "Aug 24 · 255k steps"; // Calculate from data
 
   const formatSteps = (steps: number) => {
     if (steps >= 1000) return `${Math.floor(steps / 1000)}k`;
@@ -136,7 +142,7 @@ export default function StepHistory() {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-primary-foreground/90">Best month:</span>
-            <span className="text-primary-foreground font-medium">{bestMonth}</span>
+            <span className="text-primary-foreground font-medium">{bestMonth.month}{bestMonth.steps > 0 ? ` · ${formatSteps(bestMonth.steps)} steps` : ''}</span>
           </div>
         </div>
       </div>
