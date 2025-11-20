@@ -46,7 +46,7 @@ export default function Exercises() {
   };
 
   const filteredExercises = useMemo(() => {
-    return exercisesData.filter(exercise => {
+    const filtered = exercisesData.filter(exercise => {
       const matchesMuscleGroup = selectedMuscleGroup === 'All' || 
         exercise.muscle_groups.some(group => 
           group.toLowerCase().includes(selectedMuscleGroup.toLowerCase())
@@ -57,6 +57,21 @@ export default function Exercises() {
       
       return matchesMuscleGroup && matchesSearch;
     });
+
+    // Sort: exercises starting with search query first, then others
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return filtered.sort((a, b) => {
+        const aStarts = a.name.toLowerCase().startsWith(query);
+        const bStarts = b.name.toLowerCase().startsWith(query);
+        
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+        return a.name.localeCompare(b.name);
+      });
+    }
+    
+    return filtered;
   }, [selectedMuscleGroup, searchQuery]);
 
   const handleExerciseClick = (exercise: Exercise) => {
