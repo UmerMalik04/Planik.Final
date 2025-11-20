@@ -122,10 +122,10 @@ export default function GoalsSettings() {
           Fitness Goals
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {/* Target Weight */}
-        <div className="space-y-2">
-          <Label htmlFor="target-weight" className="flex items-center gap-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="target-weight" className="flex items-center gap-2 text-sm">
             <TrendingUp className="w-4 h-4 text-primary" />
             Target Weight (kg)
           </Label>
@@ -134,14 +134,15 @@ export default function GoalsSettings() {
             type="number"
             step="0.1"
             placeholder="e.g., 75"
+            className="h-9"
             value={goals.target_weight || ''}
             onChange={(e) => setGoals({ ...goals, target_weight: parseFloat(e.target.value) || undefined })}
           />
         </div>
 
         {/* Weekly Workout Frequency */}
-        <div className="space-y-2">
-          <Label htmlFor="workout-frequency" className="flex items-center gap-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="workout-frequency" className="flex items-center gap-2 text-sm">
             <Activity className="w-4 h-4 text-primary" />
             Weekly Workout Frequency
           </Label>
@@ -151,6 +152,7 @@ export default function GoalsSettings() {
             min="1"
             max="7"
             placeholder="e.g., 4"
+            className="h-9"
             value={goals.weekly_workout_frequency || ''}
             onChange={(e) => setGoals({ ...goals, weekly_workout_frequency: parseInt(e.target.value) || undefined })}
           />
@@ -158,8 +160,8 @@ export default function GoalsSettings() {
         </div>
 
         {/* Daily Calorie Target */}
-        <div className="space-y-2">
-          <Label htmlFor="calorie-target" className="flex items-center gap-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="calorie-target" className="flex items-center gap-2 text-sm">
             <Utensils className="w-4 h-4 text-primary" />
             Daily Calorie Target
           </Label>
@@ -167,14 +169,15 @@ export default function GoalsSettings() {
             id="calorie-target"
             type="number"
             placeholder="e.g., 2000"
+            className="h-9"
             value={goals.daily_calorie_target || ''}
             onChange={(e) => setGoals({ ...goals, daily_calorie_target: parseInt(e.target.value) || undefined })}
           />
         </div>
 
         {/* Daily Protein Target */}
-        <div className="space-y-2">
-          <Label htmlFor="protein-target" className="flex items-center gap-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="protein-target" className="flex items-center gap-2 text-sm">
             <Utensils className="w-4 h-4 text-primary" />
             Daily Protein Target (g)
           </Label>
@@ -182,14 +185,15 @@ export default function GoalsSettings() {
             id="protein-target"
             type="number"
             placeholder="e.g., 150"
+            className="h-9"
             value={goals.daily_protein_target || ''}
             onChange={(e) => setGoals({ ...goals, daily_protein_target: parseFloat(e.target.value) || undefined })}
           />
         </div>
 
         {/* Daily Water Target */}
-        <div className="space-y-2">
-          <Label htmlFor="water-target" className="flex items-center gap-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="water-target" className="flex items-center gap-2 text-sm">
             <Utensils className="w-4 h-4 text-primary" />
             Daily Water Target (ml)
           </Label>
@@ -197,17 +201,19 @@ export default function GoalsSettings() {
             id="water-target"
             type="number"
             placeholder="e.g., 2000"
+            className="h-9"
             value={goals.daily_water_target || ''}
             onChange={(e) => setGoals({ ...goals, daily_water_target: parseInt(e.target.value) || undefined })}
           />
         </div>
 
         {/* Target Date */}
-        <div className="space-y-2">
-          <Label htmlFor="target-date">Target Date (Optional)</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="target-date" className="text-sm">Target Date (Optional)</Label>
           <Input
             id="target-date"
             type="date"
+            className="h-9"
             value={goals.target_date}
             onChange={(e) => setGoals({ ...goals, target_date: e.target.value })}
           />
