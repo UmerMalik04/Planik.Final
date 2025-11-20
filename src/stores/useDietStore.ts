@@ -2,6 +2,15 @@ import { create } from 'zustand';
 import { FoodRecognitionService } from '@/services/FoodRecognitionService';
 import { supabase } from '@/integrations/supabase/client';
 
+const STORAGE_KEY = 'diet_offline_data';
+const QUEUE_KEY = 'diet_offline_queue';
+
+interface OfflineOperation {
+  type: 'add' | 'remove';
+  data: any;
+  timestamp: number;
+}
+
 export interface FoodItem {
   id: string;
   name: string;
@@ -29,20 +38,106 @@ export interface DailyNutrition {
 
 interface DietStore {
   dailyNutrition: DailyNutrition[];
+  isOnline: boolean;
+  pendingOperations: number;
   initializeDietData: () => Promise<void>;
   addFood: (food: Omit<FoodItem, 'id'>) => Promise<void>;
   removeFood: (foodId: string, date: string) => Promise<void>;
   getDailyNutrition: (date: string) => DailyNutrition;
   scanFood: (file: File) => Promise<FoodItem | null>;
   scanBarcode: (barcode: string) => Promise<FoodItem | null>;
+  syncOfflineData: () => Promise<void>;
+  setOnlineStatus: (status: boolean) => void;
+  loadFromCache: () => void;
+  saveToCache: () => void;
 }
 
 export const useDietStore = create<DietStore>()((set, get) => ({
   dailyNutrition: [],
+  isOnline: navigator.onLine,
+  pendingOperations: 0,
+
+  loadFromCache: () => {
+    try {
+      const cached = localStorage.getItem(STORAGE_KEY);
+      if (cached) {
+        const data = JSON.parse(cached);
+        set({ dailyNutrition: data });
+      }
+    } catch (error) {
+      console.error('Failed to load from cache:', error);
+    }
+  },
+
+  saveToCache: () => {
+    try {
+      const state = get();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.dailyNutrition));
+    } catch (error) {
+      console.error('Failed to save to cache:', error);
+    }
+  },
+
+  setOnlineStatus: (status: boolean) => {
+    set({ isOnline: status });
+    if (status) {
+      get().syncOfflineData();
+    }
+  },
+
+  syncOfflineData: async () => {
+    try {
+      const queueStr = localStorage.getItem(QUEUE_KEY);
+      if (!queueStr) return;
+
+      const queue: OfflineOperation[] = JSON.parse(queueStr);
+      if (queue.length === 0) return;
+
+      set({ pendingOperations: queue.length });
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      for (const operation of queue) {
+        try {
+          if (operation.type === 'add') {
+            await supabase
+              .from('food_items')
+              .insert({
+                ...operation.data,
+                user_id: user.id
+              });
+          } else if (operation.type === 'remove') {
+            await supabase
+              .from('food_items')
+              .delete()
+              .eq('id', operation.data.foodId)
+              .eq('user_id', user.id);
+          }
+        } catch (error) {
+          console.error('Failed to sync operation:', error);
+        }
+      }
+
+      localStorage.removeItem(QUEUE_KEY);
+      set({ pendingOperations: 0 });
+      
+      await get().initializeDietData();
+    } catch (error) {
+      console.error('Failed to sync offline data:', error);
+    }
+  },
 
   initializeDietData: async () => {
+    get().loadFromCache();
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+
+    if (!get().isOnline) {
+      console.log('Offline mode: using cached data');
+      return;
+    }
 
     const { data: foodItems } = await supabase
       .from('food_items')
@@ -89,6 +184,7 @@ export const useDietStore = create<DietStore>()((set, get) => ({
       });
 
       set({ dailyNutrition: Array.from(dailyMap.values()) });
+      get().saveToCache();
     }
   },
 
@@ -110,6 +206,73 @@ export const useDietStore = create<DietStore>()((set, get) => ({
       unit: food.unit,
       date: food.date
     });
+
+    const tempId = crypto.randomUUID();
+    
+    if (!get().isOnline) {
+      const queueStr = localStorage.getItem(QUEUE_KEY) || '[]';
+      const queue: OfflineOperation[] = JSON.parse(queueStr);
+      queue.push({
+        type: 'add',
+        data: validated,
+        timestamp: Date.now()
+      });
+      localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+
+      const foodWithId: FoodItem = {
+        id: tempId,
+        name: validated.name,
+        calories: validated.calories,
+        protein: validated.protein,
+        carbs: validated.carbs,
+        fat: validated.fat,
+        fiber: validated.fiber || 0,
+        sugar: validated.sugar || 0,
+        date: validated.date,
+        quantity: validated.quantity,
+        unit: validated.unit
+      };
+
+      set((state) => {
+        const existingDayIndex = state.dailyNutrition.findIndex(
+          (day) => day.date === food.date
+        );
+
+        if (existingDayIndex >= 0) {
+          const updatedDay = { ...state.dailyNutrition[existingDayIndex] };
+          updatedDay.foods.push(foodWithId);
+          updatedDay.totalCalories += food.calories;
+          updatedDay.totalProtein += food.protein;
+          updatedDay.totalCarbs += food.carbs;
+          updatedDay.totalFat += food.fat;
+          updatedDay.totalFiber += food.fiber || 0;
+          updatedDay.totalSugar += food.sugar || 0;
+
+          const newDailyNutrition = [...state.dailyNutrition];
+          newDailyNutrition[existingDayIndex] = updatedDay;
+
+          return { dailyNutrition: newDailyNutrition };
+        } else {
+          const newDay: DailyNutrition = {
+            date: food.date,
+            totalCalories: food.calories,
+            totalProtein: food.protein,
+            totalCarbs: food.carbs,
+            totalFat: food.fat,
+            totalFiber: food.fiber || 0,
+            totalSugar: food.sugar || 0,
+            foods: [foodWithId],
+          };
+
+          return {
+            dailyNutrition: [...state.dailyNutrition, newDay],
+          };
+        }
+      });
+      
+      get().saveToCache();
+      return;
+    }
 
     const { data, error } = await supabase
       .from('food_items')
@@ -182,6 +345,8 @@ export const useDietStore = create<DietStore>()((set, get) => ({
           };
         }
       });
+      
+      get().saveToCache();
     }
   },
 
@@ -189,11 +354,22 @@ export const useDietStore = create<DietStore>()((set, get) => ({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    await supabase
-      .from('food_items')
-      .delete()
-      .eq('id', foodId)
-      .eq('user_id', user.id);
+    if (!get().isOnline) {
+      const queueStr = localStorage.getItem(QUEUE_KEY) || '[]';
+      const queue: OfflineOperation[] = JSON.parse(queueStr);
+      queue.push({
+        type: 'remove',
+        data: { foodId, date },
+        timestamp: Date.now()
+      });
+      localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+    } else {
+      await supabase
+        .from('food_items')
+        .delete()
+        .eq('id', foodId)
+        .eq('user_id', user.id);
+    }
 
     set((state) => {
       const dayIndex = state.dailyNutrition.findIndex((day) => day.date === date);
@@ -214,6 +390,7 @@ export const useDietStore = create<DietStore>()((set, get) => ({
           const newDailyNutrition = [...state.dailyNutrition];
           newDailyNutrition[dayIndex] = updatedDay;
 
+          get().saveToCache();
           return { dailyNutrition: newDailyNutrition };
         }
       }

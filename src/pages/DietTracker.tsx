@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,8 @@ import { useDietStore, FoodItem } from '@/stores/useDietStore';
 import { useToast } from '@/hooks/use-toast';
 import { useSettings } from '@/contexts/SettingsContext';
 import { BarcodeService } from '@/services/BarcodeService';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,7 +27,8 @@ export default function DietTracker() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { formatDateWithOptions, getText } = useSettings();
-  const { addFood, removeFood, getDailyNutrition, scanFood, scanBarcode } = useDietStore();
+  const { addFood, removeFood, getDailyNutrition, scanFood, scanBarcode, setOnlineStatus, pendingOperations } = useDietStore();
+  const isOnline = useOnlineStatus();
   const [isScanning, setIsScanning] = useState(false);
   const [isScanningBarcode, setIsScanningBarcode] = useState(false);
   const [showBarcodeDialog, setShowBarcodeDialog] = useState(false);
@@ -47,6 +50,11 @@ export default function DietTracker() {
     quantity: 1,
     unit: 'serving'
   });
+
+  useEffect(() => {
+    setOnlineStatus(isOnline);
+  }, [isOnline, setOnlineStatus]);
+
 
   const handleScanFood = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -236,18 +244,32 @@ export default function DietTracker() {
   return (
     <div className="min-h-screen p-6 space-y-6 bg-background">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate('/')}
-          className="hover:bg-accent"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{getText('diet_tracker')}</h1>
-          <p className="text-muted-foreground">{formatDateWithOptions(new Date())}</p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/')}
+            className="hover:bg-accent"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">{getText('diet_tracker')}</h1>
+            <p className="text-muted-foreground">{formatDateWithOptions(new Date())}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {!isOnline && (
+            <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-700 dark:text-yellow-400">
+              Offline
+            </Badge>
+          )}
+          {pendingOperations > 0 && (
+            <Badge variant="secondary" className="bg-blue-500/20 text-blue-700 dark:text-blue-400">
+              {pendingOperations} pending
+            </Badge>
+          )}
         </div>
       </div>
 
