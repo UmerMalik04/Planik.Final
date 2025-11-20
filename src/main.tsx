@@ -1,4 +1,4 @@
-import { StrictMode, useState } from "react";
+import { StrictMode, useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -8,6 +8,7 @@ import OnboardingTour from "./components/OnboardingTour";
 import App from "./App.tsx";
 import "./index.css";
 import { registerSW } from 'virtual:pwa-register';
+import { supabase } from "./integrations/supabase/client";
 
 // Register service worker for PWA
 const updateSW = registerSW({
@@ -27,20 +28,63 @@ const MainApp = () => {
     return sessionStorage.getItem('splashShown') !== 'true';
   });
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(false);
+
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user && !showSplash && !isCheckingOnboarding) {
+        setIsCheckingOnboarding(true);
+        const { data: preferences } = await supabase
+          .from('user_preferences')
+          .select('has_completed_onboarding')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+
+        if (!preferences?.has_completed_onboarding) {
+          setShowOnboarding(true);
+        }
+        setIsCheckingOnboarding(false);
+      }
+    };
+
+    checkOnboardingStatus();
+  }, [showSplash, isCheckingOnboarding]);
 
   const handleSplashComplete = () => {
     sessionStorage.setItem('splashShown', 'true');
     setShowSplash(false);
-    
-    // Check if user is new (hasn't seen onboarding before)
-    const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
-    if (!hasSeenOnboarding) {
-      setShowOnboarding(true);
-    }
   };
 
-  const handleOnboardingComplete = () => {
-    localStorage.setItem('hasSeenOnboarding', 'true');
+  const handleOnboardingComplete = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session?.user) {
+      // Check if user_preferences row exists
+      const { data: existing } = await supabase
+        .from('user_preferences')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+
+      if (existing) {
+        // Update existing row
+        await supabase
+          .from('user_preferences')
+          .update({ has_completed_onboarding: true })
+          .eq('user_id', session.user.id);
+      } else {
+        // Insert new row
+        await supabase
+          .from('user_preferences')
+          .insert({ 
+            user_id: session.user.id, 
+            has_completed_onboarding: true 
+          });
+      }
+    }
+    
     setShowOnboarding(false);
   };
 

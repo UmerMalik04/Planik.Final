@@ -252,6 +252,7 @@ export type Database = {
       user_preferences: {
         Row: {
           created_at: string | null
+          has_completed_onboarding: boolean | null
           hidden_widgets: Json | null
           id: string
           updated_at: string | null
@@ -260,6 +261,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          has_completed_onboarding?: boolean | null
           hidden_widgets?: Json | null
           id?: string
           updated_at?: string | null
@@ -268,6 +270,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          has_completed_onboarding?: boolean | null
           hidden_widgets?: Json | null
           id?: string
           updated_at?: string | null
