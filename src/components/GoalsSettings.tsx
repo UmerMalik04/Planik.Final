@@ -213,7 +213,7 @@ export default function GoalsSettings() {
           <Input
             id="target-date"
             type="date"
-            className="h-9"
+            className="h-9 text-sm"
             value={goals.target_date}
             onChange={(e) => setGoals({ ...goals, target_date: e.target.value })}
           />
