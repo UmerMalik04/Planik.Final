@@ -209,21 +209,9 @@ export default function Profile() {
         }
       }
 
-      // Filter to show only 5 achievements: prioritize incomplete ones, then recently completed
+      // Show only incomplete achievements (up to 5)
       const incompleteAchievements = achievementsWithProgress.filter(a => !a.completed);
-      const completedAchievements = achievementsWithProgress
-        .filter(a => a.completed)
-        .sort((a, b) => {
-          const dateA = a.completedAt ? a.completedAt.getTime() : 0;
-          const dateB = b.completedAt ? b.completedAt.getTime() : 0;
-          return dateB - dateA; // Most recent first
-        });
-
-      // Show up to 3 incomplete, fill remaining with completed
-      const displayAchievements = [
-        ...incompleteAchievements.slice(0, 3),
-        ...completedAchievements.slice(0, Math.max(0, 5 - incompleteAchievements.slice(0, 3).length))
-      ].slice(0, 5);
+      const displayAchievements = incompleteAchievements.slice(0, 5);
 
       console.log('Display achievements:', displayAchievements);
       setAchievements(displayAchievements);
@@ -443,11 +431,11 @@ export default function Profile() {
                             <span>Progress</span>
                             <span>{achievement.progress}/{achievement.maxProgress}</span>
                           </div>
-                          <div className="w-full bg-muted rounded-full h-2">
+                          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                             <div 
                               className="bg-primary h-2 rounded-full transition-all"
                               style={{ 
-                                width: `${(achievement.progress / achievement.maxProgress) * 100}%` 
+                                width: `${Math.min(100, (achievement.progress / achievement.maxProgress) * 100)}%` 
                               }}
                             />
                           </div>
