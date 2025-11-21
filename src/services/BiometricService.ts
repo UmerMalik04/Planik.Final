@@ -19,7 +19,6 @@ export class BiometricService {
         value: refreshToken
       });
     } catch (error) {
-      console.error('Error saving refresh token:', error);
       throw new Error('Failed to save refresh token securely');
     }
   }
@@ -29,7 +28,6 @@ export class BiometricService {
       const result = await Preferences.get({ key: this.REFRESH_TOKEN_KEY });
       return result.value || null;
     } catch (error) {
-      console.error('Error retrieving refresh token:', error);
       return null;
     }
   }
@@ -169,7 +167,6 @@ export class BiometricService {
 
       return { success: true, refreshToken };
     } catch (error) {
-      console.error('Biometric login error:', error);
       return { success: false, error: 'An error occurred during biometric login. Please try again.' };
     }
   }
