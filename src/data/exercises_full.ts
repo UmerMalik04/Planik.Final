@@ -317,11 +317,16 @@ export const exercisesData: Exercise[] = [
     "thumbnail": "/assets/running-thumbnail.png",
     "video_or_animation": "assets/animations/running.mp4",
     "instructions": [
-      "Set treadmill to desired speed or choose a flat outdoor path.",
-      "Maintain upright posture, slight forward lean.",
-      "Stride naturally, landing mid-foot.",
-      "Run for 20-30 minutes, adjust speed as needed.",
-      "Cool down with a 5-minute walk."
+      "For treadmill: Set the machine to your desired speed and incline. For outdoor: choose a safe, flat route.",
+      "Start with a 5-minute walking or light jogging warm-up.",
+      "Maintain an upright posture with your head up, looking forward, not down.",
+      "Keep your shoulders relaxed and arms bent at about 90 degrees.",
+      "Swing your arms naturally in rhythm with your stride, keeping them close to your body.",
+      "Land on your mid-foot, not your heels or toes, with each stride.",
+      "Take natural, comfortable strides—avoid overstriding or bouncing too much.",
+      "Keep your core engaged and breathe rhythmically (in through nose, out through mouth).",
+      "Run for 20-30 minutes, adjusting pace based on your fitness level.",
+      "Cool down with a 5-minute walk and stretch your legs afterward."
     ],
     "last_used": "2025-08-27"
   },
@@ -344,10 +349,16 @@ export const exercisesData: Exercise[] = [
     "thumbnail": "/assets/cycling-thumbnail.png",
     "video_or_animation": "assets/animations/cycling.mp4",
     "instructions": [
-      "Adjust bike seat to hip height.",
-      "Pedal at a steady pace, keeping core engaged.",
-      "Maintain smooth, circular pedaling motion.",
-      "Cycle for 20-30 minutes, adjust resistance as needed."
+      "Adjust the bike seat so that your leg has a slight bend when the pedal is at its lowest point.",
+      "Position the handlebars at a comfortable height to maintain good posture.",
+      "Clip in or place your feet securely on the pedals.",
+      "Start pedaling at a comfortable, steady pace to warm up.",
+      "Maintain an upright posture with your core engaged and shoulders relaxed.",
+      "Use a smooth, circular pedaling motion rather than just pushing down.",
+      "For stationary bikes: adjust resistance to match your fitness level and goals.",
+      "For outdoor cycling: shift gears appropriately for terrain and maintain awareness of surroundings.",
+      "Cycle for 20-30 minutes, gradually increasing intensity if desired.",
+      "Cool down with 3-5 minutes of easy pedaling before stopping."
     ],
     "last_used": "2025-08-22"
   },
@@ -476,10 +487,15 @@ export const exercisesData: Exercise[] = [
     "thumbnail": "/assets/chest-fly-thumbnail.png",
     "video_or_animation": "assets/animations/chest_fly.mp4",
     "instructions": [
-      "Sit at a chest fly machine or lie on a bench with dumbbells.",
-      "Extend arms wide, palms facing up (dumbbells) or gripping handles.",
-      "Bring arms together in a hugging motion, squeezing chest.",
-      "Return to starting position.",
+      "For machine: Sit with your back flat against the pad, grip the handles with palms facing forward.",
+      "For dumbbells: Lie on a flat bench with a dumbbell in each hand, arms extended above chest.",
+      "Keep a slight bend in your elbows throughout the entire movement.",
+      "For machine: Push the handles together in front of you in a hugging motion.",
+      "For dumbbells: Lower the weights out to your sides in a wide arc until you feel a stretch in your chest.",
+      "Bring your arms back together at the top, squeezing your chest muscles.",
+      "Focus on using your chest muscles, not your arms, to move the weight.",
+      "Keep your core engaged and avoid arching your back excessively.",
+      "Return to the starting position with control.",
       "Repeat for 10-12 reps."
     ],
     "last_used": "2025-08-19"
@@ -584,9 +600,14 @@ export const exercisesData: Exercise[] = [
     "thumbnail": "/assets/leg-curl-thumbnail.png",
     "video_or_animation": "assets/animations/leg_curl.mp4",
     "instructions": [
-      "Lie face-down on a leg curl machine, adjust pad to ankles.",
-      "Curl legs up toward glutes, contracting hamstrings.",
-      "Lower legs back down with control.",
+      "Lie face-down on a leg curl machine with your ankles under the padded lever.",
+      "Adjust the machine so the pad rests just above your heels.",
+      "Grip the handles for stability and keep your hips pressed against the bench.",
+      "Keep your legs fully extended at the starting position.",
+      "Curl your legs upward by bending your knees, bringing your heels toward your glutes.",
+      "Contract your hamstrings hard at the top of the movement.",
+      "Slowly lower your legs back down to the starting position with control.",
+      "Avoid lifting your hips off the bench or arching your lower back.",
       "Repeat for 10-12 reps."
     ],
     "last_used": "2025-08-19"
@@ -597,9 +618,14 @@ export const exercisesData: Exercise[] = [
     "thumbnail": "/assets/leg-extension-thumbnail.png",
     "video_or_animation": "assets/animations/leg_extension_lottie.json",
     "instructions": [
-      "Sit on a leg extension machine, adjust pad to shins.",
-      "Extend legs until straight, contracting quads.",
-      "Lower legs back down with control.",
+      "Sit on a leg extension machine and adjust the backrest for comfort.",
+      "Position the padded lever on the lower part of your shins, just above your ankles.",
+      "Grip the handles on the sides of the seat for stability.",
+      "Keep your back flat against the backrest and your core engaged.",
+      "Extend your legs by straightening your knees until they're fully extended.",
+      "Squeeze your quadriceps hard at the top of the movement.",
+      "Slowly lower the weight back down with control to the starting position.",
+      "Avoid locking your knees or using momentum to swing the weight.",
       "Repeat for 10-12 reps."
     ],
     "last_used": "2025-08-21"
@@ -636,9 +662,14 @@ export const exercisesData: Exercise[] = [
     "thumbnail": "/assets/overhead-press-thumbnail.png",
     "video_or_animation": "assets/animations/overhead_press.mp4",
     "instructions": [
-      "Stand or sit, hold barbell/dumbbells at shoulder height, palms forward.",
-      "Press weight overhead until arms are extended.",
-      "Lower back to shoulders with control.",
+      "Stand with feet shoulder-width apart or sit on a bench with back support.",
+      "Hold a barbell at shoulder level with an overhand grip, or dumbbells at shoulder height with palms facing forward.",
+      "Engage your core and keep your back straight throughout the movement.",
+      "Press the weight straight overhead until your arms are fully extended.",
+      "At the top, the weight should be directly over your shoulders and head.",
+      "Avoid arching your lower back excessively; keep your core tight.",
+      "Lower the weight back down to shoulder level with control.",
+      "Keep your elbows slightly in front of your body, not flaring too far to the sides.",
       "Repeat for 8-12 reps."
     ],
     "last_used": "2025-08-26"
@@ -740,9 +771,14 @@ export const exercisesData: Exercise[] = [
     "thumbnail": "/assets/tricep-pushdown-thumbnail.png",
     "video_or_animation": "assets/animations/tricep_pushdown_lottie.json",
     "instructions": [
-      "Stand at a cable machine with a high pulley, grip bar or rope.",
-      "Push bar down until arms are extended, elbows close to body.",
-      "Return to starting position with control.",
+      "Stand facing a cable machine with a high pulley attachment (straight bar or rope).",
+      "Grip the attachment with an overhand grip, hands about shoulder-width apart.",
+      "Position your elbows close to your sides and keep them stationary throughout.",
+      "Start with the bar or rope at chest level, forearms parallel to the floor.",
+      "Push the attachment down by extending your elbows until your arms are fully straight.",
+      "Squeeze your triceps at the bottom of the movement.",
+      "Slowly return to the starting position with control, resisting the weight.",
+      "Keep your upper body still; avoid leaning forward or using momentum.",
       "Repeat for 10-12 reps."
     ],
     "last_used": "2025-08-26"
@@ -783,9 +819,14 @@ export const exercisesData: Exercise[] = [
     "thumbnail": "/assets/dips-thumbnail.png",
     "video_or_animation": "assets/animations/dips.mp4",
     "instructions": [
-      "On parallel bars or a bench, grip handles or edge.",
-      "Lower body until elbows are at 90 degrees.",
-      "Push back up to starting position.",
+      "Grip parallel bars or the edge of a bench with hands shoulder-width apart.",
+      "For parallel bars: support your body weight with arms fully extended, feet off the ground.",
+      "For bench dips: sit on the edge, hands beside hips, feet extended in front.",
+      "Lower your body by bending your elbows until they reach about 90 degrees.",
+      "Keep your elbows close to your body, not flaring out to the sides.",
+      "Lean forward slightly to emphasize chest, or stay upright for more triceps focus.",
+      "Push yourself back up to the starting position by extending your arms.",
+      "Keep your core engaged and avoid excessive shoulder strain.",
       "Repeat for 10-12 reps."
     ],
     "last_used": "2025-08-20"
