@@ -167,20 +167,6 @@ export default function Settings() {
     }
   };
 
-  const testNotifications = async () => {
-    // Test workout completion notification
-    await NotificationService.sendWorkoutCompleteNotification();
-    
-    // Test achievement notification after a short delay
-    setTimeout(async () => {
-      await NotificationService.sendAchievementNotification("First Workout Completed");
-    }, 2000);
-    
-    toast({
-      title: "Test Notifications Sent",
-      description: "Check if you received the test notifications",
-    });
-  };
 
   const handleChangePassword = async () => {
     if (!resetPasswordEmail) {
@@ -587,20 +573,6 @@ export default function Settings() {
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Set a custom daily time for workout reminders (repeats every day)
-                  </p>
-                </div>
-
-                <Separator />
-
-                {/* Test Notifications */}
-                <div className="space-y-2">
-                  <Label>Test Notifications</Label>
-                  <Button onClick={testNotifications} variant="outline" className="w-full">
-                    <Bell className="h-4 w-4 mr-2" />
-                    Test Workout & Achievement Notifications
-                  </Button>
-                  <p className="text-sm text-muted-foreground">
-                    Test workout completion and achievement notifications
                   </p>
                 </div>
               </>
