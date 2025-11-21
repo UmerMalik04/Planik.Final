@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const Templates = () => {
   const navigate = useNavigate();
-  const { workoutPlans } = useWorkoutStore();
+  const { workoutPlans, initializeUserData } = useWorkoutStore();
 
   const handleUseTemplate = async (templateId: string) => {
     const template = workoutTemplates.find(t => t.id === templateId);
@@ -57,6 +57,9 @@ const Templates = () => {
       }
 
       toast.success(`${template.name} template added!`);
+      
+      // Refresh the workout store to include the new plan
+      await initializeUserData();
       
       // Navigate to the workout plan
       navigate(`/workout-plan/${planData.id}`);
