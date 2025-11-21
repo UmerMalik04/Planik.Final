@@ -148,7 +148,7 @@ export default function UserProfile() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarFallback>
+            <AvatarFallback className="bg-primary text-primary-foreground">
               {displayName.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
