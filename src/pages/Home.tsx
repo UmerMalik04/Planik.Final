@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
 import { Plus, Minus, TrendingUp, TrendingDown, Utensils, Activity, Edit3, Check } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useDietStore } from "@/stores/useDietStore";
 import { HealthService } from "@/services/HealthService";
@@ -185,16 +185,16 @@ export default function Home() {
 
   const summary = getWorkoutSummary();
 
-  const handleWorkoutTypeClick = (workoutType: string) => {
+  const handleWorkoutTypeClick = useCallback((workoutType: string) => {
     const existingPlan = workoutPlans.find(plan => plan.type === workoutType);
     if (existingPlan) {
       navigate(`/workout-plan/${existingPlan.id}`);
     } else {
       navigate(`/create-plan?type=${workoutType}`);
     }
-  };
+  }, [workoutPlans, navigate]);
 
-  const handleAddCustomWorkout = () => {
+  const handleAddCustomWorkout = useCallback(() => {
     if (customWorkoutName.trim()) {
       const colors = [
         "bg-card border-orange-500 text-orange-600",
@@ -211,12 +211,12 @@ export default function Home() {
       setCustomWorkoutName("");
       setShowCustomInput(false);
     }
-  };
+  }, [customWorkoutName, addWorkoutType]);
 
-  const handleDeleteWorkout = (workoutName: string, e: React.MouseEvent) => {
+  const handleDeleteWorkout = useCallback((workoutName: string, e: React.MouseEvent) => {
     e.stopPropagation();
     deleteWorkoutType(workoutName);
-  };
+  }, [deleteWorkoutType]);
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;

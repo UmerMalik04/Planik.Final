@@ -47,18 +47,25 @@ export default function Profile() {
 
   useEffect(() => {
     const getUser = async () => {
-      // First try to get user from localStorage (for updated profile data)
-      const savedUser = localStorage.getItem('current-user');
-      if (savedUser) {
-        const parsedUser = JSON.parse(savedUser);
-        setUser(parsedUser);
-        setEditedName(parsedUser?.user_metadata?.name || '');
-      } else {
-        // Fallback to Supabase if no saved user
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(user);
-        setEditedName(user?.user_metadata?.name || '');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('display_name, avatar_url')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (profile) {
+        user.user_metadata = {
+          ...user.user_metadata,
+          name: profile.display_name,
+          avatar_url: profile.avatar_url
+        };
       }
+      
+      setUser(user);
+      setEditedName(user.user_metadata?.name || user.email?.split('@')[0] || '');
       loadAchievements();
     };
 
@@ -89,11 +96,7 @@ export default function Profile() {
   const loadAchievements = async () => {
     try {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
-      console.log('Loading achievements for user:', currentUser?.id);
-      if (!currentUser) {
-        console.log('No user found, cannot load achievements');
-        return;
-      }
+      if (!currentUser) return;
 
       // Load all achievements
       const { data: allAchievements, error: achievementsError } = await supabase
@@ -209,11 +212,9 @@ export default function Profile() {
         }
       }
 
-      // Show only incomplete achievements (up to 5)
       const incompleteAchievements = achievementsWithProgress.filter(a => !a.completed);
       const displayAchievements = incompleteAchievements.slice(0, 5);
 
-      console.log('Display achievements:', displayAchievements);
       setAchievements(displayAchievements);
     } catch (error) {
       console.error('Error loading achievements:', error);
@@ -227,13 +228,27 @@ export default function Profile() {
 
   const handleSaveName = async () => {
     try {
-      // Update user in localStorage
-      const savedUsers = JSON.parse(localStorage.getItem('mock-users') || '[]');
-      const userIndex = savedUsers.findIndex((u: any) => u.email === user.email);
-      if (userIndex !== -1) {
-        savedUsers[userIndex].user_metadata.name = editedName;
-        localStorage.setItem('mock-users', JSON.stringify(savedUsers));
-        localStorage.setItem('current-user', JSON.stringify(savedUsers[userIndex]));
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) return;
+
+      const { data: existingProfile } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('id', currentUser.id)
+        .maybeSingle();
+
+      if (existingProfile) {
+        await supabase
+          .from('user_profiles')
+          .update({ display_name: editedName.trim() })
+          .eq('id', currentUser.id);
+      } else {
+        await supabase
+          .from('user_profiles')
+          .insert({
+            id: currentUser.id,
+            display_name: editedName.trim()
+          });
       }
       
       const updatedUser = {

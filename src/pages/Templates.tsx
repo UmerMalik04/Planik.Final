@@ -7,23 +7,29 @@ import { workoutTemplates } from "@/data/workoutTemplates";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useState, useCallback } from "react";
 
 const Templates = () => {
   const navigate = useNavigate();
-  const { workoutPlans, initializeUserData } = useWorkoutStore();
+  const { initializeUserData } = useWorkoutStore();
+  const [isCreating, setIsCreating] = useState(false);
 
-  const handleUseTemplate = async (templateId: string) => {
+  const handleUseTemplate = useCallback(async (templateId: string) => {
+    if (isCreating) return;
+    
     const template = workoutTemplates.find(t => t.id === templateId);
     if (!template) return;
+
+    setIsCreating(true);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error("Please log in to create a workout");
+        setIsCreating(false);
         return;
       }
 
-      // Determine workout type based on template name
       let workoutType = template.name;
       if (template.name.toLowerCase().includes('push')) {
         workoutType = 'Push Day';
@@ -35,7 +41,6 @@ const Templates = () => {
         workoutType = 'Arm Day';
       }
 
-      // Create a new workout plan directly in Supabase
       const { data: planData, error: planError } = await supabase
         .from('workout_plans')
         .insert({
@@ -50,10 +55,10 @@ const Templates = () => {
       if (planError || !planData) {
         console.error("Error creating workout plan:", planError);
         toast.error("Failed to create workout plan");
+        setIsCreating(false);
         return;
       }
 
-      // Add all exercises from the template
       const exercisePromises = template.exercises.map((exercise, index) => {
         const repsNum = parseInt(exercise.reps.split('-')[0]) || 10;
         
@@ -73,17 +78,14 @@ const Templates = () => {
       await Promise.all(exercisePromises);
 
       toast.success(`${template.name} template added!`);
-      
-      // Refresh the workout store to include the new plan
       await initializeUserData();
-      
-      // Navigate to the workout plan
       navigate(`/workout-plan/${planData.id}`);
     } catch (error) {
       console.error("Error creating template:", error);
       toast.error("Failed to create workout from template");
+      setIsCreating(false);
     }
-  };
+  }, [initializeUserData, navigate, isCreating]);
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -167,8 +169,9 @@ const Templates = () => {
               <Button 
                 className="w-full" 
                 onClick={() => handleUseTemplate(template.id)}
+                disabled={isCreating}
               >
-                Use This Template
+                {isCreating ? 'Creating...' : 'Use This Template'}
               </Button>
             </div>
           </Card>
