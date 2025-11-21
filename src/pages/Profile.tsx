@@ -89,7 +89,11 @@ export default function Profile() {
   const loadAchievements = async () => {
     try {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (!currentUser) return;
+      console.log('Loading achievements for user:', currentUser?.id);
+      if (!currentUser) {
+        console.log('No user found, cannot load achievements');
+        return;
+      }
 
       // Load all achievements
       const { data: allAchievements, error: achievementsError } = await supabase
@@ -221,6 +225,7 @@ export default function Profile() {
         ...completedAchievements.slice(0, Math.max(0, 5 - incompleteAchievements.slice(0, 3).length))
       ].slice(0, 5);
 
+      console.log('Display achievements:', displayAchievements);
       setAchievements(displayAchievements);
     } catch (error) {
       console.error('Error loading achievements:', error);
@@ -390,7 +395,12 @@ export default function Profile() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
+            {achievements.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">
+                No achievements to display yet. Complete your first workout to unlock achievements!
+              </p>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
               {achievements.map((achievement) => (
                 <div
                   key={achievement.id}
@@ -454,6 +464,7 @@ export default function Profile() {
                 </div>
               ))}
             </div>
+            )}
           </CardContent>
         </Card>
       </div>
