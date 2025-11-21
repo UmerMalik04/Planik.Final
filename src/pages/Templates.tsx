@@ -23,13 +23,26 @@ const Templates = () => {
         return;
       }
 
+      // Determine workout type based on template name
+      let workoutType = template.name;
+      if (template.name.toLowerCase().includes('push')) {
+        workoutType = 'Push Day';
+      } else if (template.name.toLowerCase().includes('pull') || template.name.toLowerCase().includes('back')) {
+        workoutType = 'Pull Day';
+      } else if (template.name.toLowerCase().includes('leg')) {
+        workoutType = 'Leg Day';
+      } else if (template.name.toLowerCase().includes('arm') || template.name.toLowerCase().includes('bicep') || template.name.toLowerCase().includes('tricep')) {
+        workoutType = 'Arm Day';
+      }
+
       // Create a new workout plan directly in Supabase
       const { data: planData, error: planError } = await supabase
         .from('workout_plans')
         .insert({
           user_id: user.id,
           name: template.name,
-          type: template.name,
+          type: workoutType,
+          description: template.goal,
         })
         .select()
         .single();
@@ -41,10 +54,10 @@ const Templates = () => {
       }
 
       // Add all exercises from the template
-      for (const exercise of template.exercises) {
+      const exercisePromises = template.exercises.map((exercise, index) => {
         const repsNum = parseInt(exercise.reps.split('-')[0]) || 10;
         
-        await supabase
+        return supabase
           .from('exercises')
           .insert({
             user_id: user.id,
@@ -53,8 +66,11 @@ const Templates = () => {
             reps: repsNum,
             sets: exercise.sets,
             has_warmup: false,
+            order_index: index,
           });
-      }
+      });
+
+      await Promise.all(exercisePromises);
 
       toast.success(`${template.name} template added!`);
       
