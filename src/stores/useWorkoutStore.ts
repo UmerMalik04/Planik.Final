@@ -135,22 +135,25 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
           const { data: exercises } = await supabase
             .from('exercises')
             .select('*')
-            .eq('workout_plan_id', plan.id);
+            .eq('workout_plan_id', plan.id)
+            .order('order_index', { ascending: true });
 
           return {
             id: plan.id,
             name: plan.name,
-            type: plan.type,
+            type: plan.type || plan.name,
+            description: plan.description,
             restTimer: plan.rest_timer,
             exercises: exercises?.map(e => ({
               id: e.id,
               name: e.name,
-              weight: e.weight,
-              reps: e.reps,
-              sets: e.sets,
-              planId: e.workout_plan_id,
-              hasWarmup: e.has_warmup
-            })) || []
+              weight: e.weight || undefined,
+              reps: e.reps || 10,
+              sets: e.sets || 3,
+              notes: e.notes || undefined,
+              planId: plan.id,
+              hasWarmup: e.has_warmup || false,
+            })) || [],
           };
         })
       );
