@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Camera, Trophy, Flame, Target, Zap, Calendar, Star, ArrowLeft, Dumbbell, Users, Weight } from 'lucide-react';
+import { Trophy, Flame, Target, Zap, Calendar, Star, ArrowLeft, Dumbbell, Users, Weight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSettings } from '@/contexts/SettingsContext';
 
@@ -266,145 +266,6 @@ export default function Profile() {
     }
   };
 
-  const handleProfilePictureChange = async () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    
-    input.onchange = async (event) => {
-      const file = (event.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      // Check file size (max 5MB)
-      const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
-      if (file.size > maxSizeInBytes) {
-        toast({
-          title: "Image Too Large",
-          description: "Please select an image smaller than 5MB.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Check file type - accept all common image types
-      const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/bmp'];
-      if (!validImageTypes.includes(file.type)) {
-        toast({
-          title: "Invalid File Type",
-          description: "Please select a valid image file (PNG, JPG, GIF, WEBP, SVG, BMP).",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      try {
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
-        if (!currentUser) {
-          toast({
-            title: "Error",
-            description: "You must be logged in to update your profile picture.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        // Upload to Supabase Storage
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${currentUser.id}-${Date.now()}.${fileExt}`;
-        const filePath = `${currentUser.id}/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('avatars')
-          .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: true
-          });
-
-        if (uploadError) throw uploadError;
-
-        // Get public URL with cache-busting parameter
-        const { data: { publicUrl } } = supabase.storage
-          .from('avatars')
-          .getPublicUrl(filePath);
-
-        // Add cache-busting parameter to force refresh
-        const cacheBustedUrl = `${publicUrl}?t=${Date.now()}`;
-
-        // Update user profile in database
-        // First, check if profile exists
-        const { data: existingProfile } = await supabase
-          .from('user_profiles')
-          .select('id')
-          .eq('id', currentUser.id)
-          .maybeSingle();
-
-        if (existingProfile) {
-          // Profile exists, update it
-          const { error: updateError } = await supabase
-            .from('user_profiles')
-            .update({
-              avatar_url: publicUrl,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', currentUser.id);
-
-          if (updateError) throw updateError;
-        } else {
-          // Profile doesn't exist, create it
-          const { error: insertError } = await supabase
-            .from('user_profiles')
-            .insert({
-              id: currentUser.id,
-              avatar_url: publicUrl,
-              display_name: currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || 'User'
-            });
-
-          if (insertError) throw insertError;
-        }
-
-        // Update auth user metadata
-        const { error: metadataError } = await supabase.auth.updateUser({
-          data: { avatar_url: cacheBustedUrl }
-        });
-
-        if (metadataError) throw metadataError;
-
-        // Fetch fresh user data to ensure state is in sync
-        const { data: { user: freshUser } } = await supabase.auth.getUser();
-
-        // Update local state with the cache-busted URL
-        const updatedUser = {
-          ...freshUser,
-          user_metadata: {
-            ...freshUser?.user_metadata,
-            avatar_url: cacheBustedUrl
-          }
-        };
-        
-        setUser(updatedUser);
-        
-        // Also update localStorage if user was saved there
-        const savedUser = localStorage.getItem('current-user');
-        if (savedUser) {
-          localStorage.setItem('current-user', JSON.stringify(updatedUser));
-        }
-        
-        toast({
-          title: "Profile Picture Updated",
-          description: "Your profile picture has been changed successfully.",
-        });
-      } catch (error) {
-        console.error('Profile picture update error:', error);
-        toast({
-          title: "Upload Failed",
-          description: error instanceof Error ? error.message : "Failed to update profile picture. Please try again.",
-          variant: "destructive",
-        });
-      }
-    };
-    
-    input.click();
-  };
 
   const triggerAchievementAnimation = (achievementId: string) => {
     // Create confetti animation effect
@@ -447,22 +308,11 @@ export default function Profile() {
           <CardContent className="space-y-6">
             {/* Avatar and Basic Info */}
             <div className="flex items-center gap-6">
-              <div className="relative">
-                <Avatar className="h-24 w-24">
-                  <AvatarImage src={user.user_metadata?.avatar_url} alt={displayName} />
-                  <AvatarFallback className="text-2xl">
-                    {displayName.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
-                  onClick={handleProfilePictureChange}
-                >
-                  <Camera className="h-4 w-4" />
-                </Button>
-              </div>
+              <Avatar className="h-24 w-24">
+                <AvatarFallback className="text-2xl">
+                  {displayName.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
               
               <div className="flex-1 space-y-4">
                 {/* Name */}
