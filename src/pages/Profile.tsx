@@ -20,7 +20,21 @@ interface Achievement {
   progress?: number;
   maxProgress?: number;
   completedAt?: Date;
+  achievementId?: string;
 }
+
+const getIconComponent = (iconName: string) => {
+  const icons: Record<string, React.ReactNode> = {
+    Flame: <Flame className="h-6 w-6" />,
+    Trophy: <Trophy className="h-6 w-6" />,
+    Star: <Star className="h-6 w-6" />,
+    Dumbbell: <Dumbbell className="h-6 w-6" />,
+    Zap: <Zap className="h-6 w-6" />,
+    Weight: <Weight className="h-6 w-6" />,
+    Target: <Target className="h-6 w-6" />,
+  };
+  return icons[iconName] || <Trophy className="h-6 w-6" />;
+};
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -49,58 +63,173 @@ export default function Profile() {
     };
 
     getUser();
+
+    // Set up realtime subscription for achievement updates
+    const channel = supabase
+      .channel('user_achievements_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_achievements',
+        },
+        (payload) => {
+          console.log('Achievement update:', payload);
+          loadAchievements();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
-  const loadAchievements = () => {
-    // Mock achievements - in real app, load from database
-    const userAchievements: Achievement[] = [
-      {
-        id: '1',
-        title: 'Consistency King',
-        description: 'Work out 7 days in a row',
-        icon: <Flame className="h-6 w-6" />,
-        completed: true,
-        completedAt: new Date('2024-01-15')
-      },
-      {
-        id: '2',
-        title: '10 Workout Club',
-        description: 'Complete 10 workouts',
-        icon: <Dumbbell className="h-6 w-6" />,
-        completed: true,
-        progress: 10,
-        maxProgress: 10,
-        completedAt: new Date('2024-01-20')
-      },
-      {
-        id: '3',
-        title: '100kg Bench Club',
-        description: 'Bench press 100kg or more',
-        icon: <Weight className="h-6 w-6" />,
-        completed: false,
-        progress: 85,
-        maxProgress: 100
-      },
-      {
-        id: '4',
-        title: 'Perfect Overload',
-        description: 'Increase weight in every workout for a week',
-        icon: <Zap className="h-6 w-6" />,
-        completed: true,
-        completedAt: new Date('2024-01-25')
-      },
-      {
-        id: '5',
-        title: 'Early Bird',
-        description: 'Complete 5 morning workouts',
-        icon: <Star className="h-6 w-6" />,
-        completed: false,
-        progress: 3,
-        maxProgress: 5
-      }
-    ];
+  const loadAchievements = async () => {
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) return;
 
-    setAchievements(userAchievements);
+      // Load all achievements
+      const { data: allAchievements, error: achievementsError } = await supabase
+        .from('achievements')
+        .select('*')
+        .order('target_value', { ascending: true });
+
+      if (achievementsError) throw achievementsError;
+
+      // Load user's achievement progress
+      const { data: userProgress, error: progressError } = await supabase
+        .from('user_achievements')
+        .select('*')
+        .eq('user_id', currentUser.id);
+
+      if (progressError) throw progressError;
+
+      // Create a map of user progress
+      const progressMap = new Map(
+        userProgress?.map(p => [p.achievement_id, p]) || []
+      );
+
+      // Get user's workout statistics to calculate progress
+      const { data: sessions } = await supabase
+        .from('workout_sessions')
+        .select('*')
+        .eq('user_id', currentUser.id);
+
+      const totalWorkouts = sessions?.length || 0;
+
+      // Map achievements with progress
+      const achievementsWithProgress = allAchievements?.map(achievement => {
+        const userProg = progressMap.get(achievement.id);
+        const isCompleted = userProg?.completed || false;
+
+        // Calculate current progress based on metric
+        let currentProgress = userProg?.current_progress || 0;
+        
+        // Auto-calculate progress for workouts_completed metric
+        if (achievement.metric === 'workouts_completed') {
+          currentProgress = totalWorkouts;
+        }
+
+        return {
+          id: achievement.id,
+          achievementId: achievement.id,
+          title: achievement.title,
+          description: achievement.description,
+          icon: getIconComponent(achievement.icon),
+          completed: isCompleted,
+          progress: currentProgress,
+          maxProgress: achievement.target_value,
+          completedAt: userProg?.completed_at ? new Date(userProg.completed_at) : undefined,
+        };
+      }) || [];
+
+      // Check for newly completed achievements
+      for (const achievement of achievementsWithProgress) {
+        const userProg = progressMap.get(achievement.achievementId!);
+        const wasCompleted = userProg?.completed || false;
+        const isNowCompleted = achievement.progress! >= achievement.maxProgress!;
+
+        if (isNowCompleted && !wasCompleted) {
+          // Mark as completed in database
+          if (userProg) {
+            await supabase
+              .from('user_achievements')
+              .update({
+                completed: true,
+                completed_at: new Date().toISOString(),
+                current_progress: achievement.progress,
+              })
+              .eq('id', userProg.id);
+          } else {
+            await supabase
+              .from('user_achievements')
+              .insert({
+                user_id: currentUser.id,
+                achievement_id: achievement.achievementId!,
+                completed: true,
+                completed_at: new Date().toISOString(),
+                current_progress: achievement.progress,
+              });
+          }
+
+          // Show notification
+          toast({
+            title: "🎉 Achievement Unlocked!",
+            description: `${achievement.title} - ${achievement.description}`,
+            duration: 5000,
+          });
+
+          // Trigger animation
+          triggerAchievementAnimation(achievement.id);
+        } else if (!isNowCompleted && userProg && achievement.progress !== userProg.current_progress) {
+          // Update progress
+          await supabase
+            .from('user_achievements')
+            .update({
+              current_progress: achievement.progress,
+            })
+            .eq('id', userProg.id);
+        } else if (!isNowCompleted && !userProg && achievement.progress! > 0) {
+          // Create initial progress entry
+          await supabase
+            .from('user_achievements')
+            .insert({
+              user_id: currentUser.id,
+              achievement_id: achievement.achievementId!,
+              completed: false,
+              current_progress: achievement.progress,
+            });
+        }
+      }
+
+      // Filter to show only 5 achievements: prioritize incomplete ones, then recently completed
+      const incompleteAchievements = achievementsWithProgress.filter(a => !a.completed);
+      const completedAchievements = achievementsWithProgress
+        .filter(a => a.completed)
+        .sort((a, b) => {
+          const dateA = a.completedAt ? a.completedAt.getTime() : 0;
+          const dateB = b.completedAt ? b.completedAt.getTime() : 0;
+          return dateB - dateA; // Most recent first
+        });
+
+      // Show up to 3 incomplete, fill remaining with completed
+      const displayAchievements = [
+        ...incompleteAchievements.slice(0, 3),
+        ...completedAchievements.slice(0, Math.max(0, 5 - incompleteAchievements.slice(0, 3).length))
+      ].slice(0, 5);
+
+      setAchievements(displayAchievements);
+    } catch (error) {
+      console.error('Error loading achievements:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load achievements. Please refresh the page.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSaveName = async () => {
