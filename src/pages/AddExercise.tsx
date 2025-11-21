@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Save } from "lucide-react";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
+import { exercisesData } from "@/data/exercises_full";
 
 export default function AddExercise() {
   const navigate = useNavigate();
@@ -18,6 +19,41 @@ export default function AddExercise() {
   const [reps, setReps] = useState("");
   const [sets, setSets] = useState("");
   const [hasWarmup, setHasWarmup] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Filter exercises based on user input
+  const filteredExercises = useMemo(() => {
+    if (!exerciseName.trim()) return [];
+    
+    const searchTerm = exerciseName.toLowerCase();
+    return exercisesData
+      .filter(exercise => exercise.name.toLowerCase().startsWith(searchTerm))
+      .slice(0, 8); // Limit to 8 suggestions
+  }, [exerciseName]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleExerciseSelect = (name: string) => {
+    setExerciseName(name);
+    setShowSuggestions(false);
+  };
 
   if (!plan) {
     return (
@@ -69,15 +105,43 @@ export default function AddExercise() {
           <CardTitle>Exercise Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
+          <div className="relative">
             <Label htmlFor="exerciseName">Exercise Name</Label>
             <Input
+              ref={inputRef}
               id="exerciseName"
               value={exerciseName}
-              onChange={(e) => setExerciseName(e.target.value)}
+              onChange={(e) => {
+                setExerciseName(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
               placeholder="e.g., Bicep Curls"
               className="mt-1"
+              autoComplete="off"
             />
+            
+            {/* Autocomplete Dropdown */}
+            {showSuggestions && filteredExercises.length > 0 && (
+              <div
+                ref={dropdownRef}
+                className="absolute z-50 w-full mt-1 bg-background border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto"
+              >
+                {filteredExercises.map((exercise, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => handleExerciseSelect(exercise.name)}
+                    className="w-full text-left px-4 py-3 hover:bg-accent hover:text-accent-foreground transition-colors border-b border-border last:border-b-0"
+                  >
+                    <div className="font-medium">{exercise.name}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {exercise.muscle_groups.join(", ")}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
