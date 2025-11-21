@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -133,8 +133,13 @@ function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
     return { name: 'Untrained', color: '#6b7280', range: '0%' };
   };
 
-  const currentLevel = getMuscleLevel(getMuscleProgress(muscleGroup));
-  const trend = Math.random() > 0.5 ? 'up' : Math.random() > 0.5 ? 'down' : 'stable';
+  const progress = useMemo(() => getMuscleProgress(muscleGroup), [muscleGroup, workoutSessions]);
+  const currentLevel = useMemo(() => getMuscleLevel(progress), [progress]);
+  const trend = useMemo(() => {
+    const hash = muscleGroup.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const rand = (hash % 3);
+    return rand === 0 ? 'up' : rand === 1 ? 'down' : 'stable';
+  }, [muscleGroup]);
 
   const scrollPrev = () => {
     if (emblaApi) emblaApi.scrollPrev();
@@ -405,11 +410,26 @@ export function InteractiveBodyMap() {
     if (progress > 0) return muscleTiers[0]; // Rookie
     return { name: 'Untrained', color: '#6b7280', range: '0%' };
   };
+  
+  // Memoize muscle data to prevent recalculations on every render
+  const muscleData = useMemo(() => {
+    return muscleGroups.map((muscle) => {
+      const progress = getMuscleProgress(muscle.key);
+      const level = getMuscleLevel(progress);
+      // Consistent pseudo-random trend based on muscle key
+      const hash = muscle.key.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const trendRand = (hash % 3);
+      const trend = trendRand === 0 ? 'up' : trendRand === 1 ? 'down' : 'stable';
+      const trendPercentage = (hash % 15) + 1;
+      
+      return { ...muscle, progress, level, trend, trendPercentage };
+    });
+  }, [workoutSessions]);
 
-  const getCurrentFitnessLevel = () => {
+  const currentLevel = useMemo(() => {
     // Calculate overall fitness level based on all muscle groups
-    const totalProgress = muscleGroups.reduce((sum, muscle) => sum + getMuscleProgress(muscle.key), 0);
-    const averageProgress = totalProgress / muscleGroups.length;
+    const totalProgress = muscleData.reduce((sum, muscle) => sum + muscle.progress, 0);
+    const averageProgress = totalProgress / muscleData.length;
     
     if (averageProgress >= 95) return fitnessLevels[5]; // World Class
     if (averageProgress >= 80) return fitnessLevels[4]; // Elite
@@ -417,9 +437,7 @@ export function InteractiveBodyMap() {
     if (averageProgress >= 40) return fitnessLevels[2]; // Intermediate
     if (averageProgress >= 20) return fitnessLevels[1]; // Novice
     return fitnessLevels[0]; // Beginner
-  };
-
-  const currentLevel = getCurrentFitnessLevel();
+  }, [muscleData]);
 
   return (
     <div className="space-y-6">
@@ -429,42 +447,35 @@ export function InteractiveBodyMap() {
           <h3 className="text-lg font-semibold mb-4">Muscle Development</h3>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {muscleGroups.map((muscle) => {
-              const progress = getMuscleProgress(muscle.key);
-              const level = getMuscleLevel(progress);
-              const trend = Math.random() > 0.5 ? 'up' : Math.random() > 0.5 ? 'down' : 'stable';
-              const trendPercentage = Math.floor(Math.random() * 15) + 1;
-              
-              return (
-                <div 
-                  key={muscle.key}
-                  className="flex items-center justify-between p-4 rounded-lg bg-muted hover:bg-muted/80 cursor-pointer transition-colors border-l-4 border-blue-500"
-                  onClick={() => setSelectedMuscle(muscle.key)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: level.color }}
-                    />
-                    <div>
-                      <span className="text-sm font-medium">{muscle.name}</span>
-                      <div className="flex items-center gap-1 mt-1">
-                        {trend === 'up' && <TrendingUp className="w-3 h-3 text-green-500" />}
-                        {trend === 'down' && <TrendingDown className="w-3 h-3 text-red-500" />}
-                        {trend === 'stable' && <Minus className="w-3 h-3 text-yellow-500" />}
-                        <span className="text-xs text-muted-foreground">
-                          {trend === 'up' ? '+' : trend === 'down' ? '-' : ''}{trendPercentage}%
-                        </span>
-                      </div>
+            {muscleData.map((muscle) => (
+              <div 
+                key={muscle.key}
+                className="flex items-center justify-between p-4 rounded-lg bg-muted hover:bg-muted/80 cursor-pointer transition-colors border-l-4 border-blue-500"
+                onClick={() => setSelectedMuscle(muscle.key)}
+              >
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: muscle.level.color }}
+                  />
+                  <div>
+                    <span className="text-sm font-medium">{muscle.name}</span>
+                    <div className="flex items-center gap-1 mt-1">
+                      {muscle.trend === 'up' && <TrendingUp className="w-3 h-3 text-green-500" />}
+                      {muscle.trend === 'down' && <TrendingDown className="w-3 h-3 text-red-500" />}
+                      {muscle.trend === 'stable' && <Minus className="w-3 h-3 text-yellow-500" />}
+                      <span className="text-xs text-muted-foreground">
+                        {muscle.trend === 'up' ? '+' : muscle.trend === 'down' ? '-' : ''}{muscle.trendPercentage}%
+                      </span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-xs font-medium text-foreground">{progress}%</div>
-                    <div className="text-xs text-muted-foreground">{level.name}</div>
-                  </div>
                 </div>
-              );
-            })}
+                <div className="text-right">
+                  <div className="text-xs font-medium text-foreground">{muscle.progress}%</div>
+                  <div className="text-xs text-muted-foreground">{muscle.level.name}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
