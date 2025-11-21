@@ -11,10 +11,11 @@ export default function ExerciseDetail() {
   const { exerciseName } = useParams();
   const { getText } = useSettings();
 
-  // Find the exercise by name
-  const exercise = exercisesData.find(ex => 
-    ex.name.toLowerCase().replace(/\s+/g, '-') === exerciseName?.toLowerCase()
-  );
+  // Find the exercise by name - match the slug generation from Exercises.tsx
+  const exercise = exercisesData.find(ex => {
+    const exerciseSlug = ex.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    return exerciseSlug === exerciseName?.toLowerCase();
+  });
 
   if (!exercise) {
     return (
