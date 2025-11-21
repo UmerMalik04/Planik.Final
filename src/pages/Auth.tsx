@@ -52,8 +52,6 @@ export default function Auth() {
       const token = urlParams.get('token');
       const emailParam = urlParams.get('email');
       
-      console.log('Recovery URL params:', { type, token, emailParam });
-      
       if (type === 'recovery') {
         if (token) {
           // If we have a token, verify it with Supabase
@@ -64,14 +62,12 @@ export default function Auth() {
             });
             
             if (error) {
-              console.error('Token verification error:', error);
               toast({
                 title: "Invalid Reset Link",
                 description: "This password reset link is invalid or has expired. Please request a new one.",
                 variant: "destructive",
               });
             } else {
-              console.log('Token verified successfully:', data);
               setShowPasswordReset(true);
               toast({
                 title: "Link Verified",
@@ -79,7 +75,6 @@ export default function Auth() {
               });
             }
           } catch (err) {
-            console.error('Error verifying token:', err);
             toast({
               title: "Error",
               description: "Failed to verify reset link. Please try again.",
@@ -183,7 +178,6 @@ export default function Auth() {
       });
 
       if (error) {
-        console.error('Login error:', error);
         toast({
           title: "Login Failed", 
           description: error.message === 'Invalid login credentials' 
@@ -210,7 +204,6 @@ export default function Auth() {
         window.location.href = '/';
       }
     } catch (error: any) {
-      console.error('Login error:', error);
       toast({
         title: "Error",
         description: error.message || "An unexpected error occurred.",
@@ -276,7 +269,6 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      console.log('Starting signup process...');
       const { data, error } = await supabase.auth.signUp({
         email: signupForm.email,
         password: signupForm.password,
@@ -291,8 +283,6 @@ export default function Auth() {
       });
 
       if (error) {
-        console.error('Signup error:', error);
-        
         // Handle specific error cases
         if (error.message.includes('rate limit') || error.code === 'over_email_send_rate_limit') {
           toast({
@@ -322,8 +312,6 @@ export default function Auth() {
         return;
       }
 
-      console.log('Signup successful:', data);
-      
       toast({
         title: "Account Created!",
         description: "Welcome to Planik! You can now start your fitness journey.",
@@ -333,7 +321,6 @@ export default function Auth() {
       navigate('/');
 
     } catch (error) {
-      console.error('Signup error:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred during signup.",
@@ -348,8 +335,6 @@ export default function Auth() {
     setLoading(true);
     
     try {
-      console.log('Starting Google OAuth...');
-      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -358,9 +343,7 @@ export default function Auth() {
       });
 
       if (error) {
-        console.error('Google login error:', error);
-        
-        // Handle specific error cases  
+        // Handle specific error cases
         if (error.message.includes('Invalid provider') || 
             error.message.includes('provider is not enabled') || 
             error.message.includes('Unsupported provider') ||
@@ -381,11 +364,9 @@ export default function Auth() {
         return;
       }
 
-      console.log('Google OAuth initiated - redirecting to Google...');
       // OAuth will redirect to Google, so don't set loading to false here
       
     } catch (error) {
-      console.error('Google login error:', error);
       toast({
         title: "Google Login Failed",
         description: "An unexpected error occurred. Please ensure Google OAuth is configured in your Supabase project.",
