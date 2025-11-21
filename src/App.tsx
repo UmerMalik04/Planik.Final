@@ -8,6 +8,7 @@ import AuthGuard from "@/components/AuthGuard";
 import { useWorkoutStore } from "./stores/useWorkoutStore";
 import { useDietStore } from "./stores/useDietStore";
 import { supabase } from "./integrations/supabase/client";
+import { useOfflineSync } from "./hooks/useOfflineSync";
 import Layout from "./components/Layout";
 
 const Home = lazy(() => import("./pages/Home"));
@@ -37,6 +38,9 @@ const queryClient = new QueryClient();
 function DataInitializer() {
   const initWorkout = useWorkoutStore(state => state.initializeUserData);
   const initDiet = useDietStore(state => state.initializeDietData);
+  
+  // Initialize offline sync
+  useOfflineSync();
 
   useEffect(() => {
     const initData = async () => {
