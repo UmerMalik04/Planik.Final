@@ -392,7 +392,7 @@ export default function Profile() {
               {achievements.map((achievement) => (
                 <div
                   key={achievement.id}
-                  className="relative p-4 rounded-lg border-2 border-primary bg-background transition-all"
+                  className="relative p-4 rounded-lg border-2 border-primary bg-white transition-all"
                 >
                   <div className="flex items-start gap-3">
                     <div className={`p-2 rounded-full ${
