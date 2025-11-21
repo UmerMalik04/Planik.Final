@@ -309,7 +309,7 @@ export default function Profile() {
             {/* Avatar and Basic Info */}
             <div className="flex items-center gap-6">
               <Avatar className="h-24 w-24">
-                <AvatarFallback className="text-2xl">
+                <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
                   {displayName.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
