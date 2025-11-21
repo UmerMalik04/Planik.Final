@@ -60,9 +60,6 @@ const Templates = () => {
       
       // Navigate to the workout plan
       navigate(`/workout-plan/${planData.id}`);
-      
-      // Reload the page to fetch the new data
-      setTimeout(() => window.location.reload(), 100);
     } catch (error) {
       console.error("Error creating template:", error);
       toast.error("Failed to create workout from template");
