@@ -311,7 +311,7 @@ export default function Profile() {
         // Upload to Supabase Storage
         const fileExt = file.name.split('.').pop();
         const fileName = `${currentUser.id}-${Date.now()}.${fileExt}`;
-        const filePath = `avatars/${fileName}`;
+        const filePath = `${currentUser.id}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('avatars')
@@ -322,10 +322,13 @@ export default function Profile() {
 
         if (uploadError) throw uploadError;
 
-        // Get public URL
+        // Get public URL with cache-busting parameter
         const { data: { publicUrl } } = supabase.storage
           .from('avatars')
           .getPublicUrl(filePath);
+
+        // Add cache-busting parameter to force refresh
+        const cacheBustedUrl = `${publicUrl}?t=${Date.now()}`;
 
         // Update user profile in database
         // First, check if profile exists
@@ -359,16 +362,32 @@ export default function Profile() {
           if (insertError) throw insertError;
         }
 
-        // Update local state with the new avatar URL
+        // Update auth user metadata
+        const { error: metadataError } = await supabase.auth.updateUser({
+          data: { avatar_url: cacheBustedUrl }
+        });
+
+        if (metadataError) throw metadataError;
+
+        // Fetch fresh user data to ensure state is in sync
+        const { data: { user: freshUser } } = await supabase.auth.getUser();
+
+        // Update local state with the cache-busted URL
         const updatedUser = {
-          ...user,
+          ...freshUser,
           user_metadata: {
-            ...user.user_metadata,
-            avatar_url: publicUrl
+            ...freshUser?.user_metadata,
+            avatar_url: cacheBustedUrl
           }
         };
         
         setUser(updatedUser);
+        
+        // Also update localStorage if user was saved there
+        const savedUser = localStorage.getItem('current-user');
+        if (savedUser) {
+          localStorage.setItem('current-user', JSON.stringify(updatedUser));
+        }
         
         toast({
           title: "Profile Picture Updated",
