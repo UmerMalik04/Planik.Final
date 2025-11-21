@@ -157,11 +157,12 @@ export default function Profile() {
         return;
       }
 
-      // Check file type
-      if (!file.type.startsWith('image/')) {
+      // Check file type - accept all common image types
+      const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/bmp'];
+      if (!validImageTypes.includes(file.type)) {
         toast({
           title: "Invalid File Type",
-          description: "Please select a valid image file (PNG, JPG, WEBP, etc.).",
+          description: "Please select a valid image file (PNG, JPG, GIF, WEBP, SVG, BMP).",
           variant: "destructive",
         });
         return;
@@ -229,7 +230,7 @@ export default function Profile() {
           if (insertError) throw insertError;
         }
 
-        // Update local state
+        // Update local state with the new avatar URL
         const updatedUser = {
           ...user,
           user_metadata: {
@@ -239,9 +240,6 @@ export default function Profile() {
         };
         
         setUser(updatedUser);
-        
-        // Trigger storage event to update other components
-        window.dispatchEvent(new Event('storage'));
         
         toast({
           title: "Profile Picture Updated",
