@@ -202,9 +202,17 @@ export default function DietTracker() {
       const result = await scanBarcode(barcode);
       
       if (result) {
+        setScannedFood(result);
         toast({
           title: "Product Found!",
           description: `${result.name} - ${result.calories} cal`,
+          duration: 3000,
+        });
+      } else {
+        toast({
+          title: "Product Not Found",
+          description: "Couldn't find product information for this barcode",
+          variant: "destructive",
           duration: 3000,
         });
       }
