@@ -46,10 +46,11 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,svg,woff2}'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/twtvzmyvhthvhvulaxfc\.supabase\.co\/.*/i,
+            urlPattern: /^https:\/\/twtvzmyvhthvhvulaxfc\.supabase\.co\/rest\/.*/i,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'supabase-cache',
+              cacheName: 'supabase-api-cache',
+              networkTimeoutSeconds: 10,
               expiration: {
                 maxEntries: 100,
                 maxAgeSeconds: 60 * 60 * 24 // 24 hours
@@ -58,6 +59,10 @@ export default defineConfig(({ mode }) => ({
                 statuses: [0, 200]
               }
             }
+          },
+          {
+            urlPattern: /^https:\/\/twtvzmyvhthvhvulaxfc\.supabase\.co\/auth\/.*/i,
+            handler: 'NetworkOnly',
           },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

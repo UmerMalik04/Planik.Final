@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
+import { offlineStorage } from "@/services/OfflineStorage";
 
 export interface Exercise {
   id: string;
@@ -121,99 +122,142 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
 
   initializeUserData: async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    // Load workout plans
-    const { data: plans } = await supabase
-      .from('workout_plans')
-      .select('*')
-      .eq('user_id', user.id);
-
-    if (plans) {
-      const plansWithExercises = await Promise.all(
-        plans.map(async (plan) => {
-          const { data: exercises } = await supabase
-            .from('exercises')
-            .select('*')
-            .eq('workout_plan_id', plan.id)
-            .order('order_index', { ascending: true });
-
-          return {
-            id: plan.id,
-            name: plan.name,
-            type: plan.type || plan.name,
-            description: plan.description,
-            restTimer: plan.rest_timer,
-            exercises: exercises?.map(e => ({
-              id: e.id,
-              name: e.name,
-              weight: e.weight || undefined,
-              reps: e.reps || 10,
-              sets: e.sets || 3,
-              notes: e.notes || undefined,
-              planId: plan.id,
-              hasWarmup: e.has_warmup || false,
-            })) || [],
-          };
-        })
-      );
-
-      set({ workoutPlans: plansWithExercises });
+    if (!user) {
+      // Load from offline storage if no user
+      try {
+        const [plans, sessions, records] = await Promise.all([
+          offlineStorage.getWorkoutPlans(),
+          offlineStorage.getWorkoutSessions(),
+          offlineStorage.getPersonalRecords(),
+        ]);
+        
+        set({ 
+          workoutPlans: plans,
+          workoutSessions: sessions,
+          personalRecords: records,
+        });
+      } catch (error) {
+        console.error('Failed to load offline data:', error);
+      }
+      return;
     }
 
-    // Load sessions
-    const { data: sessions } = await supabase
-      .from('workout_sessions')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('date', { ascending: false });
+    try {
+      // Try to load from Supabase
+      const { data: plans } = await supabase
+        .from('workout_plans')
+        .select('*')
+        .eq('user_id', user.id);
 
-    if (sessions) {
-      const sessionsWithExercises = await Promise.all(
-        sessions.map(async (session) => {
-          const { data: completedExercises } = await supabase
-            .from('completed_exercises')
-            .select('*')
-            .eq('session_id', session.id);
+      if (plans) {
+        const plansWithExercises = await Promise.all(
+          plans.map(async (plan) => {
+            const { data: exercises } = await supabase
+              .from('exercises')
+              .select('*')
+              .eq('workout_plan_id', plan.id)
+              .order('order_index', { ascending: true });
 
-          return {
-            id: session.id,
-            planId: session.plan_id,
-            date: session.date,
-            exercises: completedExercises?.map(e => ({
-              id: e.id,
-              name: e.exercise_name,
-              weight: Number(e.weight),
-              reps: e.reps,
-              sets: e.sets,
-              date: e.created_at
-            })) || []
-          };
-        })
-      );
+            return {
+              id: plan.id,
+              name: plan.name,
+              type: plan.type || plan.name,
+              description: plan.description,
+              restTimer: plan.rest_timer,
+              exercises: exercises?.map(e => ({
+                id: e.id,
+                name: e.name,
+                weight: e.weight || undefined,
+                reps: e.reps || 10,
+                sets: e.sets || 3,
+                notes: e.notes || undefined,
+                planId: plan.id,
+                hasWarmup: e.has_warmup || false,
+              })) || [],
+            };
+          })
+        );
 
-      set({ workoutSessions: sessionsWithExercises });
+        set({ workoutPlans: plansWithExercises });
+      }
+
+      // Load sessions
+      const { data: sessions } = await supabase
+        .from('workout_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+
+      if (sessions) {
+        const sessionsWithExercises = await Promise.all(
+          sessions.map(async (session) => {
+            const { data: completedExercises } = await supabase
+              .from('completed_exercises')
+              .select('*')
+              .eq('session_id', session.id);
+
+            return {
+              id: session.id,
+              planId: session.plan_id,
+              date: session.date,
+              exercises: completedExercises?.map(e => ({
+                id: e.id,
+                name: e.exercise_name,
+                weight: Number(e.weight),
+                reps: e.reps,
+                sets: e.sets,
+                date: e.created_at
+              })) || []
+            };
+          })
+        );
+
+        set({ workoutSessions: sessionsWithExercises });
+      }
+
+      // Load personal records
+      const { data: prs } = await supabase
+        .from('personal_records')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (prs) {
+        set({
+          personalRecords: prs.map(pr => ({
+            exerciseName: pr.exercise_name,
+            weight: pr.weight,
+            reps: pr.reps,
+            date: pr.date
+          }))
+        });
+      }
+
+      // Save to offline storage after successful load
+      const state = get();
+      await offlineStorage.saveWorkoutPlans(state.workoutPlans);
+      await offlineStorage.saveWorkoutSessions(state.workoutSessions);
+      await offlineStorage.savePersonalRecords(state.personalRecords);
+      
+    } catch (error) {
+      console.error('Failed to load from Supabase, using offline data:', error);
+      
+      // Load from offline storage as fallback
+      try {
+        const [plans, sessions, records] = await Promise.all([
+          offlineStorage.getWorkoutPlans(),
+          offlineStorage.getWorkoutSessions(),
+          offlineStorage.getPersonalRecords(),
+        ]);
+        
+        set({ 
+          workoutPlans: plans,
+          workoutSessions: sessions,
+          personalRecords: records,
+        });
+      } catch (offlineError) {
+        console.error('Failed to load offline data:', offlineError);
+      }
     }
-
-    // Load personal records
-    const { data: prs } = await supabase
-      .from('personal_records')
-      .select('*')
-      .eq('user_id', user.id);
-
-    if (prs) {
-      set({
-        personalRecords: prs.map(pr => ({
-          exerciseName: pr.exercise_name,
-          weight: pr.weight,
-          reps: pr.reps,
-          date: pr.date
-        }))
-      });
-    }
-
-    // Note: user_stats and workout_types tables don't exist yet
-    // These features can be implemented later if needed
   },
 
   addWorkoutPlan: async (plan) => {
