@@ -27,7 +27,7 @@ export default function DietTracker() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { formatDateWithOptions, getText } = useSettings();
-  const { addFood, removeFood, getDailyNutrition, scanFood, scanBarcode, setOnlineStatus, pendingOperations } = useDietStore();
+  const { addFood, removeFood, getDailyNutrition, scanFood, scanBarcode, setOnlineStatus, pendingOperations, dailyNutrition } = useDietStore();
   const isOnline = useOnlineStatus();
   const [isScanning, setIsScanning] = useState(false);
   const [isScanningBarcode, setIsScanningBarcode] = useState(false);
@@ -37,7 +37,15 @@ export default function DietTracker() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const currentDate = new Date().toISOString().split('T')[0];
-  const todayNutrition = getDailyNutrition(currentDate);
+  // Use store's dailyNutrition state so component re-renders when food is added/removed
+  const todayNutrition = dailyNutrition.find(d => d.date === currentDate) || {
+    date: currentDate,
+    totalCalories: 0,
+    totalProtein: 0,
+    totalCarbs: 0,
+    totalFat: 0,
+    foods: []
+  };
   
   const [newFood, setNewFood] = useState({
     name: '',
