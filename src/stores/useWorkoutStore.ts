@@ -475,7 +475,7 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
   },
 
   updateExercise: async (exerciseId, updates) => {
-    await supabase
+    const { error } = await supabase
       .from('exercises')
       .update({
         name: updates.name,
@@ -485,6 +485,11 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
         has_warmup: updates.hasWarmup
       })
       .eq('id', exerciseId);
+
+    if (error) {
+      console.error('Error updating exercise:', error);
+      throw error;
+    }
 
     set((state) => ({
       workoutPlans: state.workoutPlans.map((plan) => ({

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Plus, Trash2, Edit } from "lucide-react";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -68,19 +69,33 @@ export default function WorkoutPlan() {
   };
 
   const handleSaveEdit = async () => {
-    if (!editingExercise || !editName.trim()) return;
+    if (!editingExercise || !editName.trim()) {
+      toast.error("Exercise name cannot be empty");
+      return;
+    }
     
-    await updateExercise(editingExercise.id, {
-      name: editName.trim(),
-      reps: editReps,
-      sets: editSets,
-      weight: editingExercise.weight,
-      hasWarmup: editingExercise.hasWarmup,
-      planId: editingExercise.planId
-    });
-    
-    setEditDialogOpen(false);
-    setEditingExercise(null);
+    if (editReps < 1 || editSets < 1) {
+      toast.error("Reps and sets must be at least 1");
+      return;
+    }
+
+    try {
+      await updateExercise(editingExercise.id, {
+        name: editName.trim(),
+        reps: editReps,
+        sets: editSets,
+        weight: editingExercise.weight,
+        hasWarmup: editingExercise.hasWarmup,
+        planId: editingExercise.planId
+      });
+      
+      toast.success("Exercise updated successfully");
+      setEditDialogOpen(false);
+      setEditingExercise(null);
+    } catch (error) {
+      console.error("Error updating exercise:", error);
+      toast.error("Failed to update exercise. Please try again.");
+    }
   };
 
   return (
