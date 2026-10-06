@@ -80,9 +80,37 @@ export default function Home() {
 
   useEffect(() => {
     calculateProgress();
-    initializeStepCounter();
     loadPreferences();
   }, [workoutSessions]);
+
+  // Read steps from the device step counter, or from saved history when
+  // the counter is unavailable (web) or permission was denied
+  useEffect(() => {
+    let cancelled = false;
+    let stepInterval: ReturnType<typeof setInterval> | undefined;
+
+    const refreshSteps = async () => {
+      const todaySteps = await HealthService.getStepsToday();
+      if (!cancelled) setSteps(todaySteps);
+    };
+
+    const initializeStepCounter = async () => {
+      const granted = await HealthService.requestPermissions();
+      if (cancelled) return;
+      setPermissionGranted(granted);
+      await refreshSteps();
+      if (granted && !cancelled) {
+        stepInterval = setInterval(refreshSteps, 60000);
+      }
+    };
+
+    initializeStepCounter();
+
+    return () => {
+      cancelled = true;
+      if (stepInterval) clearInterval(stepInterval);
+    };
+  }, []);
 
   const loadPreferences = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -97,56 +125,6 @@ export default function Home() {
     if (data) {
       if (data.widget_order) setWidgetOrder(data.widget_order as string[]);
       if (data.hidden_widgets) setHiddenWidgets(data.hidden_widgets as string[]);
-    }
-  };
-
-  const initializeStepCounter = async () => {
-    // Request permissions for native step counter
-    const granted = await HealthService.requestPermissions();
-    setPermissionGranted(granted);
-    
-    if (granted) {
-      // Get today's steps from native plugin
-      const todaySteps = await HealthService.getStepsToday();
-      setSteps(todaySteps);
-      
-      // Update steps every minute
-      const stepInterval = setInterval(async () => {
-        const currentSteps = await HealthService.getStepsToday();
-        setSteps(currentSteps);
-      }, 60000); // Update every 60 seconds
-      
-      return () => clearInterval(stepInterval);
-    } else {
-      // Fallback to simulated steps for web/demo
-      const savedSteps = localStorage.getItem('daily-steps');
-      const today = new Date().toDateString();
-      const savedStepsData = savedSteps ? JSON.parse(savedSteps) : {};
-      
-      if (savedStepsData.date === today) {
-        setSteps(savedStepsData.steps || 0);
-      } else {
-        setSteps(0);
-        localStorage.setItem('daily-steps', JSON.stringify({
-          date: today,
-          steps: 0
-        }));
-      }
-      
-      // Simulate step counting for demo
-      const stepInterval = setInterval(() => {
-        setSteps(prev => {
-          const newSteps = prev + Math.floor(Math.random() * 3);
-          const today = new Date().toDateString();
-          localStorage.setItem('daily-steps', JSON.stringify({
-            date: today,
-            steps: newSteps
-          }));
-          return newSteps;
-        });
-      }, 30000);
-      
-      return () => clearInterval(stepInterval);
     }
   };
 

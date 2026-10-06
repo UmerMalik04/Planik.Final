@@ -25,7 +25,6 @@ const AddExercise = lazy(() => import("./pages/AddExercise"));
 const EditExercise = lazy(() => import("./pages/EditExercise"));
 const StartWorkout = lazy(() => import("./pages/StartWorkout"));
 const DietTracker = lazy(() => import("./pages/DietTracker"));
-const Demo = lazy(() => import("./pages/Demo"));
 const Profile = lazy(() => import("./pages/Profile"));
 const ExerciseDetail = lazy(() => import("./pages/ExerciseDetail"));
 const BodyMap = lazy(() => import("./pages/BodyMap"));
@@ -79,7 +78,6 @@ function App() {
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/demo" element={<Demo />} />
             <Route path="/" element={
               <AuthGuard>
                 <Layout>

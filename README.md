@@ -1,73 +1,58 @@
-# Welcome to your Lovable project
+# Planik
 
-## Project info
+A fitness tracking app: workout plans and logging, progress charts, a body map, diet tracking with barcode and photo food recognition, and a daily step counter.
 
-**URL**: https://lovable.dev/projects/ae88b117-77b8-4910-b56c-76e68ab4d741
+Built with Vite, React, TypeScript, Tailwind CSS and shadcn/ui, packaged for Android and iOS with Capacitor, and backed by Supabase.
 
-## How can I edit this code?
+## Web development
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/ae88b117-77b8-4910-b56c-76e68ab4d741) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Requires Node.js 20 or newer.
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+npm install
+npm run dev      # http://localhost:8080
+npm run build    # production build in dist/
+npm run lint
 ```
 
-**Edit a file directly in GitHub**
+The Supabase URL and publishable key are in `.env` and `src/integrations/supabase/client.ts`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Native apps
 
-**Use GitHub Codespaces**
+The app ID is `com.planik.app`. After changing web code, rebuild and copy it into the native projects:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```sh
+npm run build
+npx cap sync
+```
 
-## What technologies are used for this project?
+### Android
 
-This project is built with:
+Open `android/` in Android Studio (`npx cap open android`) and run it.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- Step counting uses the phone's step counter sensor and needs the Physical activity permission. The sensor has no history, so past days come from the steps the app has saved to Supabase.
+- Barcode scanning uses Google's code scanner. Google Play services downloads it the first time you scan.
 
-## How can I deploy this project?
+### iOS
 
-Simply open [Lovable](https://lovable.dev/projects/ae88b117-77b8-4910-b56c-76e68ab4d741) and click on Share -> Publish.
+Needs macOS with Xcode and CocoaPods.
 
-## Can I connect a custom domain to my Lovable project?
+```sh
+cd ios/App && pod install
+npx cap open ios
+```
 
-Yes, you can!
+- Minimum iOS version is 15.5, which the ML Kit barcode scanner requires.
+- Step counting reads from HealthKit. The HealthKit entitlement is in `ios/App/App/App.entitlements`; select your team under Signing & Capabilities so Xcode can add HealthKit to the App ID.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Supabase edge functions
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Functions live in `supabase/functions`. Set these secrets on the Supabase project (`supabase secrets set NAME=value`):
+
+| Secret | Used by |
+| --- | --- |
+| `GEMINI_API_KEY` | `recognize-food` (Google Gemini, from https://aistudio.google.com/apikey) |
+| `RESEND_API_KEY` | `request-password-reset`, `send-email`, `send-feedback` |
+| `SITE_URL` | `request-password-reset`, the URL that password reset links open, e.g. `https://planik.app` |
+
+Deploy with `supabase functions deploy <name>`.

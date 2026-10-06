@@ -1,6 +1,6 @@
-import { Capacitor } from '@capacitor/core';
-import { Device } from '@capacitor/device';
+import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
+import StepCounter from '@/plugins/StepCounter';
 
 export interface HealthData {
   steps: number;
@@ -14,7 +14,8 @@ export interface PermissionStatus {
   reason?: string;
 }
 
-import StepCounter from '@/plugins/StepCounter';
+// step_history.date holds the user's local calendar day, not the UTC day
+const toLocalDate = (date: Date) => format(date, 'yyyy-MM-dd');
 
 export class HealthService {
   static async requestPermissions(): Promise<boolean> {
@@ -32,15 +33,13 @@ export class HealthService {
       const result = await StepCounter.getStepsToday();
       
       // Save to database
-      const today = new Date().toISOString().split('T')[0];
-      await this.saveStepsToDatabase(today, result.steps);
+      await this.saveStepsToDatabase(toLocalDate(new Date()), result.steps);
       
       return result.steps;
     } catch (error) {
       console.error('Error getting steps today:', error);
       // Fallback to database
-      const today = new Date().toISOString().split('T')[0];
-      return await this.getStepsFromDatabase(today);
+      return await this.getStepsFromDatabase(toLocalDate(new Date()));
     }
   }
 
@@ -52,11 +51,9 @@ export class HealthService {
       });
       return result.steps;
     } catch (error) {
-      console.error('Error getting steps for date range:', error);
-      // Fallback to database for single day
+      // Expected on web and for past days on Android: fall back to saved history
       if (startDate.toDateString() === endDate.toDateString()) {
-        const date = startDate.toISOString().split('T')[0];
-        return await this.getStepsFromDatabase(date);
+        return await this.getStepsFromDatabase(toLocalDate(startDate));
       }
       return 0;
     }

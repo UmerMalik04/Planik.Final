@@ -30,8 +30,11 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get the origin from the request headers to build the correct redirect URL
-    const origin = req.headers.get('origin') || 'https://ae88b117-77b8-4910-b56c-76e68ab4d741.lovableproject.com';
+    // Prefer the configured site URL; fall back to the caller's origin
+    const origin = Deno.env.get('SITE_URL') || req.headers.get('origin');
+    if (!origin) {
+      throw new Error("SITE_URL is not configured");
+    }
     const redirectUrl = `${origin}/auth?type=recovery`;
 
     console.log("Redirect URL:", redirectUrl);

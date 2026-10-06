@@ -266,7 +266,7 @@ function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
     const crop = crops[muscleKey] || { x: 0, y: 0, width: 10, height: 50 };
     
     return {
-      backgroundImage: `url(/lovable-uploads/bb665430-4ad6-4640-b01c-96cdd7a186be.png)`,
+      backgroundImage: `url(/images/body-map-background.png)`,
       backgroundPosition: `-${crop.x}% -${crop.y}%`,
       backgroundSize: '1000% 200%',
       width: '100%',
