@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Mail, Lock, User, Calendar, Users, Chrome, Phone } from 'lucide-react';
+import { Mail, Lock, User, Calendar, Users, Chrome, Phone, UserRound } from 'lucide-react';
 import { BiometricService } from '@/services/BiometricService';
 
 export default function Auth() {
@@ -324,6 +324,44 @@ export default function Auth() {
       toast({
         title: "Error",
         description: "An unexpected error occurred during signup.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    setLoading(true);
+
+    try {
+      // Creates a temporary Supabase account, so the guest's data is saved
+      // like any other user's until they sign out
+      const { error } = await supabase.auth.signInAnonymously({
+        options: { data: { name: 'Guest' } }
+      });
+
+      if (error) {
+        const notEnabled = error.message.toLowerCase().includes('anonymous');
+        toast({
+          title: "Guest Login Failed",
+          description: notEnabled
+            ? "Guest access is not enabled. In Supabase, turn on Authentication > Sign In / Providers > Allow anonymous sign-ins."
+            : error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Welcome, Guest!",
+        description: "Your data is kept until you sign out. Create an account to keep it for good.",
+      });
+      navigate('/');
+    } catch (error) {
+      toast({
+        title: "Guest Login Failed",
+        description: error instanceof Error ? error.message : "Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -744,6 +782,26 @@ export default function Auth() {
                   </form>
                 </TabsContent>
               </Tabs>
+
+              <div className="relative mt-6">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">Or</span>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full mt-4"
+                onClick={handleGuestLogin}
+                disabled={loading}
+              >
+                <UserRound className="w-4 h-4 mr-2" />
+                Continue as Guest
+              </Button>
             </>
           )}
         </CardContent>
