@@ -52,7 +52,6 @@ const AddExercise = lazy(routeLoaders.addExercise);
 const EditExercise = lazy(routeLoaders.editExercise);
 const StartWorkout = lazy(routeLoaders.startWorkout);
 const DietTracker = lazy(routeLoaders.dietTracker);
-const Demo = lazy(routeLoaders.demo);
 const Profile = lazy(routeLoaders.profile);
 const ExerciseDetail = lazy(routeLoaders.exerciseDetail);
 const StepHistory = lazy(routeLoaders.stepHistory);
@@ -170,7 +169,6 @@ function AppRoutes() {
         {/* ---- Public routes (no auth required) ---- */}
         <Route path="/auth" element={<Auth />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/demo" element={<Demo />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
 

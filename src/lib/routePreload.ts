@@ -24,7 +24,6 @@ export type RouteKey =
   | 'startWorkout'
   | 'auth'
   | 'authCallback'
-  | 'demo'
   | 'help'
   | 'healthKitSettings'
   | 'privacy'
@@ -51,7 +50,6 @@ export const routeLoaders: Record<RouteKey, Loader> = {
   startWorkout: () => import('@/pages/StartWorkout'),
   auth: () => import('@/pages/Auth'),
   authCallback: () => import('@/pages/AuthCallback'),
-  demo: () => import('@/pages/Demo'),
   help: () => import('@/pages/Help'),
   healthKitSettings: () => import('@/pages/HealthKitSettings'),
   privacy: () => import('@/pages/Privacy'),

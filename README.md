@@ -25,7 +25,7 @@ This project is part of my technical portfolio for the **Technical Intern role a
 | Frontend | React 18, TypeScript 5, Vite 5 |
 | Styling | Tailwind CSS v3, shadcn/ui, semantic HSL design tokens |
 | State | Zustand stores with selective persistence |
-| Native | Capacitor 6 (iOS Swift / Android Kotlin bridges) |
+| Native | Capacitor 7 (iOS Swift / Android Kotlin bridges) |
 | Backend | Supabase (Postgres, Auth, Edge Functions, Storage) |
 | Security | Row-Level Security on every table, JWT validation in edge functions |
 | Offline | IndexedDB via custom `OfflineStorage` service, online/offline transition sync |

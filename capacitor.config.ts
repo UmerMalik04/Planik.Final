@@ -15,11 +15,6 @@ const config: CapacitorConfig = {
     Camera: {
       permissions: ['camera', 'photos']
     },
-    LocalNotifications: {
-      smallIcon: 'ic_stat_icon_config_sample',
-      iconColor: '#488AFF',
-      sound: 'beep.wav'
-    },
     GoogleAuth: {
       scopes: ['profile', 'email'],
       serverClientId: '876860682396-snp1r9u16ftm6mgoksm8348guoerjlnu.apps.googleusercontent.com',
