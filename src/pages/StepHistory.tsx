@@ -1,17 +1,25 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Calendar as CalendarIcon, Edit } from "lucide-react";
+import { ArrowLeft, RefreshCw, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HealthService } from "@/services/HealthService";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, subMonths, addMonths } from "date-fns";
+import { HealthKitDisclosure } from "@/components/HealthKitDisclosure";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface DaySteps {
   date: Date;
   steps: number;
 }
 
+/**
+ * StepHistory page ("/step-history").
+ * Day / week / month views of step counts. Subscribes to a user-scoped
+ * realtime channel so cells update live as new step data is synced.
+ */
 export default function StepHistory() {
   const navigate = useNavigate();
   const [dailyGoal, setDailyGoal] = useState(9000);
@@ -19,103 +27,198 @@ export default function StepHistory() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [monthlySteps, setMonthlySteps] = useState<DaySteps[]>([]);
   const [weeklySteps, setWeeklySteps] = useState<{ date: string; steps: number }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [longestStreak, setLongestStreak] = useState(0);
   const [bestMonth, setBestMonth] = useState<{ month: string; steps: number }>({ month: '', steps: 0 });
+  const [lastSynced, setLastSynced] = useState<Date | null>(null);
 
+  const generateEmptyCalendar = (month: Date): DaySteps[] => {
+    const start = startOfMonth(month);
+    const end = endOfMonth(month);
+    const days = eachDayOfInterval({ start, end });
+    return days.map(date => ({ date, steps: 0 }));
+  };
+
+  /**
+   * Build the calendar rows for a month from a date -> steps map.
+   * Pure, so it can be used both for the instant first paint (from the device
+   * snapshot) and for the later server/native results.
+   */
+  const buildCalendar = (month: Date, stepsMap: Map<string, number>): DaySteps[] => {
+    const days = eachDayOfInterval({ start: startOfMonth(month), end: endOfMonth(month) });
+    return days.map((date) => ({
+      date,
+      steps: stepsMap.get(format(date, 'yyyy-MM-dd')) ?? 0,
+    }));
+  };
+
+  const applyStepsToCalendar = useCallback((month: Date, stepsMap: Map<string, number>) => {
+    setMonthlySteps(buildCalendar(month, stepsMap));
+  }, []);
+
+  // Load data when month changes
   useEffect(() => {
-    loadStepData();
-    loadStats();
+    let cancelled = false;
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+
+    // Frame 1: paint the last-known numbers for this month straight from the
+    // device snapshot (no network, no await) so the calendar is never blank.
+    const snapshot = HealthService.getMonthlyStepsSnapshot(year, month);
+    setMonthlySteps(snapshot ? buildCalendar(currentMonth, snapshot) : generateEmptyCalendar(currentMonth));
+
+    const loadData = async () => {
+      // Step 1: reuse the prefetched/warm fetch when the idle prefetcher
+      // already loaded this month, otherwise fetch it now.
+      const dbSteps = await HealthService.getMonthlySteps(year, month);
+      if (cancelled) return;
+      applyStepsToCalendar(currentMonth, dbSteps);
+
+      // Step 2: Sync from native health store in background
+      setIsSyncing(true);
+      try {
+        const healthSteps = await HealthService.syncMonthFromHealthKit(year, month, dbSteps);
+        if (cancelled) return;
+
+        if (healthSteps.size > 0) {
+          const merged = new Map(dbSteps);
+          // A native 0 must never blank out a day we already recorded.
+          healthSteps.forEach((steps, date) => {
+            if (steps > 0 || !(dbSteps.get(date) ?? 0)) merged.set(date, steps);
+          });
+          applyStepsToCalendar(currentMonth, merged);
+          setLastSynced(new Date());
+        }
+
+      } finally {
+        if (!cancelled) setIsSyncing(false);
+      }
+
+      if (!cancelled) loadStats();
+    };
+
+    loadData();
+    HealthService.getWeeklySteps().then(w => { if (!cancelled) setWeeklySteps(w); });
+
+
+    return () => { cancelled = true; };
+  }, [currentMonth, applyStepsToCalendar]);
+
+  // Realtime subscription for daily_steps
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    const setupRealtime = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      channel = supabase
+        .channel(`daily-steps-realtime:${user.id}`)
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'daily_steps',
+          filter: `user_id=eq.${user.id}`,
+        }, (payload) => {
+          const record = payload.eventType === 'DELETE' ? payload.old : payload.new;
+          // Note: check for null/undefined, not falsiness — a legitimate 0-step day must still update the calendar.
+          if (!record?.date || record?.steps == null) return;
+
+          setMonthlySteps(prev => {
+            return prev.map(day => {
+              const dayStr = format(day.date, 'yyyy-MM-dd');
+              if (dayStr === record.date) {
+                return { ...day, steps: record.steps as number };
+              }
+              return day;
+            });
+          });
+        })
+        .subscribe();
+    };
+
+    setupRealtime();
+    return () => { channel?.unsubscribe(); };
   }, [currentMonth]);
 
+  /** Load aggregate stats (longest streak, best month) from the health store. */
   const loadStats = async () => {
     const stats = await HealthService.getStepStats();
     setLongestStreak(stats.longestStreak);
     setBestMonth(stats.bestMonth);
   };
 
-  const loadStepData = async () => {
-    setLoading(true);
-    
-    // Load weekly data
-    const weekly = await HealthService.getWeeklySteps();
-    setWeeklySteps(weekly);
-
-    // Load monthly data
-    const start = startOfMonth(currentMonth);
-    const end = endOfMonth(currentMonth);
-    const days = eachDayOfInterval({ start, end });
-    
-    const monthData = await Promise.all(
-      days.map(async (date) => {
-        const startOfDay = new Date(date.setHours(0, 0, 0, 0));
-        const endOfDay = new Date(date.setHours(23, 59, 59, 999));
-        const steps = await HealthService.getStepsForDateRange(startOfDay, endOfDay);
-        return { date, steps };
-      })
-    );
-    
-    setMonthlySteps(monthData);
-    setLoading(false);
+  /** Force a fresh sync from HealthKit / Health Connect. */
+  const handleManualRefresh = async () => {
+    setIsSyncing(true);
+    try {
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth();
+      const { stepsMap, syncedFromNative } = await HealthService.refreshMonth(year, month);
+      applyStepsToCalendar(currentMonth, stepsMap);
+      setLastSynced(new Date());
+      await loadStats();
+      toast.success(syncedFromNative ? 'Synced from Health app' : 'Loaded from database');
+    } catch (error) {
+      toast.error('Failed to sync steps');
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
+  /** Pick a tailwind text color for a step count based on how close it is to the goal. */
   const getStepColor = (steps: number) => {
-    if (steps >= 14000) return "text-success"; // Green
-    if (steps >= 10000) return "text-primary"; // Primary blue
-    if (steps >= 5000) return "text-accent"; // Accent
-    if (steps >= 2000) return "text-primary/70"; // Light primary
-    return "text-muted-foreground";
+    if (steps >= 10000) return "text-primary font-bold";
+    if (steps >= 5000) return "text-primary";
+    if (steps > 0) return "text-primary/70";
+    return "text-muted-foreground/40";
   };
 
   const totalMonthSteps = monthlySteps.reduce((sum, day) => sum + day.steps, 0);
   const totalWeekSteps = weeklySteps.reduce((sum, day) => sum + day.steps, 0);
 
+  /** Format a step count as a compact label (e.g. 12500 → "12.5K"). */
   const formatSteps = (steps: number) => {
-    if (steps >= 1000) return `${Math.floor(steps / 1000)}k`;
+    if (steps >= 1000) return `${(steps / 1000).toFixed(steps >= 10000 ? 0 : 1)}K`;
     return steps.toString();
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary to-background">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-primary text-primary-foreground p-6 pb-8">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-primary text-primary-foreground p-4 pb-6">
+        <div className="flex items-center justify-between mb-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
             className="text-primary-foreground hover:bg-primary-foreground/20"
           >
-            <ArrowLeft className="h-6 w-6" />
+            <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 flex items-center justify-center">
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/>
-              </svg>
-            </div>
-            <h1 className="text-xl font-semibold">Step history</h1>
-          </div>
+          <h1 className="text-lg font-semibold">Step History</h1>
           <Button
             variant="ghost"
             size="icon"
+            onClick={handleManualRefresh}
+            disabled={isSyncing}
             className="text-primary-foreground hover:bg-primary-foreground/20"
           >
-            <CalendarIcon className="h-6 w-6" />
+            <RefreshCw className={`h-5 w-5 ${isSyncing ? 'animate-spin' : ''}`} />
           </Button>
         </div>
 
         {/* Stats */}
-        <div className="space-y-3">
+        <div className="space-y-2 text-sm">
           <div className="flex items-center justify-between">
-            <span className="text-primary-foreground/90">Daily goal:</span>
-            <div className="flex items-center gap-2">
+            <span className="text-primary-foreground/80">Daily goal:</span>
+            <div className="flex items-center gap-1">
               {isEditingGoal ? (
                 <input
                   type="number"
                   value={dailyGoal}
                   onChange={(e) => setDailyGoal(Number(e.target.value))}
-                  className="bg-primary-foreground/20 text-primary-foreground px-3 py-1 rounded w-32 text-right"
+                  className="bg-primary-foreground/20 text-primary-foreground px-2 py-0.5 rounded w-24 text-right text-sm"
                   onBlur={() => setIsEditingGoal(false)}
                   autoFocus
                 />
@@ -124,46 +227,59 @@ export default function StepHistory() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 text-primary-foreground hover:bg-primary-foreground/20"
+                    className="h-5 w-5 text-primary-foreground hover:bg-primary-foreground/20"
                     onClick={() => setIsEditingGoal(true)}
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-3 w-3" />
                   </Button>
-                  <span className="text-primary-foreground font-medium">
-                    {dailyGoal.toLocaleString()} steps
-                  </span>
+                  <span className="font-medium">{dailyGoal.toLocaleString()}</span>
                 </>
               )}
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-primary-foreground/90">Longest streak:</span>
-            <span className="text-primary-foreground font-medium">{longestStreak} days</span>
+            <span className="text-primary-foreground/80">Longest streak:</span>
+            <span className="font-medium">{longestStreak} days</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-primary-foreground/90">Best month:</span>
-            <span className="text-primary-foreground font-medium">{bestMonth.month}{bestMonth.steps > 0 ? ` · ${formatSteps(bestMonth.steps)} steps` : ''}</span>
+            <span className="text-primary-foreground/80">Best month:</span>
+            <span className="font-medium">
+              {bestMonth.month}{bestMonth.steps > 0 ? ` · ${formatSteps(bestMonth.steps)}` : ''}
+            </span>
           </div>
+          {lastSynced && (
+            <div className="text-xs text-primary-foreground/50 text-right">
+              Last synced: {format(lastSynced, 'h:mm a')}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Tabs */}
       <Tabs defaultValue="month" className="w-full">
-        <TabsList className="w-full grid grid-cols-3 bg-primary rounded-none border-t border-primary-foreground/20">
-          <TabsTrigger value="day" className="data-[state=active]:bg-primary/80 text-primary-foreground">
-            Day
-          </TabsTrigger>
-          <TabsTrigger value="week" className="data-[state=active]:bg-primary/80 text-primary-foreground">
-            Week
-          </TabsTrigger>
-          <TabsTrigger value="month" className="data-[state=active]:bg-primary/80 text-primary-foreground">
-            Month
-          </TabsTrigger>
+        <TabsList className="w-full grid grid-cols-3 rounded-none bg-muted">
+          <TabsTrigger value="day">Day</TabsTrigger>
+          <TabsTrigger value="week">Week</TabsTrigger>
+          <TabsTrigger value="month">Month</TabsTrigger>
         </TabsList>
 
         {/* Month View */}
-        <TabsContent value="month" className="mt-0 bg-background">
-          <div className="p-4 space-y-6">
+        <TabsContent value="month" className="mt-0">
+          <div className="p-4 space-y-4">
+            <HealthKitDisclosure variant="compact" />
+
+            {/* Manual native sync trigger (HealthKit on iOS / Health Connect on Android) */}
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleManualRefresh}
+              disabled={isSyncing}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? 'Syncing steps…' : 'Sync steps now'}
+            </Button>
+
+
             {/* Month Navigation */}
             <div className="flex items-center justify-between">
               <Button
@@ -174,11 +290,12 @@ export default function StepHistory() {
                 ←
               </Button>
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-foreground">
-                  {format(currentMonth, "MMM yyyy")}
+                <h2 className="text-lg font-bold text-foreground">
+                  {format(currentMonth, "MMMM yyyy")}
                 </h2>
-                <p className="text-muted-foreground">
-                  {formatSteps(totalMonthSteps)} steps
+                <p className="text-sm text-muted-foreground">
+                  {totalMonthSteps > 0 ? `${totalMonthSteps.toLocaleString()} steps` : 'No data'}
+                  {isSyncing && <span className="ml-1 text-xs">(syncing...)</span>}
                 </p>
               </div>
               <Button
@@ -192,35 +309,33 @@ export default function StepHistory() {
             </div>
 
             {/* Calendar Grid */}
-            <div className="space-y-4">
+            <div className="space-y-2">
               <div className="grid grid-cols-7 gap-1 text-center">
-                {["M", "T", "W", "T", "F", "S", "S"].map((day) => (
-                  <div key={day} className="text-xs text-muted-foreground py-2">
+                {["M", "T", "W", "T", "F", "S", "S"].map((day, i) => (
+                  <div key={`${day}-${i}`} className="text-xs text-muted-foreground font-medium py-1">
                     {day}
                   </div>
                 ))}
               </div>
 
               <div className="grid grid-cols-7 gap-1">
-                {/* Empty cells for days before month starts */}
                 {Array.from({ length: (startOfMonth(currentMonth).getDay() + 6) % 7 }).map((_, i) => (
                   <div key={`empty-${i}`} className="aspect-square" />
                 ))}
                 
-                {/* Days with step counts */}
                 {monthlySteps.map((day) => {
                   const isToday = isSameDay(day.date, new Date());
                   return (
-                  <div
+                    <div
                       key={day.date.toISOString()}
-                      className={`aspect-square flex flex-col items-center justify-center rounded-lg ${
-                        isToday ? "bg-primary/20 ring-2 ring-primary" : ""
+                      className={`aspect-square flex flex-col items-center justify-center rounded-lg text-center ${
+                        isToday ? "bg-primary/15 ring-1.5 ring-primary" : ""
                       }`}
                     >
-                      <div className={`text-sm font-medium ${getStepColor(day.steps)}`}>
-                        {formatSteps(day.steps)}
+                      <div className={`text-[11px] leading-tight ${getStepColor(day.steps)}`}>
+                        {day.steps > 0 ? formatSteps(day.steps) : '–'}
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-[10px] text-muted-foreground/60 mt-0.5">
                         {format(day.date, "d")}
                       </div>
                     </div>
@@ -232,19 +347,19 @@ export default function StepHistory() {
         </TabsContent>
 
         {/* Week View */}
-        <TabsContent value="week" className="mt-0 bg-background p-4">
+        <TabsContent value="week" className="mt-0 p-4">
           <div className="space-y-4">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-foreground">This Week</h2>
-              <p className="text-muted-foreground">{formatSteps(totalWeekSteps)} steps</p>
+              <h2 className="text-lg font-bold text-foreground">This Week</h2>
+              <p className="text-sm text-muted-foreground">{formatSteps(totalWeekSteps)} steps</p>
             </div>
             <div className="space-y-2">
               {weeklySteps.map((day, index) => (
-                <Card key={index} className="p-4">
+                <Card key={index} className="p-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-foreground">{day.date}</span>
-                    <span className={`font-bold ${getStepColor(day.steps)}`}>
-                      {day.steps.toLocaleString()} steps
+                    <span className="text-sm text-foreground">{day.date}</span>
+                    <span className={`text-sm font-bold ${getStepColor(day.steps)}`}>
+                      {day.steps.toLocaleString()}
                     </span>
                   </div>
                 </Card>
@@ -254,13 +369,13 @@ export default function StepHistory() {
         </TabsContent>
 
         {/* Day View */}
-        <TabsContent value="day" className="mt-0 bg-background p-4">
+        <TabsContent value="day" className="mt-0 p-4">
           <Card className="p-6 text-center">
-            <h2 className="text-2xl font-bold text-foreground mb-2">Today</h2>
+            <h2 className="text-lg font-bold text-foreground mb-2">Today</h2>
             <p className="text-4xl font-bold text-primary">
               {weeklySteps[weeklySteps.length - 1]?.steps.toLocaleString() || 0}
             </p>
-            <p className="text-muted-foreground mt-2">steps</p>
+            <p className="text-muted-foreground mt-1 text-sm">steps</p>
           </Card>
         </TabsContent>
       </Tabs>

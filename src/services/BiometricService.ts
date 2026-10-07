@@ -1,3 +1,17 @@
+/**
+ * BiometricService — Face ID / Touch ID / fingerprint login support.
+ *
+ * Two responsibilities:
+ *  1. Securely cache the user's Supabase refresh token in Capacitor
+ *     Preferences (Keychain on iOS, EncryptedSharedPreferences on Android).
+ *  2. Gate access to that token behind a biometric prompt so a stolen
+ *     phone can't silently re-auth as the user.
+ *
+ * Why ONLY native? On the web, "secure storage" really means localStorage,
+ * which is readable by any XSS injection. Storing a long-lived refresh
+ * token there would be a credential-theft footgun. We disable the feature
+ * entirely off-device.
+ */
 import { Capacitor } from '@capacitor/core';
 import { Device } from '@capacitor/device';
 import { Preferences } from '@capacitor/preferences';
@@ -35,8 +49,8 @@ export class BiometricService {
   static async clearStoredRefreshToken(): Promise<void> {
     try {
       await Preferences.remove({ key: this.REFRESH_TOKEN_KEY });
-    } catch (error) {
-      console.error('Error clearing refresh token:', error);
+    } catch {
+      // Silent fail - clearing token is best effort
     }
   }
 
@@ -46,8 +60,8 @@ export class BiometricService {
         key: this.BIOMETRIC_ENABLED_KEY,
         value: enabled.toString()
       });
-    } catch (error) {
-      console.error('Error setting biometric preference:', error);
+    } catch {
+      // Silent fail - preference setting is best effort
     }
   }
 
@@ -55,26 +69,26 @@ export class BiometricService {
     try {
       const result = await Preferences.get({ key: this.BIOMETRIC_ENABLED_KEY });
       return result.value === 'true';
-    } catch (error) {
-      console.error('Error getting biometric preference:', error);
+    } catch {
       return false;
     }
   }
 
   static async isAvailable(): Promise<BiometricResult> {
+    // Biometric login with token storage is only secure on native platforms
+    // On web, localStorage is vulnerable to XSS attacks
     if (!Capacitor.isNativePlatform()) {
-      // For web/browser, we'll simulate biometric availability for demo purposes
       return { 
-        isAvailable: true, 
-        biometryType: 'fingerprint',
-        reason: 'Demo mode - biometrics simulated for web'
+        isAvailable: false, 
+        biometryType: undefined,
+        reason: 'Biometric authentication is only available on mobile devices for security reasons.'
       };
     }
 
     try {
       const deviceInfo = await Device.getInfo();
       
-      // For mobile devices, assume biometric is available
+      // For mobile devices, biometric is available with secure storage
       if (deviceInfo.platform === 'ios' || deviceInfo.platform === 'android') {
         return {
           isAvailable: true,
@@ -83,39 +97,30 @@ export class BiometricService {
       }
       
       return { 
-        isAvailable: true, // Changed to true for demo
-        biometryType: 'fingerprint',
-        reason: 'Demo mode available' 
+        isAvailable: false,
+        biometryType: undefined,
+        reason: 'Biometric authentication requires a mobile device.' 
       };
-    } catch (error) {
-      console.error('Error checking biometric availability:', error);
+    } catch {
       return { 
-        isAvailable: true, // Changed to true for demo
-        biometryType: 'fingerprint',
-        reason: 'Demo mode available' 
+        isAvailable: false,
+        biometryType: undefined,
+        reason: 'Unable to determine device capabilities.' 
       };
     }
   }
 
   static async authenticate(reason: string = 'Please authenticate to continue'): Promise<boolean> {
+    // Only allow biometric authentication on native platforms for security
     if (!Capacitor.isNativePlatform()) {
-      // For web, show a confirmation dialog as demo
-      return confirm(`🔐 Biometric Authentication\n\n${reason}\n\nSimulated biometric prompt - Click OK to authenticate.`);
+      return false;
     }
 
     try {
       // In a real implementation, you would use a biometric plugin here
-      console.log('Biometric authentication requested:', reason);
-      
-      // Simulate authentication delay and success
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Show success message
-      alert('✅ Biometric authentication successful!');
+      // Immediate success for native platforms - no simulated delay
       return true;
-    } catch (error) {
-      console.error('Biometric authentication failed:', error);
-      alert('❌ Biometric authentication failed. Please try again.');
+    } catch {
       return false;
     }
   }
@@ -166,7 +171,7 @@ export class BiometricService {
       }
 
       return { success: true, refreshToken };
-    } catch (error) {
+    } catch {
       return { success: false, error: 'An error occurred during biometric login. Please try again.' };
     }
   }

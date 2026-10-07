@@ -9,6 +9,11 @@ import { ArrowLeft, Save } from "lucide-react";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
 import { exercisesData } from "@/data/exercises_full";
 
+/**
+ * AddExercise page ("/add-exercise/:planId").
+ * Form for adding a new exercise (with optional warmup) to a workout plan,
+ * with auto-suggestions from the exercise library.
+ */
 export default function AddExercise() {
   const navigate = useNavigate();
   const { planId } = useParams();
@@ -50,6 +55,7 @@ export default function AddExercise() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  /** User picked a suggestion — fill the name field and close the dropdown. */
   const handleExerciseSelect = (name: string) => {
     setExerciseName(name);
     setShowSuggestions(false);
@@ -66,6 +72,7 @@ export default function AddExercise() {
     );
   }
 
+  /** Validate the form and persist the exercise to the plan, then navigate back. */
   const handleSaveExercise = () => {
     if (!exerciseName.trim() || !reps || !sets) return;
 

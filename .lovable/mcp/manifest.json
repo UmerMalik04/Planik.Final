@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "sdk_version": "0.23.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://ismbryaopmkffztxbpoi.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "planik-mcp",
+      "version": "0.1.0",
+      "title": "Planik"
+    },
+    "tools": [
+      {
+        "name": "list_workout_plans",
+        "title": "List workout plans",
+        "description": "List all workout plans belonging to the signed-in Planik user.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "description": "Max plans to return (default 50).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_personal_records",
+        "title": "List personal records",
+        "description": "List the signed-in user's personal records (best weight × reps per exercise).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "exercise": {
+              "description": "Filter by exercise name (case-insensitive).",
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_recent_workouts",
+        "title": "List recent workouts",
+        "description": "List the user's most recent completed workout sessions and their exercises.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "days": {
+              "description": "Look back N days (default 30).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 365
+            },
+            "limit": {
+              "description": "Max sessions (default 20).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "log_water",
+        "title": "Log water intake",
+        "description": "Record a water intake amount (in millilitres) for the signed-in user.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "amount_ml": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5000,
+              "description": "Amount of water in millilitres."
+            },
+            "date": {
+              "description": "Date (yyyy-MM-dd). Defaults to today.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "amount_ml"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "log_food",
+        "title": "Log food item",
+        "description": "Add a food item with macros to the signed-in user's diet log.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "calories": {
+              "type": "number",
+              "minimum": 0
+            },
+            "protein": {
+              "type": "number",
+              "minimum": 0
+            },
+            "carbs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "fat": {
+              "type": "number",
+              "minimum": 0
+            },
+            "fiber": {
+              "type": "number",
+              "minimum": 0
+            },
+            "sugar": {
+              "type": "number",
+              "minimum": 0
+            },
+            "quantity": {
+              "description": "Quantity (default 1).",
+              "type": "number",
+              "minimum": 0
+            },
+            "unit": {
+              "description": "Unit label (default 'serving').",
+              "type": "string"
+            },
+            "date": {
+              "description": "Date yyyy-MM-dd. Defaults to today.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "calories",
+            "protein",
+            "carbs",
+            "fat"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_daily_steps",
+        "title": "Get daily steps",
+        "description": "Return the signed-in user's daily step counts for the last N days.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "days": {
+              "description": "Number of days to return (default 7).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 90
+            }
+          }
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

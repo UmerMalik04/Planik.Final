@@ -13,7 +13,14 @@ import { Search, Dumbbell, TrendingUp, TrendingDown, Minus, Weight, Hash, Clock,
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { SEO } from "@/components/SEO";
 
+/**
+ * History page ("/history").
+ * Calendar view of completed workouts. Tapping a day opens a dialog with
+ * the session's stats (volume, sets, reps, duration) and an
+ * improvement comparison vs. the previous time you did each exercise.
+ */
 export default function History() {
   const { workoutSessions, workoutPlans, initializeUserData, getExerciseHistory } = useWorkoutStore();
   const { formatWeight, formatDate: formatAppDate, getText } = useSettings();
@@ -39,6 +46,7 @@ export default function History() {
   };
 
   // Get improvement status for an exercise compared to previous session
+  /** Compare a single exercise to the previous time the user did it (volume diff). */
   const getExerciseImprovement = (exerciseName: string, currentSession: any, exercise: any) => {
     const history = getExerciseHistory(exerciseName);
     
@@ -81,6 +89,7 @@ export default function History() {
   };
 
   // Calculate workout statistics
+  /** Roll up volume, sets, reps, and per-exercise improvement counts for a session. */
   const calculateWorkoutStats = (session: any) => {
     let totalVolume = 0;
     let totalSets = 0;
@@ -120,10 +129,10 @@ export default function History() {
     };
   };
 
-  // Handle notes editing
+  // Handle notes editing (disabled - notes column not available)
   const handleEditNotes = (session: any) => {
     setCurrentSessionId(session.id);
-    setNotesText(session.notes || "");
+    setNotesText("");
     setEditingNotes(true);
   };
 
@@ -137,17 +146,8 @@ export default function History() {
     }
 
     try {
-      const { error } = await supabase
-        .from('workout_sessions')
-        .update({ notes: notesText.trim() || null })
-        .eq('id', currentSessionId);
-
-      if (error) throw error;
-
-      // Update local state
-      await initializeUserData();
-      
-      toast.success("Notes saved successfully");
+      // Notes feature temporarily disabled - column not available in current schema
+      toast.info("Notes feature coming soon");
       setEditingNotes(false);
     } catch (error) {
       console.error('Error saving notes:', error);
@@ -162,6 +162,7 @@ export default function History() {
   };
 
   // Get workouts for a specific day
+  /** Return all sessions whose date matches the given calendar day. */
   const getWorkoutsForDay = (date: Date) => {
     return workoutSessions.filter(session => 
       isSameDay(new Date(session.date), date)
@@ -197,6 +198,10 @@ export default function History() {
 
   return (
     <div className="container mx-auto px-4 py-6">
+      <SEO
+        title="Workout History — Planik"
+        description="Review your completed workouts on a calendar. See volume, sets, reps, duration, and improvements compared to previous sessions."
+      />
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">{getText('workout_history')}</h1>
         <p className="text-sm sm:text-base text-muted-foreground">

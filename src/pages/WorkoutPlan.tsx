@@ -27,6 +27,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+/**
+ * WorkoutPlan page ("/workout-plan/:planId").
+ * Shows the exercises in a single workout plan and lets the user edit /
+ * delete exercises, delete the whole plan, or start a workout from it.
+ */
 export default function WorkoutPlan() {
   const navigate = useNavigate();
   const { planId } = useParams();
@@ -51,23 +56,39 @@ export default function WorkoutPlan() {
     );
   }
 
-  const handleDeletePlan = () => {
-    deleteWorkoutPlan(plan.id);
-    navigate("/");
+  /** Delete the current plan (and all its exercises) and navigate home. */
+  const handleDeletePlan = async () => {
+    try {
+      await deleteWorkoutPlan(plan.id);
+      toast.success("Workout plan deleted");
+      navigate("/");
+    } catch (error) {
+      console.error("Error deleting plan:", error);
+      toast.error("Failed to delete plan");
+    }
   };
 
-  const handleDeleteExercise = (exerciseId: string) => {
-    deleteExercise(exerciseId);
+  /** Remove a single exercise from the plan. */
+  const handleDeleteExercise = async (exerciseId: string, exerciseName: string) => {
+    try {
+      await deleteExercise(exerciseId);
+      toast.success(`"${exerciseName}" removed`);
+    } catch (error) {
+      console.error("Error deleting exercise:", error);
+      toast.error("Failed to delete exercise");
+    }
   };
 
+  /** Open the edit dialog and seed it with the chosen exercise's values. */
   const handleEditClick = (exercise: any) => {
     setEditingExercise(exercise);
     setEditName(exercise.name);
-    setEditReps(exercise.reps);
-    setEditSets(exercise.sets);
+    setEditReps(exercise.reps || 10);
+    setEditSets(exercise.sets || 3);
     setEditDialogOpen(true);
   };
 
+  /** Validate and persist edits made in the edit dialog. */
   const handleSaveEdit = async () => {
     if (!editingExercise || !editName.trim()) {
       toast.error("Exercise name cannot be empty");
@@ -96,6 +117,11 @@ export default function WorkoutPlan() {
       console.error("Error updating exercise:", error);
       toast.error("Failed to update exercise. Please try again.");
     }
+  };
+
+  /** Navigate to the workout-in-progress screen for this plan. */
+  const handleStartWorkout = () => {
+    navigate(`/start-workout/${plan.id}`);
   };
 
   return (
@@ -247,7 +273,7 @@ export default function WorkoutPlan() {
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction 
-                              onClick={() => handleDeleteExercise(exercise.id)}
+                              onClick={() => handleDeleteExercise(exercise.id, exercise.name)}
                               className="bg-destructive text-destructive-foreground"
                             >
                               Delete
@@ -267,7 +293,7 @@ export default function WorkoutPlan() {
         <div className="space-y-3">
           {plan.exercises.length > 0 && (
             <Button
-              onClick={() => navigate(`/start-workout/${plan.id}`)}
+              onClick={handleStartWorkout}
               className="w-full h-12 text-lg bg-blue-600 hover:bg-blue-700"
             >
               Start Workout

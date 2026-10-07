@@ -1,0 +1,22 @@
+# Planik
+
+> Planik is an all-in-one fitness companion for planning workouts, tracking diet, scanning food, and monitoring progress across iOS, Android, and the web.
+
+## Pages
+
+- [Home](/): Personal fitness dashboard with daily summary.
+- [Exercises](/exercises): Browse the full exercise library.
+- [Body Map](/body-map): Interactive muscle map for targeted training.
+- [Templates](/templates): Prebuilt workout plan templates.
+- [Create Plan](/create-plan): Build a custom workout plan.
+- [Progress](/progress): Charts and trends for workouts and body metrics.
+- [History](/history): Past workout sessions and stats.
+- [Diet Tracker](/diet-tracker): Log meals, scan barcodes, and recognize food with AI.
+- [Help](/help): FAQs and support.
+- [Demo](/demo): Authentication demo experience.
+
+## Optional
+
+- [Sign in](/auth): Account sign in and sign up.
+- [Profile](/profile): User profile settings.
+- [Settings](/settings): App preferences.

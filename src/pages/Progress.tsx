@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, TrendingUp, TrendingDown, Edit3, Plus, Calendar, Trash2, MoreVertical } from "lucide-react";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
+import { SEO } from "@/components/SEO";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,12 @@ import { cn } from "@/lib/utils";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useSettings } from "@/contexts/SettingsContext";
 
+/**
+ * Progress page ("/progress").
+ * Personal-records dashboard. Lets the user view, add, edit and delete
+ * 1-rep-max records, and renders charts of per-exercise and per-workout-
+ * type progress over time.
+ */
 export default function Progress() {
   const navigate = useNavigate();
   const { formatWeight, formatDate, getText } = useSettings();
@@ -54,7 +61,7 @@ export default function Progress() {
 
   const defaultExercises = ["Bench press", "Deadlift", "Squat"];
 
-  // Get all unique exercises with their progress
+  /** Build a list of every unique exercise the user has ever logged, with trend info. */
   const getAllExercisesWithProgress = () => {
     const uniqueExercises = Array.from(new Set(
       workoutSessions.flatMap(session => 
@@ -92,7 +99,7 @@ export default function Progress() {
 
   const exercisesProgress = getAllExercisesWithProgress();
 
-  // Get workout type progress with weekly averages
+  /** Compare this week's per-set average weight vs last week's, per workout type. */
   const getWorkoutTypeProgress = () => {
     const now = new Date();
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -238,6 +245,7 @@ export default function Progress() {
     setRecordToDelete(null);
   };
 
+  /** Build chart-ready data for a single exercise's full history. */
   const getChartData = (exerciseName: string) => {
     const history = getExerciseHistory(exerciseName);
     return history
@@ -251,6 +259,7 @@ export default function Progress() {
       }));
   };
 
+  /** Build chart-ready data of average weight per session for a workout type. */
   const getWorkoutTypeChartData = (workoutTypeName: string) => {
     // Get all sessions for this workout type, sorted chronologically
     const typeSessions = workoutSessions.filter(session => {
@@ -290,12 +299,17 @@ export default function Progress() {
 
   return (
     <div className="min-h-screen p-6 space-y-6">
+      <SEO
+        title="Personal Records & Progress — Planik"
+        description="Visualize your strength gains, personal records, and body measurement trends over time. Spot plateaus and celebrate PRs with Planik."
+      />
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => navigate("/")}
+          aria-label="Back to home"
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
@@ -608,13 +622,19 @@ export default function Progress() {
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={getChartData(selectedExercise)}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#6b7280" />
                     <XAxis 
                       dataKey="date" 
-                      label={{ value: 'Date', position: 'insideBottom', offset: -5 }}
+                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                      tickLine={{ stroke: '#6b7280' }}
+                      axisLine={{ stroke: '#6b7280' }}
+                      label={{ value: 'Date', position: 'insideBottom', offset: -5, fill: '#6b7280' }}
                     />
                     <YAxis 
-                      label={{ value: 'Weight (kg)', angle: -90, position: 'insideLeft' }}
+                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                      tickLine={{ stroke: '#6b7280' }}
+                      axisLine={{ stroke: '#6b7280' }}
+                      label={{ value: 'Weight (kg)', angle: -90, position: 'insideLeft', fill: '#6b7280' }}
                     />
                     <Tooltip 
                       formatter={(value, name) => [
@@ -626,9 +646,12 @@ export default function Progress() {
                     <Line 
                       type="monotone" 
                       dataKey="weight" 
-                      stroke="hsl(var(--primary))" 
-                      strokeWidth={2}
-                      dot={{ fill: "hsl(var(--primary))" }}
+                      stroke="#3b82f6" 
+                      strokeWidth={3}
+                      dot={{ fill: "#3b82f6", strokeWidth: 2, r: 5 }}
+                      activeDot={{ r: 7, fill: "#3b82f6" }}
+                      connectNulls
+                      isAnimationActive={false}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -657,34 +680,34 @@ export default function Progress() {
                         data={getWorkoutTypeChartData(selectedWorkoutType)}
                         margin={{ top: 5, right: 20, bottom: 20, left: 0 }}
                       >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#6b7280" />
                         <XAxis 
                           dataKey="date" 
-                          tick={{ fill: 'hsl(var(--foreground))' }}
-                          tickLine={{ stroke: 'hsl(var(--foreground))' }}
-                          label={{ value: 'Date', position: 'insideBottom', offset: -5 }}
+                          tick={{ fill: '#6b7280', fontSize: 12 }}
+                          tickLine={{ stroke: '#6b7280' }}
+                          axisLine={{ stroke: '#6b7280' }}
+                          label={{ value: 'Date', position: 'insideBottom', offset: -5, fill: '#6b7280' }}
                         />
                         <YAxis 
-                          tick={{ fill: 'hsl(var(--foreground))' }}
-                          tickLine={{ stroke: 'hsl(var(--foreground))' }}
+                          tick={{ fill: '#6b7280', fontSize: 12 }}
+                          tickLine={{ stroke: '#6b7280' }}
+                          axisLine={{ stroke: '#6b7280' }}
                           domain={['auto', 'auto']}
-                          label={{ value: 'Weight (kg)', angle: -90, position: 'insideLeft' }}
+                          label={{ value: 'Weight (kg)', angle: -90, position: 'insideLeft', fill: '#6b7280' }}
                         />
                         <Tooltip 
                           formatter={(value) => [formatWeight(value as number), 'Avg Weight']}
                           labelFormatter={(label) => `Date: ${label}`}
-                          contentStyle={{ 
-                            backgroundColor: 'hsl(var(--background))', 
-                            border: '1px solid hsl(var(--border))' 
-                          }}
                         />
                         <Line 
                           type="monotone" 
                           dataKey="weight" 
-                          stroke="hsl(var(--primary))" 
+                          stroke="#3b82f6" 
                           strokeWidth={3}
-                          dot={{ fill: "hsl(var(--primary))", r: 5 }}
-                          activeDot={{ r: 7 }}
+                          dot={{ fill: "#3b82f6", strokeWidth: 2, r: 5 }}
+                          activeDot={{ r: 7, fill: "#3b82f6" }}
+                          connectNulls
+                          isAnimationActive={false}
                         />
                       </LineChart>
                     </ResponsiveContainer>

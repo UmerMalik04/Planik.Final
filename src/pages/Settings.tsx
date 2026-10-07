@@ -11,15 +11,25 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useSettings } from '@/contexts/SettingsContext';
+import { SEO } from '@/components/SEO';
 import { 
   Settings as SettingsIcon, 
   Moon, 
   Sun, 
   Globe, 
   Scale, 
-  Bell, 
   Palette, 
   Calendar,
   Lock,
@@ -34,10 +44,10 @@ import {
   Mail,
   Info,
   ArrowLeft,
-  Send
+  Send,
+  Heart
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { NotificationService } from '@/services/NotificationService';
 import GoalsSettings from '@/components/GoalsSettings';
 
 const languages = [
@@ -56,118 +66,48 @@ const languages = [
 ];
 
 
+/**
+ * Settings page ("/settings").
+ * Central hub for theme, language, units, notifications, fitness goals,
+ * password reset, feedback / support, data export and account deletion.
+ */
 export default function Settings() {
   const navigate = useNavigate();
   const { theme, toggleTheme, themeColor, setThemeColor, availableColors } = useTheme();
   const { settings, updateSetting, getText } = useSettings();
   const [feedback, setFeedback] = useState('');
   const [resetPasswordEmail, setResetPasswordEmail] = useState('');
-  const [customReminderTime, setCustomReminderTime] = useState('19:00');
-  const [notificationPermission, setNotificationPermission] = useState('default');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [termsDialogOpen, setTermsDialogOpen] = useState(false);
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
+  const [healthKitPrivacyDialogOpen, setHealthKitPrivacyDialogOpen] = useState(false);
   const [supportDialogOpen, setSupportDialogOpen] = useState(false);
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
   const [supportMessage, setSupportMessage] = useState("");
   const [isSendingSupport, setIsSendingSupport] = useState(false);
   const [isSendingPasswordReset, setIsSendingPasswordReset] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    
-    checkNotificationPermission();
-    
-    // Start reminder checker for web platform when component mounts
-    if (settings.notifications) {
-      NotificationService.startReminderChecker();
-    }
-    
-    // Cleanup interval on unmount
-    return () => {
-      if (window.workoutReminderInterval) {
-        clearInterval(window.workoutReminderInterval);
-        window.workoutReminderInterval = null;
+    // Get current user's email
+    const getCurrentUserEmail = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email) {
+        setUserEmail(user.email);
+        setResetPasswordEmail(user.email);
       }
     };
-  }, [settings.notifications]);
-
-  const checkNotificationPermission = async () => {
-    const permission = await NotificationService.getNotificationPermissionStatus();
-    setNotificationPermission(permission);
-  };
-
-  const handleNotificationToggle = async (enabled: boolean) => {
-    if (enabled) {
-      // Check permission status first
-      const permission = await NotificationService.getNotificationPermissionStatus();
-      console.log('Current permission status:', permission);
-      
-      if (permission === 'denied') {
-        setNotificationPermission('denied');
-        toast({
-          title: "Notifications Blocked",
-          description: "Notifications are blocked in your browser. Please enable them in your browser settings and refresh the page.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      const success = await NotificationService.enablePushNotifications();
-      if (success) {
-        updateSetting('notifications', true);
-        setNotificationPermission('granted');
-        toast({
-          title: "Notifications Enabled",
-          description: "You'll now receive daily workout reminders at 7:00 PM.",
-        });
-      } else {
-        const newPermission = await NotificationService.getNotificationPermissionStatus();
-        setNotificationPermission(newPermission);
-        
-        if (newPermission === 'denied') {
-          toast({
-            title: "Notifications Blocked",
-            description: "Notifications are blocked. Please enable them in your browser settings, then refresh the page and try again.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Permission Required",
-            description: "Please allow notifications when prompted to receive workout reminders.",
-            variant: "destructive",
-          });
-        }
-        
-        // Don't update the setting if it failed
-        updateSetting('notifications', false);
-      }
-    } else {
-      await NotificationService.disablePushNotifications();
-      updateSetting('notifications', false);
-      toast({
-        title: "Notifications Disabled",
-        description: "All scheduled notifications have been cancelled.",
-      });
-    }
-  };
-
-  const handleCustomReminderTime = async () => {
-    const success = await NotificationService.scheduleCustomWorkoutReminder(customReminderTime);
-    if (success) {
-      toast({
-        title: "Reminder Scheduled",
-        description: `Daily workout reminder set for ${customReminderTime}. You'll receive notifications every day at this time.`,
-      });
-    } else {
-      toast({
-        title: "Error",
-        description: "Failed to schedule reminder. Please check notification permissions.",
-        variant: "destructive",
-      });
-    }
-  };
+    getCurrentUserEmail();
+  }, []);
 
 
+
+
+
+
+  /** Validate the email and trigger our request-password-reset edge function. */
   const handleChangePassword = async () => {
     if (!resetPasswordEmail) {
       toast({
@@ -225,6 +165,7 @@ export default function Settings() {
     }
   };
 
+  /** Send general feedback to the team via the send-feedback edge function. */
   const handleFeedback = async () => {
     if (!feedback.trim()) {
       toast({
@@ -276,6 +217,7 @@ export default function Settings() {
     }
   };
 
+  /** Send a support request via the same edge function but from the support dialog. */
   const handleSupportMessage = async () => {
     if (!supportMessage.trim()) {
       toast({
@@ -317,6 +259,7 @@ export default function Settings() {
     }
   };
 
+  /** Placeholder for data export — currently just shows a toast. */
   const handleExportData = (format: 'csv' | 'pdf') => {
     toast({
       title: "Export Started",
@@ -324,29 +267,55 @@ export default function Settings() {
     });
   };
 
-  const handleDeleteAccount = () => {
-    const currentUser = JSON.parse(localStorage.getItem('current-user') || '{}');
-    const savedUsers = JSON.parse(localStorage.getItem('mock-users') || '[]');
-    const filteredUsers = savedUsers.filter((u: any) => u.email !== currentUser.email);
-    
-    localStorage.setItem('mock-users', JSON.stringify(filteredUsers));
-    localStorage.removeItem('current-user');
-    localStorage.removeItem('auth-session');
-    
-    toast({
-      title: "Account Deleted",
-      description: "Your account and all data have been permanently deleted.",
-      variant: "destructive",
-    });
-    
-    // Redirect to auth page after a short delay
-    setTimeout(() => {
+  /**
+   * Permanently delete the user's account and all personal data.
+   *
+   * Calls the delete-account edge function, which:
+   *  1. Verifies the caller's JWT.
+   *  2. Deletes all rows owned by the user from every public table.
+   *  3. Deletes the auth user via Supabase Admin API.
+   *
+   * Apple Guideline 5.1.1(v) requires in-app account deletion that
+   * actually removes the user — this satisfies that requirement.
+   */
+  const handleDeleteAccount = async () => {
+    setIsDeletingAccount(true);
+    try {
+      const { error } = await supabase.functions.invoke('delete-account');
+
+      if (error) {
+        throw new Error(error.message || 'Failed to delete account');
+      }
+
+      // Clear any cached local auth state
+      await supabase.auth.signOut({ scope: 'global' });
+      localStorage.clear();
+
+      toast({
+        title: 'Account Deleted',
+        description: 'Your account and all data have been permanently deleted.',
+        variant: 'destructive',
+      });
+
       navigate('/auth');
-    }, 2000);
+    } catch (err: any) {
+      toast({
+        title: 'Deletion Failed',
+        description: err.message || 'Unable to delete account. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeletingAccount(false);
+      setDeleteDialogOpen(false);
+    }
   };
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl">
+      <SEO
+        title="Settings — Planik"
+        description="Customize Planik: theme, units, language, rest timer defaults, notifications, biometrics, and account preferences."
+      />
       <div className="space-y-6">
         {/* Back Button */}
         <Button 
@@ -485,101 +454,8 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Notifications & Privacy */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              {getText('notifications_privacy')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Notifications */}
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>{getText('push_notifications')}</Label>
-                <p className="text-sm text-muted-foreground">
-                  {getText('receive_workout_reminders')}
-                </p>
-              </div>
-              <Switch
-                checked={settings.notifications}
-                onCheckedChange={handleNotificationToggle}
-              />
-            </div>
 
-            {/* Notification Permission Status */}
-            {notificationPermission === 'denied' && (
-              <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-                <h4 className="font-medium text-destructive mb-2">Notifications Blocked</h4>
-                <p className="text-sm text-destructive mb-3">
-                  Notifications are blocked in your browser. To enable them:
-                </p>
-                <ol className="text-sm text-destructive space-y-1 mb-3 list-decimal list-inside">
-                  <li>Click the settings/lock icon in your browser's address bar</li>
-                  <li>Change notifications from "Block" to "Allow"</li>
-                  <li>Refresh this page</li>
-                  <li>Try enabling notifications again</li>
-                </ol>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => window.location.reload()}
-                  className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                >
-                  Refresh Page
-                </Button>
-              </div>
-            )}
 
-            {notificationPermission === 'default' && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-950 dark:border-blue-800">
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  Click the toggle above to request notification permissions
-                </p>
-              </div>
-            )}
-
-            {settings.notifications && (
-              <>
-                <Separator />
-                
-                {/* Custom Reminder Time */}
-                <div className="space-y-3">
-                  <Label>Custom Workout Reminder</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="time"
-                      value={customReminderTime}
-                      onChange={(e) => setCustomReminderTime(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button onClick={handleCustomReminderTime} variant="outline">
-                      Schedule
-                    </Button>
-                    <Button 
-                      onClick={async () => {
-                        await NotificationService.cancelCustomWorkoutReminder();
-                        toast({
-                          title: "Reminder Cancelled",
-                          description: "Custom workout reminder has been cancelled.",
-                        });
-                      }} 
-                      variant="outline"
-                      size="sm"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Set a custom daily time for workout reminders (repeats every day)
-                  </p>
-                </div>
-              </>
-            )}
-
-          </CardContent>
-        </Card>
 
         {/* Workout Settings */}
         <Card>
@@ -666,20 +542,25 @@ export default function Settings() {
             {/* Change Password */}
             <div className="space-y-3">
               <Label>{getText('change_password')}</Label>
+              <p className="text-xs text-muted-foreground">
+                A password reset link will be sent to your email address.
+              </p>
               <div className="space-y-2">
                 <Input
                   type="email"
                   placeholder="Enter your email address"
                   value={resetPasswordEmail}
                   onChange={(e) => setResetPasswordEmail(e.target.value)}
+                  readOnly={!!userEmail}
+                  className={userEmail ? "bg-muted cursor-not-allowed" : ""}
                 />
                 <Button 
                   onClick={handleChangePassword} 
-                  disabled={isSendingPasswordReset}
+                  disabled={isSendingPasswordReset || !resetPasswordEmail}
                   className="w-full transition-all active:scale-95 hover:shadow-lg disabled:opacity-50"
                 >
-                  <Lock className="h-4 w-4 mr-2" />
-                  {isSendingPasswordReset ? "Sending..." : "Change Password"}
+                  <Mail className="h-4 w-4 mr-2" />
+                  {isSendingPasswordReset ? "Sending Reset Link..." : "Send Password Reset Link"}
                 </Button>
               </div>
             </div>
@@ -689,7 +570,7 @@ export default function Settings() {
             <Button 
               variant="destructive" 
               className="w-full justify-start transition-all active:scale-95 hover:shadow-lg"
-              onClick={handleDeleteAccount}
+              onClick={() => setDeleteDialogOpen(true)}
             >
               <Trash2 className="h-4 w-4 mr-2" />
               {getText('delete_account_data')}
@@ -730,6 +611,22 @@ export default function Settings() {
               >
                 <Shield className="h-4 w-4 mr-2" />
                 {getText('privacy_policy')}
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-foreground hover:bg-accent"
+                onClick={() => setHealthKitPrivacyDialogOpen(true)}
+              >
+                <Heart className="h-4 w-4 mr-2 text-red-500" />
+                HealthKit Privacy Policy
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-foreground hover:bg-accent"
+                onClick={() => navigate('/healthkit-settings')}
+              >
+                <Heart className="h-4 w-4 mr-2 text-red-500" />
+                HealthKit Settings
               </Button>
               <Button 
                 variant="ghost" 
@@ -849,6 +746,114 @@ export default function Settings() {
         </DialogContent>
       </Dialog>
 
+      {/* HealthKit Privacy Policy Dialog */}
+      <Dialog open={healthKitPrivacyDialogOpen} onOpenChange={setHealthKitPrivacyDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Heart className="h-5 w-5 text-red-500" />
+              HealthKit Privacy Policy
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
+              <p className="text-red-800 dark:text-red-200 font-medium">
+                Your health data privacy is our top priority. This policy explains how Planik uses Apple HealthKit.
+              </p>
+            </div>
+
+            <section>
+              <h3 className="font-semibold mb-2">1. Health Data We Access</h3>
+              <p className="text-muted-foreground mb-2">
+                Planik only accesses the following health data from Apple HealthKit:
+              </p>
+              <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-2">
+                <li><strong>Step Count</strong> - Your daily step count data (Read-only access)</li>
+              </ul>
+              <p className="text-muted-foreground mt-2 text-xs">
+                We do not access any other health data such as heart rate, sleep, weight, or medical records.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-2">2. How We Use Your Health Data</h3>
+              <p className="text-muted-foreground">
+                Your step count data is used solely for the following purposes:
+              </p>
+              <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-2 mt-2">
+                <li>Displaying your daily step count within the app</li>
+                <li>Tracking your step history and progress over time</li>
+                <li>Helping you achieve your fitness goals</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-2">3. Data Storage & Security</h3>
+              <p className="text-muted-foreground">
+                Your health data is:
+              </p>
+              <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-2 mt-2">
+                <li>Stored securely on your device and in your personal account</li>
+                <li>Encrypted using industry-standard protocols</li>
+                <li>Never shared with third parties</li>
+                <li>Never used for advertising or marketing purposes</li>
+                <li>Never sold to any entity</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-2">4. Your Control Over Health Data</h3>
+              <p className="text-muted-foreground">
+                You have complete control over your health data:
+              </p>
+              <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-2 mt-2">
+                <li>You can revoke HealthKit access at any time in iOS Settings</li>
+                <li>You can delete your health data from the app at any time</li>
+                <li>Revoking access will stop the app from reading new data</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-2">5. Data Sharing</h3>
+              <p className="text-muted-foreground">
+                We <strong>never</strong> share your HealthKit data with:
+              </p>
+              <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-2 mt-2">
+                <li>Third-party advertisers</li>
+                <li>Data brokers</li>
+                <li>Social media platforms</li>
+                <li>Any external services not essential to app functionality</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-2">6. Compliance</h3>
+              <p className="text-muted-foreground">
+                Planik complies with Apple's HealthKit guidelines and requirements, including:
+              </p>
+              <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-2 mt-2">
+                <li>Only requesting access to data necessary for app functionality</li>
+                <li>Providing clear disclosure of data usage</li>
+                <li>Respecting user privacy and data control</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-2">7. Contact Us</h3>
+              <p className="text-muted-foreground">
+                For questions about how we handle your health data, please contact us at privacy@planik.com
+              </p>
+            </section>
+
+            <div className="bg-muted rounded-lg p-4 mt-4">
+              <p className="text-xs text-muted-foreground">
+                Last updated: January 2026. This policy may be updated periodically. We will notify you of any significant changes.
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Contact Support Dialog */}
       <Dialog open={supportDialogOpen} onOpenChange={setSupportDialogOpen}>
         <DialogContent className="max-w-2xl">
@@ -876,6 +881,33 @@ export default function Settings() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Account Confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Account?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete your account and all associated data
+              (workouts, diet logs, step history, and settings). This action cannot
+              be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingAccount}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteAccount();
+              }}
+              disabled={isDeletingAccount}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeletingAccount ? 'Deleting...' : 'Delete Account'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

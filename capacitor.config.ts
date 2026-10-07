@@ -1,12 +1,29 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.planik.app',
+  appId: 'uk.org.planik.app',
   appName: 'Planik',
   webDir: 'dist',
+  // Load the live web app so publishing updates the installed app instantly —
+  // no App Store resubmission needed for JS/CSS changes.
+  // Native plugin changes (Capacitor upgrades, new permissions) still require a rebuild.
+  server: {
+    url: 'https://planik.org.uk',
+    cleartext: false
+  },
   plugins: {
+    Camera: {
+      permissions: ['camera', 'photos']
+    },
     LocalNotifications: {
-      iconColor: '#488AFF'
+      smallIcon: 'ic_stat_icon_config_sample',
+      iconColor: '#488AFF',
+      sound: 'beep.wav'
+    },
+    GoogleAuth: {
+      scopes: ['profile', 'email'],
+      serverClientId: '876860682396-snp1r9u16ftm6mgoksm8348guoerjlnu.apps.googleusercontent.com',
+      forceCodeForRefreshToken: true
     }
   }
 };

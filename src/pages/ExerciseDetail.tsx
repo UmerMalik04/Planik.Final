@@ -5,7 +5,13 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { exercisesData } from '@/data/exercises_full';
+import { SEO } from '@/components/SEO';
 
+/**
+ * ExerciseDetail page ("/exercises/:exerciseName").
+ * Read-only view of a single exercise from the library: instructions,
+ * targeted muscles, and the user's last-used info if any.
+ */
 export default function ExerciseDetail() {
   const navigate = useNavigate();
   const { exerciseName } = useParams();
@@ -20,12 +26,17 @@ export default function ExerciseDetail() {
   if (!exercise) {
     return (
       <div className="min-h-screen p-6 space-y-6">
+        <SEO
+          title="Exercise Not Found — Planik"
+          description="The requested exercise could not be found in Planik's exercise library."
+        />
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate('/exercises')}
             className="hover:bg-accent"
+            aria-label="Back to exercises"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -40,6 +51,7 @@ export default function ExerciseDetail() {
     );
   }
 
+  /** Format an ISO date as a friendly relative label (e.g. "2 days ago"). */
   const formatLastUsed = (dateString: string) => {
     if (!dateString) return 'Never';
     
@@ -54,8 +66,23 @@ export default function ExerciseDetail() {
     return `${Math.ceil(diffDays / 30)}mo ago`;
   };
 
+  // Article JSON-LD: exercise name as headline, instructions joined as articleBody.
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: exercise.name,
+    articleBody: exercise.instructions.join(" "),
+    about: exercise.muscle_groups,
+  };
+
   return (
     <div className="min-h-screen p-6 space-y-6">
+      <SEO
+        title={`${exercise.name} — Exercise Guide | Planik`}
+        description={`How to perform ${exercise.name}. Step-by-step instructions and target muscles: ${exercise.muscle_groups.join(", ")}.`}
+        ogType="article"
+        jsonLd={articleJsonLd}
+      />
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button
@@ -63,6 +90,7 @@ export default function ExerciseDetail() {
           size="icon"
           onClick={() => navigate('/exercises')}
           className="hover:bg-accent"
+          aria-label="Back to exercises"
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
@@ -82,8 +110,8 @@ export default function ExerciseDetail() {
         <CardContent>
           <div className="flex flex-wrap gap-2">
             {exercise.muscle_groups.map((muscle, index) => (
-              <Badge 
-                key={index} 
+              <Badge
+                key={index}
                 variant="secondary"
                 className="bg-primary/10 text-primary border-primary/20"
               >
@@ -93,6 +121,7 @@ export default function ExerciseDetail() {
           </div>
         </CardContent>
       </Card>
+
 
       {/* Instructions */}
       <Card className="border-2 border-[hsl(var(--widget-border))]">

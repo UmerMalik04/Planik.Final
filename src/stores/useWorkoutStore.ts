@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
 import { offlineStorage } from "@/services/OfflineStorage";
+import { syncQueue, newId } from "@/services/SyncQueue";
 
 export interface Exercise {
   id: string;
@@ -79,7 +80,7 @@ interface WorkoutStore {
   currentWorkoutSession: WorkoutSession | null;
   
   // Actions
-  initializeUserData: () => Promise<void>;
+  initializeUserData: (forceSync?: boolean) => Promise<void>;
   addWorkoutPlan: (plan: Omit<WorkoutPlan, "id">) => Promise<void>;
   updateWorkoutPlan: (id: string, plan: Partial<WorkoutPlan>) => Promise<void>;
   deleteWorkoutPlan: (id: string) => Promise<void>;
@@ -120,30 +121,41 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
   progressKg: 0,
   lastWeekProgress: 0,
 
-  initializeUserData: async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      // Load from offline storage if no user
-      try {
-        const [plans, sessions, records] = await Promise.all([
-          offlineStorage.getWorkoutPlans(),
-          offlineStorage.getWorkoutSessions(),
-          offlineStorage.getPersonalRecords(),
-        ]);
-        
+  initializeUserData: async (forceSync = false) => {
+    // Always load from offline storage first for instant UI
+    try {
+      const [cachedPlans, cachedSessions, cachedRecords] = await Promise.all([
+        offlineStorage.getWorkoutPlans(),
+        offlineStorage.getWorkoutSessions(),
+        offlineStorage.getPersonalRecords(),
+      ]);
+      
+      if (cachedPlans.length > 0 || cachedSessions.length > 0 || cachedRecords.length > 0) {
         set({ 
-          workoutPlans: plans,
-          workoutSessions: sessions,
-          personalRecords: records,
+          workoutPlans: cachedPlans,
+          workoutSessions: cachedSessions,
+          personalRecords: cachedRecords,
         });
-      } catch (error) {
-        console.error('Failed to load offline data:', error);
       }
-      return;
+    } catch (error) {
+      console.error('Failed to load offline data:', error);
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Check if we need to sync (skip if data is fresh and not forced)
+    if (!forceSync) {
+      const lastSync = await offlineStorage.getLastSync();
+      const SYNC_INTERVAL = 30 * 60 * 1000; // 30 minutes
+      if (lastSync && (Date.now() - lastSync) < SYNC_INTERVAL) {
+        console.log('Workout data is fresh, skipping Supabase sync');
+        return;
+      }
     }
 
     try {
-      // Try to load from Supabase
+      // Background sync from Supabase
       const { data: plans } = await supabase
         .from('workout_plans')
         .select('*')
@@ -155,22 +167,21 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
             const { data: exercises } = await supabase
               .from('exercises')
               .select('*')
-              .eq('workout_plan_id', plan.id)
-              .order('order_index', { ascending: true });
+              .eq('plan_id', plan.id);
 
             return {
               id: plan.id,
               name: plan.name,
               type: plan.type || plan.name,
-              description: plan.description,
-              restTimer: plan.rest_timer,
+              description: undefined,
+              restTimer: undefined,
               exercises: exercises?.map(e => ({
                 id: e.id,
                 name: e.name,
                 weight: e.weight || undefined,
                 reps: e.reps || 10,
                 sets: e.sets || 3,
-                notes: e.notes || undefined,
+                notes: undefined,
                 planId: plan.id,
                 hasWarmup: e.has_warmup || false,
               })) || [],
@@ -202,11 +213,11 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
               date: session.date,
               exercises: completedExercises?.map(e => ({
                 id: e.id,
-                name: e.exercise_name,
+                name: e.name,
                 weight: Number(e.weight),
                 reps: e.reps,
                 sets: e.sets,
-                date: e.created_at
+                date: e.date
               })) || []
             };
           })
@@ -260,65 +271,72 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
     }
   },
 
+  /**
+   * From here down, every mutation follows the offline-first pattern:
+   *   1. generate the row id on the client (`newId()`)
+   *   2. update Zustand state optimistically so the UI never waits
+   *   3. hand the write to `syncQueue`, which sends it now if we're online
+   *      and otherwise queues it in IndexedDB for replay on reconnect.
+   * RLS still applies on replay — `user_id` is always the signed-in user.
+   */
   addWorkoutPlan: async (plan) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
     // Validate input
     const { workoutPlanSchema } = await import('@/lib/validation');
-    const validated = workoutPlanSchema.parse({
+    workoutPlanSchema.parse({
       name: plan.name,
       type: plan.type,
       description: plan.description,
       restTimer: plan.restTimer
     });
 
-    const { data, error } = await supabase
-      .from('workout_plans')
-      .insert({
+    const id = newId();
+
+    set((state) => ({
+      workoutPlans: [...state.workoutPlans, { ...plan, id }]
+    }));
+
+    await syncQueue.send({
+      table: 'workout_plans',
+      op: 'insert',
+      payload: {
+        id,
         user_id: user.id,
         name: plan.name,
-        type: plan.type,
-        rest_timer: plan.restTimer
-      })
-      .select()
-      .single();
-
-    if (data && !error) {
-      set((state) => ({
-        workoutPlans: [...state.workoutPlans, { ...plan, id: data.id }]
-      }));
-    }
+        type: plan.type
+      },
+      onConflict: 'id'
+    });
   },
 
   updateWorkoutPlan: async (id, updates) => {
-    const { error } = await supabase
-      .from('workout_plans')
-      .update({
+    set((state) => ({
+      workoutPlans: state.workoutPlans.map((plan) =>
+        plan.id === id ? { ...plan, ...updates } : plan
+      )
+    }));
+
+    await syncQueue.send({
+      table: 'workout_plans',
+      op: 'update',
+      payload: {
         name: updates.name,
         type: updates.type,
-        rest_timer: updates.restTimer
-      })
-      .eq('id', id);
-
-    if (!error) {
-      set((state) => ({
-        workoutPlans: state.workoutPlans.map((plan) =>
-          plan.id === id ? { ...plan, ...updates } : plan
-        )
-      }));
-    }
+        updated_at: new Date().toISOString()
+      },
+      match: { id },
+      timestampColumn: 'updated_at'
+    });
   },
 
   deleteWorkoutPlan: async (id) => {
-    await supabase
-      .from('workout_plans')
-      .delete()
-      .eq('id', id);
-
     set((state) => ({
       workoutPlans: state.workoutPlans.filter((plan) => plan.id !== id)
     }));
+
+    await syncQueue.send({ table: 'workout_plans', op: 'delete', match: { id } });
   },
 
   addExercise: async (planId, exercise) => {
@@ -335,72 +353,74 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
       notes: exercise.notes
     });
 
-    const { data, error } = await supabase
-      .from('exercises')
-      .insert({
+    const id = newId();
+    const newExercise = {
+      id,
+      name: validated.name,
+      weight: validated.weight,
+      reps: validated.reps,
+      sets: validated.sets,
+      planId,
+      hasWarmup: exercise.hasWarmup ?? false
+    };
+
+    set((state) => ({
+      workoutPlans: state.workoutPlans.map((plan) =>
+        plan.id === planId
+          ? { ...plan, exercises: [...plan.exercises, newExercise] }
+          : plan
+      )
+    }));
+
+    await syncQueue.send({
+      table: 'exercises',
+      op: 'insert',
+      payload: {
+        id,
         user_id: user.id,
-        workout_plan_id: planId,
+        plan_id: planId,
         name: validated.name,
         weight: validated.weight,
         reps: validated.reps,
         sets: validated.sets,
-        notes: validated.notes,
-        has_warmup: exercise.hasWarmup
-      })
-      .select()
-      .single();
-
-    if (data && !error) {
-      const newExercise = {
-        id: data.id,
-        name: data.name,
-        weight: data.weight,
-        reps: data.reps,
-        sets: data.sets,
-        planId: data.workout_plan_id,
-        hasWarmup: data.has_warmup
-      };
-
-      set((state) => ({
-        workoutPlans: state.workoutPlans.map((plan) =>
-          plan.id === planId
-            ? { ...plan, exercises: [...plan.exercises, newExercise] }
-            : plan
-        )
-      }));
-    }
+        has_warmup: exercise.hasWarmup ?? false
+      },
+      onConflict: 'id'
+    });
   },
 
   startWorkout: async (planId) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { id: '', planId, date: new Date().toISOString(), exercises: [] };
 
-    const { data, error } = await supabase
-      .from('workout_sessions')
-      .insert({
+    // Client-side id means a workout can start (and be logged against) with no
+    // network at all — the session row is created locally and replayed later.
+    const id = newId();
+    const session: WorkoutSession = {
+      id,
+      planId,
+      date: new Date().toISOString(),
+      exercises: []
+    };
+
+    set((state) => ({
+      workoutSessions: [...state.workoutSessions, session],
+      currentWorkoutSession: session
+    }));
+
+    await syncQueue.send({
+      table: 'workout_sessions',
+      op: 'insert',
+      payload: {
+        id,
         user_id: user.id,
-        plan_id: planId
-      })
-      .select()
-      .single();
+        plan_id: planId,
+        date: session.date
+      },
+      onConflict: 'id'
+    });
 
-    if (data && !error) {
-      const session: WorkoutSession = {
-        id: data.id,
-        planId: data.plan_id,
-        date: data.date,
-        exercises: []
-      };
-
-      set((state) => ({
-        workoutSessions: [...state.workoutSessions, session],
-        currentWorkoutSession: session
-      }));
-
-      return session;
-    }
-
-    return { id: '', planId, date: new Date().toISOString(), exercises: [] };
+    return session;
   },
 
   pauseWorkout: () => {
@@ -418,95 +438,100 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('exercises')
-      .insert({
+    const id = newId();
+
+    set((state) => ({
+      workoutPlans: state.workoutPlans.map((plan) =>
+        plan.id === currentWorkoutSession.planId
+          ? {
+              ...plan,
+              exercises: [
+                ...plan.exercises,
+                {
+                  id,
+                  name: exercise.name,
+                  weight: exercise.weight,
+                  reps: exercise.reps,
+                  sets: exercise.sets,
+                  planId: currentWorkoutSession.planId,
+                  hasWarmup: exercise.hasWarmup ?? false
+                }
+              ]
+            }
+          : plan
+      )
+    }));
+
+    await syncQueue.send({
+      table: 'exercises',
+      op: 'insert',
+      payload: {
+        id,
         user_id: user.id,
-        workout_plan_id: currentWorkoutSession.planId,
+        plan_id: currentWorkoutSession.planId,
         name: exercise.name,
         weight: exercise.weight,
         reps: exercise.reps,
         sets: exercise.sets,
-        has_warmup: exercise.hasWarmup
-      })
-      .select()
-      .single();
-
-    if (data && !error) {
-      set((state) => ({
-        workoutPlans: state.workoutPlans.map((plan) =>
-          plan.id === currentWorkoutSession.planId
-            ? {
-                ...plan,
-                exercises: [
-                  ...plan.exercises,
-                  {
-                    id: data.id,
-                    name: data.name,
-                    weight: data.weight,
-                    reps: data.reps,
-                    sets: data.sets,
-                    planId: data.workout_plan_id,
-                    hasWarmup: data.has_warmup
-                  }
-                ]
-              }
-            : plan
-        )
-      }));
-    }
+        has_warmup: exercise.hasWarmup ?? false
+      },
+      onConflict: 'id'
+    });
   },
 
   completeWorkout: async (sessionId, exercises) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Insert completed exercises
-    const completedExercisesData = exercises.map(exercise => ({
+    const date = new Date().toISOString();
+
+    // Build the completed rows locally so the history screen is correct even
+    // if none of this has reached Supabase yet.
+    const completedRows = exercises.map((exercise) => ({
+      id: newId(),
       user_id: user.id,
       session_id: sessionId,
-      exercise_name: exercise.name,
+      name: exercise.name,
       weight: exercise.weight,
       reps: exercise.reps,
-      sets: exercise.sets
+      sets: exercise.sets,
+      date
     }));
 
-    if (completedExercisesData.length > 0) {
-      await supabase
-        .from('completed_exercises')
-        .insert(completedExercisesData);
+    set((state) => ({
+      workoutSessions: state.workoutSessions.map((session) =>
+        session.id === sessionId
+          ? {
+              ...session,
+              exercises: completedRows.map((row) => ({
+                id: row.id,
+                name: row.name,
+                weight: Number(row.weight),
+                reps: row.reps,
+                sets: row.sets,
+                date: row.date
+              }))
+            }
+          : session
+      ),
+      currentWorkoutSession: null
+    }));
+
+    // Queued one row at a time so a single bad row can't block the rest, and
+    // so replay order stays after the session insert above.
+    for (const row of completedRows) {
+      await syncQueue.send({
+        table: 'completed_exercises',
+        op: 'insert',
+        payload: row,
+        onConflict: 'id'
+      });
     }
 
-    // Reload the session with completed exercises from database
-    const { data: completedExercises } = await supabase
-      .from('completed_exercises')
-      .select('*')
-      .eq('session_id', sessionId);
-
-    const exercisesFromDb = completedExercises?.map(e => ({
-      id: e.id,
-      name: e.exercise_name,
-      weight: Number(e.weight),
-      reps: e.reps,
-      sets: e.sets,
-      date: e.created_at
-    })) || [];
-
-    set((state) => {
-      const updatedSessions = state.workoutSessions.map(session =>
-        session.id === sessionId ? { ...session, exercises: exercisesFromDb } : session
-      );
-
-      return {
-        workoutSessions: updatedSessions,
-        currentWorkoutSession: null
-      };
-    });
-
-    // Update personal records
+    // Update personal records (compare estimated 1RM-style score consistently)
     for (const exercise of exercises) {
       const currentPR = get().getPersonalRecord(exercise.name);
-      const score = exercise.weight * exercise.reps * exercise.sets;
+      const score = exercise.weight * exercise.reps;
       const currentScore = currentPR ? currentPR.weight * currentPR.reps : 0;
 
       if (score > currentScore) {
@@ -519,22 +544,6 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
   },
 
   updateExercise: async (exerciseId, updates) => {
-    const { error } = await supabase
-      .from('exercises')
-      .update({
-        name: updates.name,
-        weight: updates.weight,
-        reps: updates.reps,
-        sets: updates.sets,
-        has_warmup: updates.hasWarmup
-      })
-      .eq('id', exerciseId);
-
-    if (error) {
-      console.error('Error updating exercise:', error);
-      throw error;
-    }
-
     set((state) => ({
       workoutPlans: state.workoutPlans.map((plan) => ({
         ...plan,
@@ -543,66 +552,69 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
         )
       }))
     }));
+
+    await syncQueue.send({
+      table: 'exercises',
+      op: 'update',
+      payload: {
+        name: updates.name,
+        weight: updates.weight,
+        reps: updates.reps,
+        sets: updates.sets,
+        has_warmup: updates.hasWarmup
+      },
+      match: { id: exerciseId }
+    });
   },
 
   deleteExercise: async (exerciseId) => {
-    await supabase
-      .from('exercises')
-      .delete()
-      .eq('id', exerciseId);
-
     set((state) => ({
       workoutPlans: state.workoutPlans.map((plan) => ({
         ...plan,
         exercises: plan.exercises.filter((exercise) => exercise.id !== exerciseId)
       }))
     }));
+
+    await syncQueue.send({ table: 'exercises', op: 'delete', match: { id: exerciseId } });
   },
 
   updatePersonalRecord: async (exerciseName, weight, reps) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
+    const date = new Date().toISOString();
+
     // Validate input
     const { personalRecordSchema } = await import('@/lib/validation');
-    personalRecordSchema.parse({
-      exerciseName,
-      weight,
-      reps,
-      date: new Date().toISOString()
-    });
-
-    await supabase
-      .from('personal_records')
-      .upsert({
-        user_id: user.id,
-        exercise_name: exerciseName,
-        weight,
-        reps,
-        date: new Date().toISOString()
-      });
+    personalRecordSchema.parse({ exerciseName, weight, reps, date });
 
     set((state) => {
+      const newRecord: PersonalRecord = { exerciseName, weight, reps, date };
       const existingIndex = state.personalRecords.findIndex(
         (pr) => pr.exerciseName === exerciseName
       );
-
-      const newRecord: PersonalRecord = {
-        exerciseName,
-        weight,
-        reps,
-        date: new Date().toISOString()
-      };
 
       if (existingIndex >= 0) {
         const updated = [...state.personalRecords];
         updated[existingIndex] = newRecord;
         return { personalRecords: updated };
-      } else {
-        return {
-          personalRecords: [...state.personalRecords, newRecord]
-        };
       }
+      return { personalRecords: [...state.personalRecords, newRecord] };
+    });
+
+    await syncQueue.send({
+      table: 'personal_records',
+      op: 'insert',
+      payload: {
+        user_id: user.id,
+        exercise_name: exerciseName,
+        weight,
+        reps,
+        date
+      },
+      // One PR row per (user, exercise) — upserting on that pair keeps replay
+      // idempotent without needing a client-side id.
+      onConflict: 'user_id,exercise_name'
     });
   },
 
@@ -610,18 +622,19 @@ export const useWorkoutStore = create<WorkoutStore>()((set, get) => ({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    await supabase
-      .from('personal_records')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('exercise_name', exerciseName);
-
     set((state) => ({
       personalRecords: state.personalRecords.filter(
         record => !(record.exerciseName === exerciseName && record.reps === reps)
       )
     }));
+
+    await syncQueue.send({
+      table: 'personal_records',
+      op: 'delete',
+      match: { user_id: user.id, exercise_name: exerciseName }
+    });
   },
+
 
   getPersonalRecord: (exerciseName) => {
     return get().personalRecords.find((pr) => pr.exerciseName === exerciseName);

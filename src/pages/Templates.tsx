@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Dumbbell, Target, Calendar } from "lucide-react";
+import { ArrowLeft, Dumbbell, Target, Calendar, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,88 +7,107 @@ import { workoutTemplates } from "@/data/workoutTemplates";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useCallback } from "react";
+import { useCallback, useRef } from "react";
+import { SEO } from "@/components/SEO";
 
+/**
+ * Templates page ("/templates").
+ * Browse pre-built workout templates and instantiate one as a personal
+ * plan. Uses a ref-based guard to swallow rapid double-clicks.
+ */
 const Templates = () => {
   const navigate = useNavigate();
-  const { initializeUserData } = useWorkoutStore();
-  const [isCreating, setIsCreating] = useState(false);
+  const { addWorkoutPlan, initializeUserData } = useWorkoutStore();
+  const processingRef = useRef<Set<string>>(new Set());
 
-  const handleUseTemplate = useCallback(async (templateId: string) => {
-    if (isCreating) return;
+  /** Clone the chosen template into a new workout plan for the current user. */
+  const handleUseTemplate = useCallback((templateId: string) => {
+    // Prevent duplicate clicks
+    if (processingRef.current.has(templateId)) return;
+    processingRef.current.add(templateId);
     
     const template = workoutTemplates.find(t => t.id === templateId);
-    if (!template) return;
+    if (!template) {
+      processingRef.current.delete(templateId);
+      return;
+    }
 
-    setIsCreating(true);
+    // Determine workout type
+    let workoutType = template.name;
+    if (template.name.toLowerCase().includes('push')) {
+      workoutType = 'Push Day';
+    } else if (template.name.toLowerCase().includes('pull') || template.name.toLowerCase().includes('back')) {
+      workoutType = 'Pull Day';
+    } else if (template.name.toLowerCase().includes('leg')) {
+      workoutType = 'Leg Day';
+    } else if (template.name.toLowerCase().includes('arm') || template.name.toLowerCase().includes('bicep') || template.name.toLowerCase().includes('tricep')) {
+      workoutType = 'Arm Day';
+    }
 
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("Please log in to create a workout");
-        setIsCreating(false);
-        return;
-      }
+    // INSTANT NAVIGATION - navigate immediately with template data in state
+    // The StartWorkout page will handle creating the plan if needed
+    navigate('/start-workout/template', { 
+      state: { 
+        templateId,
+        templateName: template.name,
+        templateType: workoutType,
+        exercises: template.exercises.map(ex => ({
+          name: ex.name,
+          sets: ex.sets,
+          reps: parseInt(ex.reps.split('-')[0]) || 10,
+          hasWarmup: false
+        }))
+      } 
+    });
 
-      let workoutType = template.name;
-      if (template.name.toLowerCase().includes('push')) {
-        workoutType = 'Push Day';
-      } else if (template.name.toLowerCase().includes('pull') || template.name.toLowerCase().includes('back')) {
-        workoutType = 'Pull Day';
-      } else if (template.name.toLowerCase().includes('leg')) {
-        workoutType = 'Leg Day';
-      } else if (template.name.toLowerCase().includes('arm') || template.name.toLowerCase().includes('bicep') || template.name.toLowerCase().includes('tricep')) {
-        workoutType = 'Arm Day';
-      }
+    // Background: Create the plan in database (fire and forget)
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
 
-      const { data: planData, error: planError } = await supabase
-        .from('workout_plans')
-        .insert({
-          user_id: user.id,
+        // Add plan to store
+        const newPlan = {
           name: template.name,
           type: workoutType,
-          description: template.goal,
-        })
-        .select()
-        .single();
+          exercises: [] as any[],
+          restTimer: 90
+        };
 
-      if (planError || !planData) {
-        console.error("Error creating workout plan:", planError);
-        toast.error("Failed to create workout plan");
-        setIsCreating(false);
-        return;
-      }
-
-      const exercisePromises = template.exercises.map((exercise, index) => {
-        const repsNum = parseInt(exercise.reps.split('-')[0]) || 10;
+        await addWorkoutPlan(newPlan);
         
-        return supabase
-          .from('exercises')
-          .insert({
-            user_id: user.id,
-            workout_plan_id: planData.id,
-            name: exercise.name,
-            reps: repsNum,
-            sets: exercise.sets,
-            has_warmup: false,
-            order_index: index,
-          });
-      });
+        // Get the newly created plan to add exercises
+        const plans = useWorkoutStore.getState().workoutPlans;
+        const createdPlan = plans.find(p => p.name === template.name && p.type === workoutType);
+        
+        if (createdPlan) {
+          const { addExercise } = useWorkoutStore.getState();
+          for (const ex of template.exercises) {
+            await addExercise(createdPlan.id, {
+              name: ex.name,
+              sets: ex.sets,
+              reps: parseInt(ex.reps.split('-')[0]) || 10,
+              hasWarmup: false
+            });
+          }
+        }
 
-      await Promise.all(exercisePromises);
-
-      toast.success(`${template.name} template added!`);
-      await initializeUserData();
-      navigate(`/workout-plan/${planData.id}`);
-    } catch (error) {
-      console.error("Error creating template:", error);
-      toast.error("Failed to create workout from template");
-      setIsCreating(false);
-    }
-  }, [initializeUserData, navigate, isCreating]);
+        await initializeUserData();
+        toast.success(`${template.name} saved to your workouts!`);
+      } catch (error) {
+        console.error("Background sync error:", error);
+      } finally {
+        processingRef.current.delete(templateId);
+      }
+    })();
+  }, [addWorkoutPlan, initializeUserData, navigate]);
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <SEO
+        title="Workout Templates — Planik"
+        description="Start fast with curated workout templates for strength, hypertrophy, fat loss, and conditioning. One tap to clone a plan into your library."
+      />
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3">
         <div className="flex items-center gap-3">
@@ -97,6 +116,7 @@ const Templates = () => {
             size="icon"
             onClick={() => navigate(-1)}
             className="shrink-0"
+            aria-label="Go back"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -165,13 +185,13 @@ const Templates = () => {
                 </div>
               </div>
 
-              {/* Use Template Button */}
+              {/* Start Workout Button - Instant action */}
               <Button 
-                className="w-full" 
+                className="w-full"
                 onClick={() => handleUseTemplate(template.id)}
-                disabled={isCreating}
               >
-                {isCreating ? 'Creating...' : 'Use This Template'}
+                <Play className="h-4 w-4 mr-2" />
+                Start Workout
               </Button>
             </div>
           </Card>

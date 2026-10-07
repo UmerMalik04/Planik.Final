@@ -13,6 +13,10 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/contexts/SettingsContext";
 
+/**
+ * EditExercise page ("/edit-exercise/:exerciseId").
+ * Form for updating the name, weight, reps and sets of an existing exercise.
+ */
 export default function EditExercise() {
   const navigate = useNavigate();
   const { exerciseId } = useParams();
@@ -47,6 +51,7 @@ export default function EditExercise() {
     );
   }
 
+  /** Validate inputs and persist the updated exercise. */
   const handleSaveExercise = () => {
     if (!exerciseName.trim() || !weight || !reps) return;
 

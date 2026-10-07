@@ -1,7 +1,7 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Planik</string>
     <string name="title_activity_main">Planik</string>
-    <string name="package_name">com.planik.app</string>
-    <string name="custom_url_scheme">com.planik.app</string>
+    <string name="package_name">uk.org.planik.app</string>
+    <string name="custom_url_scheme">uk.org.planik.app</string>
 </resources>

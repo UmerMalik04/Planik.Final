@@ -19,7 +19,6 @@ interface UserGoals {
 
 export default function GoalsSettings() {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   const [goals, setGoals] = useState<UserGoals>({
     target_weight: undefined,
     weekly_workout_frequency: 4,
@@ -63,66 +62,59 @@ export default function GoalsSettings() {
   };
 
   const handleSave = async () => {
-    setLoading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+    // Optimistic UI - show success immediately
+    toast({
+      title: 'Goals saved',
+      description: 'Your fitness goals have been updated successfully.',
+    });
 
-      const goalsData = {
-        user_id: user.id,
-        target_weight: goals.target_weight || null,
-        weekly_workout_frequency: goals.weekly_workout_frequency || null,
-        daily_calorie_target: goals.daily_calorie_target || null,
-        daily_protein_target: goals.daily_protein_target || null,
-        daily_water_target: goals.daily_water_target || null,
-        target_date: goals.target_date || null,
-      };
+    // Save in background
+    const saveInBackground = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
 
-      if (goals.id) {
-        // Update existing goals
-        const { error } = await supabase
-          .from('user_goals')
-          .update(goalsData)
-          .eq('id', goals.id);
-        
-        if (error) throw error;
-      } else {
-        // Create new goals
-        const { data, error } = await supabase
-          .from('user_goals')
-          .insert([goalsData])
-          .select()
-          .single();
-        
-        if (error) throw error;
-        if (data) setGoals({ ...goals, id: data.id });
+        const goalsData = {
+          user_id: user.id,
+          target_weight: goals.target_weight || null,
+          weekly_workout_frequency: goals.weekly_workout_frequency || null,
+          daily_calorie_target: goals.daily_calorie_target || null,
+          daily_protein_target: goals.daily_protein_target || null,
+          daily_water_target: goals.daily_water_target || null,
+          target_date: goals.target_date || null,
+        };
+
+        if (goals.id) {
+          await supabase
+            .from('user_goals')
+            .update(goalsData)
+            .eq('id', goals.id);
+        } else {
+          const { data } = await supabase
+            .from('user_goals')
+            .insert([goalsData])
+            .select()
+            .single();
+          
+          if (data) setGoals(prev => ({ ...prev, id: data.id }));
+        }
+      } catch (error) {
+        console.error('Error saving goals:', error);
       }
+    };
 
-      toast({
-        title: 'Goals saved',
-        description: 'Your fitness goals have been updated successfully.',
-      });
-    } catch (error) {
-      console.error('Error saving goals:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to save goals. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
+    saveInBackground();
   };
 
   return (
-    <Card className="border-2 border-[hsl(var(--widget-border))]">
+    <Card className="border-2 border-[hsl(var(--widget-border))] overflow-hidden">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Target className="w-5 h-5 text-primary" />
           Fitness Goals
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 box-border">
         {/* Target Weight */}
         <div className="space-y-1.5">
           <Label htmlFor="target-weight" className="flex items-center gap-2 text-sm">
@@ -213,7 +205,7 @@ export default function GoalsSettings() {
           <Input
             id="target-date"
             type="date"
-            className="h-9 text-sm"
+            className="h-9 text-sm w-full"
             value={goals.target_date}
             onChange={(e) => setGoals({ ...goals, target_date: e.target.value })}
           />
@@ -222,10 +214,9 @@ export default function GoalsSettings() {
 
         <Button 
           onClick={handleSave} 
-          disabled={loading}
           className="w-full"
         >
-          {loading ? 'Saving...' : 'Save Goals'}
+          Save Goals
         </Button>
       </CardContent>
     </Card>

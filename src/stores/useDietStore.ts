@@ -1,15 +1,48 @@
 import { create } from 'zustand';
 import { FoodRecognitionService } from '@/services/FoodRecognitionService';
 import { supabase } from '@/integrations/supabase/client';
+import { syncQueue, newId } from '@/services/SyncQueue';
+import { offlineStorage } from '@/services/OfflineStorage';
 
 const STORAGE_KEY = 'diet_offline_data';
-const QUEUE_KEY = 'diet_offline_queue';
+/** Pre-outbox queue key. Kept only so older pending writes can be migrated. */
+const LEGACY_QUEUE_KEY = 'diet_offline_queue';
 
-interface OfflineOperation {
-  type: 'add' | 'remove';
-  data: any;
-  timestamp: number;
+/**
+ * Move any food writes queued by the previous localStorage implementation into
+ * the shared IndexedDB outbox, so meals logged offline before this update are
+ * still pushed to Supabase instead of being dropped on the next sync.
+ */
+async function migrateLegacyDietQueue(userId: string) {
+  const raw = localStorage.getItem(LEGACY_QUEUE_KEY);
+  if (!raw) return;
+
+  try {
+    const queue: Array<{ type: 'add' | 'remove'; data: any }> = JSON.parse(raw) ?? [];
+    for (const op of queue) {
+      if (op?.type === 'add' && op.data) {
+        await offlineStorage.enqueue({
+          table: 'food_items',
+          op: 'insert',
+          payload: { id: op.data.id ?? newId(), ...op.data, user_id: userId },
+          onConflict: 'id',
+        });
+      } else if (op?.type === 'remove' && op.data?.foodId) {
+        await offlineStorage.enqueue({
+          table: 'food_items',
+          op: 'delete',
+          match: { id: op.data.foodId, user_id: userId },
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Failed to migrate legacy diet queue:', error);
+  }
+
+  localStorage.removeItem(LEGACY_QUEUE_KEY);
 }
+
+
 
 export interface FoodItem {
   id: string;
@@ -40,7 +73,7 @@ interface DietStore {
   dailyNutrition: DailyNutrition[];
   isOnline: boolean;
   pendingOperations: number;
-  initializeDietData: () => Promise<void>;
+  initializeDietData: (forceSync?: boolean) => Promise<void>;
   addFood: (food: Omit<FoodItem, 'id'>) => Promise<void>;
   removeFood: (foodId: string, date: string) => Promise<void>;
   getDailyNutrition: (date: string) => DailyNutrition;
@@ -85,50 +118,30 @@ export const useDietStore = create<DietStore>()((set, get) => ({
     }
   },
 
+  /**
+   * Diet writes now share the app-wide IndexedDB outbox, so this just drains
+   * it and refreshes from the server once the replay succeeds.
+   */
   syncOfflineData: async () => {
     try {
-      const queueStr = localStorage.getItem(QUEUE_KEY);
-      if (!queueStr) return;
-
-      const queue: OfflineOperation[] = JSON.parse(queueStr);
-      if (queue.length === 0) return;
-
-      set({ pendingOperations: queue.length });
-
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (user) await migrateLegacyDietQueue(user.id);
 
-      for (const operation of queue) {
-        try {
-          if (operation.type === 'add') {
-            await supabase
-              .from('food_items')
-              .insert({
-                ...operation.data,
-                user_id: user.id
-              });
-          } else if (operation.type === 'remove') {
-            await supabase
-              .from('food_items')
-              .delete()
-              .eq('id', operation.data.foodId)
-              .eq('user_id', user.id);
-          }
-        } catch (error) {
-          console.error('Failed to sync operation:', error);
-        }
+      set({ pendingOperations: syncQueue.pending() });
+      const { synced, failed } = await syncQueue.replay();
+      set({ pendingOperations: syncQueue.pending() });
+
+
+      if (synced > 0 && failed === 0) {
+        await get().initializeDietData(true);
       }
-
-      localStorage.removeItem(QUEUE_KEY);
-      set({ pendingOperations: 0 });
-      
-      await get().initializeDietData();
     } catch (error) {
       console.error('Failed to sync offline data:', error);
     }
   },
 
-  initializeDietData: async () => {
+
+  initializeDietData: async (forceSync = false) => {
     get().loadFromCache();
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -137,6 +150,22 @@ export const useDietStore = create<DietStore>()((set, get) => ({
     if (!get().isOnline) {
       console.log('Offline mode: using cached data');
       return;
+    }
+
+    // Rescue pre-outbox queued writes before the server fetch overwrites cache.
+    await migrateLegacyDietQueue(user.id);
+
+
+    // Skip sync if cache is fresh (< 30 min) unless forced
+    if (!forceSync) {
+      const lastSyncStr = localStorage.getItem('diet_last_sync');
+      if (lastSyncStr) {
+        const elapsed = Date.now() - parseInt(lastSyncStr, 10);
+        if (elapsed < 30 * 60 * 1000) {
+          console.log('Diet data is fresh, skipping sync');
+          return;
+        }
+      }
     }
 
     const { data: foodItems } = await supabase
@@ -185,6 +214,7 @@ export const useDietStore = create<DietStore>()((set, get) => ({
 
       set({ dailyNutrition: Array.from(dailyMap.values()) });
       get().saveToCache();
+      localStorage.setItem('diet_last_sync', Date.now().toString());
     }
   },
 
@@ -209,18 +239,71 @@ export const useDietStore = create<DietStore>()((set, get) => ({
 
     const tempId = crypto.randomUUID();
     
-    if (!get().isOnline) {
-      const queueStr = localStorage.getItem(QUEUE_KEY) || '[]';
-      const queue: OfflineOperation[] = JSON.parse(queueStr);
-      queue.push({
-        type: 'add',
-        data: validated,
-        timestamp: Date.now()
-      });
-      localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+    // Helper function to update state with new food item
+    const updateStateWithFood = (foodWithId: FoodItem) => {
+      set((state) => {
+        const existingDayIndex = state.dailyNutrition.findIndex(
+          (day) => day.date === food.date
+        );
 
-      const foodWithId: FoodItem = {
-        id: tempId,
+        if (existingDayIndex >= 0) {
+          const updatedDay = { ...state.dailyNutrition[existingDayIndex] };
+          updatedDay.foods = [...updatedDay.foods, foodWithId];
+          updatedDay.totalCalories += food.calories;
+          updatedDay.totalProtein += food.protein;
+          updatedDay.totalCarbs += food.carbs;
+          updatedDay.totalFat += food.fat;
+          updatedDay.totalFiber += food.fiber || 0;
+          updatedDay.totalSugar += food.sugar || 0;
+
+          const newDailyNutrition = [...state.dailyNutrition];
+          newDailyNutrition[existingDayIndex] = updatedDay;
+
+          return { dailyNutrition: newDailyNutrition };
+        } else {
+          const newDay: DailyNutrition = {
+            date: food.date,
+            totalCalories: food.calories,
+            totalProtein: food.protein,
+            totalCarbs: food.carbs,
+            totalFat: food.fat,
+            totalFiber: food.fiber || 0,
+            totalSugar: food.sugar || 0,
+            foods: [foodWithId],
+          };
+
+          return {
+            dailyNutrition: [...state.dailyNutrition, newDay],
+          };
+        }
+      });
+      get().saveToCache();
+    };
+
+    // Client-generated id: the row exists locally the moment it's logged, so
+    // it can be edited or deleted before it ever reaches Supabase.
+    const id = newId();
+
+    updateStateWithFood({
+      id,
+      name: validated.name,
+      calories: validated.calories,
+      protein: validated.protein,
+      carbs: validated.carbs,
+      fat: validated.fat,
+      fiber: validated.fiber || 0,
+      sugar: validated.sugar || 0,
+      date: validated.date,
+      quantity: validated.quantity,
+      unit: validated.unit
+    });
+
+    await syncQueue.send({
+      table: 'food_items',
+      op: 'insert',
+      payload: {
+        id,
+        user_id: user.id,
         name: validated.name,
         calories: validated.calories,
         protein: validated.protein,
@@ -231,147 +314,18 @@ export const useDietStore = create<DietStore>()((set, get) => ({
         date: validated.date,
         quantity: validated.quantity,
         unit: validated.unit
-      };
-
-      set((state) => {
-        const existingDayIndex = state.dailyNutrition.findIndex(
-          (day) => day.date === food.date
-        );
-
-        if (existingDayIndex >= 0) {
-          const updatedDay = { ...state.dailyNutrition[existingDayIndex] };
-          updatedDay.foods.push(foodWithId);
-          updatedDay.totalCalories += food.calories;
-          updatedDay.totalProtein += food.protein;
-          updatedDay.totalCarbs += food.carbs;
-          updatedDay.totalFat += food.fat;
-          updatedDay.totalFiber += food.fiber || 0;
-          updatedDay.totalSugar += food.sugar || 0;
-
-          const newDailyNutrition = [...state.dailyNutrition];
-          newDailyNutrition[existingDayIndex] = updatedDay;
-
-          return { dailyNutrition: newDailyNutrition };
-        } else {
-          const newDay: DailyNutrition = {
-            date: food.date,
-            totalCalories: food.calories,
-            totalProtein: food.protein,
-            totalCarbs: food.carbs,
-            totalFat: food.fat,
-            totalFiber: food.fiber || 0,
-            totalSugar: food.sugar || 0,
-            foods: [foodWithId],
-          };
-
-          return {
-            dailyNutrition: [...state.dailyNutrition, newDay],
-          };
-        }
-      });
-      
-      get().saveToCache();
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from('food_items')
-      .insert({
-        user_id: user.id,
-        name: validated.name,
-        calories: validated.calories,
-        protein: validated.protein,
-        carbs: validated.carbs,
-        fat: validated.fat,
-        fiber: validated.fiber,
-        sugar: validated.sugar,
-        date: validated.date,
-        quantity: validated.quantity,
-        unit: validated.unit
-      })
-      .select()
-      .single();
-    
-    if (error) throw error;
-
-    if (data && !error) {
-      const foodWithId: FoodItem = {
-        id: data.id,
-        name: data.name,
-        calories: data.calories,
-        protein: data.protein,
-        carbs: data.carbs,
-        fat: data.fat,
-        fiber: 0,
-        sugar: 0,
-        date: data.date,
-        quantity: data.quantity,
-        unit: data.unit
-      };
-
-      set((state) => {
-        const existingDayIndex = state.dailyNutrition.findIndex(
-          (day) => day.date === food.date
-        );
-
-        if (existingDayIndex >= 0) {
-          const updatedDay = { ...state.dailyNutrition[existingDayIndex] };
-          updatedDay.foods.push(foodWithId);
-          updatedDay.totalCalories += food.calories;
-          updatedDay.totalProtein += food.protein;
-          updatedDay.totalCarbs += food.carbs;
-          updatedDay.totalFat += food.fat;
-          updatedDay.totalFiber += food.fiber || 0;
-          updatedDay.totalSugar += food.sugar || 0;
-
-          const newDailyNutrition = [...state.dailyNutrition];
-          newDailyNutrition[existingDayIndex] = updatedDay;
-
-          return { dailyNutrition: newDailyNutrition };
-        } else {
-          const newDay: DailyNutrition = {
-            date: food.date,
-            totalCalories: food.calories,
-            totalProtein: food.protein,
-            totalCarbs: food.carbs,
-            totalFat: food.fat,
-            totalFiber: food.fiber || 0,
-            totalSugar: food.sugar || 0,
-            foods: [foodWithId],
-          };
-
-          return {
-            dailyNutrition: [...state.dailyNutrition, newDay],
-          };
-        }
-      });
-      
-      get().saveToCache();
-    }
+      },
+      onConflict: 'id'
+    });
   },
 
   removeFood: async (foodId, date) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    if (!get().isOnline) {
-      const queueStr = localStorage.getItem(QUEUE_KEY) || '[]';
-      const queue: OfflineOperation[] = JSON.parse(queueStr);
-      queue.push({
-        type: 'remove',
-        data: { foodId, date },
-        timestamp: Date.now()
-      });
-      localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
-    } else {
-      await supabase
-        .from('food_items')
-        .delete()
-        .eq('id', foodId)
-        .eq('user_id', user.id);
-    }
-
+    // Optimistic removal first, then queue the delete for replay.
     set((state) => {
+
       const dayIndex = state.dailyNutrition.findIndex((day) => day.date === date);
       if (dayIndex >= 0) {
         const updatedDay = { ...state.dailyNutrition[dayIndex] };
@@ -396,7 +350,14 @@ export const useDietStore = create<DietStore>()((set, get) => ({
       }
       return state;
     });
+
+    await syncQueue.send({
+      table: 'food_items',
+      op: 'delete',
+      match: { id: foodId, user_id: user.id }
+    });
   },
+
 
   getDailyNutrition: (date) => {
     const state = get();

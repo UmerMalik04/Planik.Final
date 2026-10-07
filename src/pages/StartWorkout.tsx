@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,13 +14,53 @@ import { useShare } from "@/hooks/useShare";
 import { ShareWorkout } from "@/components/ShareWorkout";
 import { WorkoutImprovementSummary } from "@/components/WorkoutImprovementSummary";
 
+interface TemplateState {
+  templateId: string;
+  templateName: string;
+  templateType: string;
+  exercises: Array<{
+    name: string;
+    sets: number;
+    reps: number;
+    hasWarmup: boolean;
+  }>;
+}
+
+/**
+ * StartWorkout page ("/start-workout/:planId").
+ * The active-workout screen. Tracks per-set weight/reps, supports drop sets
+ * and extra sets, runs a rest timer between sets, and on completion shows
+ * an improvement summary before saving the session.
+ */
 export default function StartWorkout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { planId } = useParams();
   const { workoutPlans, startWorkout, completeWorkout, getExerciseHistory, resumeWorkout, currentWorkoutSession, addExerciseToCurrentWorkout } = useWorkoutStore();
   const { settings } = useSettings();
   
-  const plan = workoutPlans.find(p => p.id === planId);
+  // Check if we're coming from a template (instant navigation)
+  const templateState = location.state as TemplateState | undefined;
+  const isFromTemplate = planId === 'template' && templateState;
+  
+  // Create a virtual plan from template data or use existing plan
+  const plan = useMemo(() => {
+    if (isFromTemplate) {
+      return {
+        id: `template-${templateState.templateId}`,
+        name: templateState.templateName,
+        type: templateState.templateType,
+        exercises: templateState.exercises.map((ex, idx) => ({
+          id: `temp-${idx}`,
+          planId: `template-${templateState.templateId}`,
+          ...ex
+        })),
+        restTimer: 90
+      };
+    }
+    return workoutPlans.find(p => p.id === planId);
+  }, [isFromTemplate, templateState, workoutPlans, planId]);
+
   const [currentSession, setCurrentSession] = useState<any>(null);
   const [completedExercises, setCompletedExercises] = useState<CompletedExercise[]>([]);
   const [showAddExerciseDialog, setShowAddExerciseDialog] = useState(false);
@@ -59,7 +99,10 @@ export default function StartWorkout() {
   useEffect(() => {
     const initSession = async () => {
       if (plan && !currentSession) {
-        const session = await startWorkout(plan.id);
+        // For templates, create a temporary session
+        const session = isFromTemplate 
+          ? { id: `temp-session-${Date.now()}`, planId: plan.id, date: new Date().toISOString() }
+          : await startWorkout(plan.id);
         console.log('Session created:', session);
         setCurrentSession(session);
         initializeWorkout(session, plan);
@@ -67,7 +110,7 @@ export default function StartWorkout() {
     };
     
     initSession();
-  }, [plan, planId]);
+  }, [plan, planId, isFromTemplate]);
 
   // Bottom timer effect
   useEffect(() => {
@@ -80,6 +123,11 @@ export default function StartWorkout() {
     return () => clearInterval(interval);
   }, [bottomTimerRunning]);
 
+  /**
+   * Build the in-memory exercise list for this session, pre-filling each
+   * exercise with its previous performance so the user can see if they're
+   * improving in real time.
+   */
   const initializeWorkout = (session: any, workoutPlan: any) => {
     console.log('Initializing workout with session:', session);
     console.log('Workout plan exercises:', workoutPlan.exercises);
@@ -126,6 +174,7 @@ export default function StartWorkout() {
     setSetTypes(initialSetTypes);
   };
 
+  /** Add an ad-hoc exercise to the in-progress workout (also writes it to the plan). */
   const addNewExercise = () => {
     if (!newExerciseName.trim() || !currentSession) return;
     
@@ -187,6 +236,11 @@ export default function StartWorkout() {
     );
   }
 
+  /**
+   * Update one field of one set. When a set transitions from incomplete to
+   * complete (weight & reps both > 0), records the rest time and stops the
+   * bottom timer. Also recomputes the "best set" for the exercise card.
+   */
   const updateExerciseSet = (exerciseIndex: number, setIndex: number, field: 'weight' | 'reps' | 'dropSetWeight' | 'dropSetReps', value: number) => {
     setExerciseSets(prev => {
       const updated = { ...prev };
@@ -237,6 +291,7 @@ export default function StartWorkout() {
     });
   };
 
+  /** Append an additional set beyond the planned count for the given exercise. */
   const addExtraSet = (exerciseIndex: number) => {
     setExtraSets(prev => ({
       ...prev,
@@ -260,6 +315,7 @@ export default function StartWorkout() {
     }));
   };
 
+  /** Pop the last extra set off the given exercise. */
   const removeExtraSet = (exerciseIndex: number) => {
     setExtraSets(prev => ({
       ...prev,
@@ -275,6 +331,7 @@ export default function StartWorkout() {
     });
   };
 
+  /** Switch a single set between 'normal' and 'dropset' types. */
   const updateSetType = (exerciseIndex: number, setIndex: number, type: 'normal' | 'dropset') => {
     const key = `${exerciseIndex}-${setIndex}`;
     setSetTypes(prev => ({
@@ -283,10 +340,12 @@ export default function StartWorkout() {
     }));
   };
 
+  /** Look up the set type for a given (exercise, set) pair, defaulting to 'normal'. */
   const getSetType = (exerciseIndex: number, setIndex: number): 'normal' | 'dropset' => {
     return setTypes[`${exerciseIndex}-${setIndex}`] || 'normal';
   };
 
+  /** Pick a coloured border for an input based on whether you beat your last performance. */
   const getPerformanceColor = (current: number, previous: number | undefined, field: 'weight' | 'reps') => {
     if (!previous) return 'border-border bg-background text-foreground';
     if (!current || current === 0) return 'border-border bg-background text-foreground';
@@ -296,6 +355,7 @@ export default function StartWorkout() {
     return 'border-2 border-warning bg-warning-light text-warning-dark dark:bg-warning-dark/20 dark:text-warning focus:ring-warning';
   };
 
+  /** Validate the workout (≥ 1 valid exercise) and open the summary dialog. */
   const handleCompleteWorkout = () => {
     if (!currentSession) return;
     
@@ -331,6 +391,7 @@ export default function StartWorkout() {
     setShowSummary(true);
   };
 
+  /** User confirmed the summary — persist the session and navigate home. */
   const confirmCompleteWorkout = async () => {
     if (!currentSession) return;
     
@@ -351,18 +412,21 @@ export default function StartWorkout() {
     navigate("/");
   };
 
+  /** Total sets across all exercises, including extra sets the user added. */
   const getTotalSets = () => {
     return completedExercises.reduce((total, exercise, index) => {
       return total + (exercise.sets + (extraSets[index] || 0));
     }, 0);
   };
 
+  /** Total volume (Σ weight × reps) lifted in this session. */
   const getTotalWeight = () => {
     return Object.values(exerciseSets).reduce((total, sets) => {
       return total + sets.reduce((setTotal, set) => setTotal + (set.weight * set.reps), 0);
     }, 0);
   };
 
+  /** Format a duration in seconds as "M:SS". */
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;

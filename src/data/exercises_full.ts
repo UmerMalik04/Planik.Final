@@ -13,7 +13,7 @@ export const exercisesData: Exercise[] = [
     "name": "Abdominal Crunch",
     "muscle_groups": ["Abs"],
     "thumbnail": "/assets/abdominal-crunch-thumbnail.png",
-    "video_or_animation": "/assets/abdominal-crunch.gif",
+    "video_or_animation": "",
     "instructions": [
       "Lie on your back with knees bent, feet flat on the floor, hip-width apart.",
       "Place hands behind head or across chest.",
@@ -71,7 +71,7 @@ export const exercisesData: Exercise[] = [
     "name": "Pull-Up",
     "muscle_groups": ["Back", "Biceps"],
     "thumbnail": "/assets/pull-up-thumbnail.png",
-    "video_or_animation": "/assets/pull-up.gif",
+    "video_or_animation": "",
     "instructions": [
       "Grip a pull-up bar, palms facing away, hands shoulder-width apart.",
       "Hang with arms extended, core engaged.",

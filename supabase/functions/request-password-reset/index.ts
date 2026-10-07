@@ -30,11 +30,13 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Prefer the configured site URL; fall back to the caller's origin
-    const origin = Deno.env.get('SITE_URL') || req.headers.get('origin');
-    if (!origin) {
-      throw new Error("SITE_URL is not configured");
-    }
+    // Restrict redirect URL to a hardcoded allowlist to prevent open redirect / phishing attacks.
+    // Never trust the caller-controlled Origin header for building auth redirect URLs.
+    const ALLOWED_ORIGINS = [
+      'https://planik.org.uk',
+    ];
+    const requestOrigin = req.headers.get('origin') || '';
+    const origin = ALLOWED_ORIGINS.includes(requestOrigin) ? requestOrigin : ALLOWED_ORIGINS[0];
     const redirectUrl = `${origin}/auth?type=recovery`;
 
     console.log("Redirect URL:", redirectUrl);
@@ -192,8 +194,9 @@ serve(async (req) => {
     );
   } catch (error: any) {
     console.error("Error in request-password-reset:", error);
+    // Return a generic message — never leak internal error details to clients.
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Failed to send password reset email" }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,

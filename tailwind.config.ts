@@ -86,6 +86,10 @@ export default {
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
 			},
+			boxShadow: {
+				soft: 'var(--shadow-soft)',
+				card: 'var(--shadow-card)'
+			},
 			keyframes: {
 				'accordion-down': {
 					from: {
@@ -120,13 +124,28 @@ export default {
 						transform: 'translateY(0)',
 						opacity: '1'
 					}
+				},
+				'rep-motion': {
+					'0%, 100%': {
+						transform: 'translateY(0) rotate(0deg)'
+					},
+					'25%': {
+						transform: 'translateY(-8px) rotate(-4deg)'
+					},
+					'50%': {
+						transform: 'translateY(0) rotate(0deg)'
+					},
+					'75%': {
+						transform: 'translateY(-8px) rotate(4deg)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'flex-bounce': 'flex-bounce 2s ease-in-out infinite',
-				'slide-up': 'slide-up 0.3s ease-out'
+				'slide-up': 'slide-up 0.3s ease-out',
+				'rep-motion': 'rep-motion 1.4s ease-in-out infinite'
 			}
 		}
 	},

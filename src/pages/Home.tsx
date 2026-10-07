@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useWorkoutStore } from "@/stores/useWorkoutStore";
-import { Plus, Minus, TrendingUp, TrendingDown, Utensils, Activity, Edit3, Check } from "lucide-react";
+import { Plus, Minus, TrendingUp, TrendingDown, Utensils, Activity, Edit3, Check, Heart } from "lucide-react";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useDietStore } from "@/stores/useDietStore";
@@ -13,13 +13,39 @@ import { WaterTracker } from "@/components/WaterTracker";
 import { DraggableWidget } from "@/components/DraggableWidget";
 import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import muscularBodyDiagram from "@/assets/muscular-body-diagram.png";
+
 import { supabase } from "@/integrations/supabase/client";
+import { readSnapshot, writeSnapshot } from "@/lib/dataPrefetch";
+import OnboardingTour from "@/components/OnboardingTour";
+import HealthPermissionPrompt from "@/components/HealthPermissionPrompt";
+import { HealthKitDisclosure } from "@/components/HealthKitDisclosure";
+import { useAuth } from "@/contexts/AuthContext";
+import { SEO } from "@/components/SEO";
+import { preloadPath } from '@/lib/routePreload';
+
+// Global cache for preferences to avoid repeated fetches
+const preferencesCache = new Map<string, { widgetOrder: string[] | null; hiddenWidgets: string[] | null; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+/** Format a Date as YYYY-MM-DD using LOCAL time (avoids UTC drift for step/nutrition keys). */
+const formatLocalDate = (d: Date): string => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
 
 
+/**
+ * Home page ("/home").
+ * The main dashboard. Renders draggable widgets (stats, steps, goals,
+ * water, workouts, diet), persists their order/visibility per user, and
+ * kicks off step counter sync on mount.
+ */
 export default function Home() {
   const navigate = useNavigate();
   const { getText } = useSettings();
+  const { user } = useAuth();
   const { getDailyNutrition } = useDietStore();
   const { 
     workoutPlans, 
@@ -50,101 +76,214 @@ export default function Home() {
     'diet'
   ]);
   const [hiddenWidgets, setHiddenWidgets] = useState<string[]>([]);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showHealthPrompt, setShowHealthPrompt] = useState(false);
+  
+  // Use user ID from auth context instead of fetching again
+  const userId = user?.id ?? null;
 
-  // Ensure goals widget is always visible on first load
+  // Initialize preferences - uses caching to avoid refetch
   useEffect(() => {
-    const ensureGoalsVisible = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+    if (!userId) return;
 
-      const { data } = await supabase
-        .from('user_preferences')
-        .select('hidden_widgets')
-        .eq('user_id', user.id)
-        .maybeSingle();
+    const loadPreferences = async () => {
+      // Frame 1: apply the layout this device used last time (no network), so
+      // the widgets never reflow once preferences arrive.
+      const snapshot = readSnapshot<{ widgetOrder: string[] | null; hiddenWidgets: string[] }>(
+        `home_prefs:${userId}`
+      );
+      if (snapshot) {
+        if (snapshot.widgetOrder) setWidgetOrder(snapshot.widgetOrder);
+        if (snapshot.hiddenWidgets) setHiddenWidgets(snapshot.hiddenWidgets);
+      }
 
-      if (data?.hidden_widgets && (data.hidden_widgets as string[]).includes('goals')) {
-        const newHidden = (data.hidden_widgets as string[]).filter(id => id !== 'goals');
-        await supabase
+      // Check cache first
+      const cached = preferencesCache.get(userId);
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        if (cached.widgetOrder) setWidgetOrder(cached.widgetOrder);
+        if (cached.hiddenWidgets) setHiddenWidgets(cached.hiddenWidgets);
+        return;
+      }
+
+      try {
+        const { data: prefs } = await supabase
           .from('user_preferences')
-          .upsert({
-            user_id: user.id,
-            widget_order: widgetOrder,
-            hidden_widgets: newHidden
-          }, { onConflict: 'user_id' });
-        setHiddenWidgets(newHidden);
+          .select('widget_order, hidden_widgets')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (prefs) {
+          const widgetOrderData = prefs.widget_order as string[] | null;
+          if (widgetOrderData) setWidgetOrder(widgetOrderData);
+          
+          const hidden = prefs.hidden_widgets as string[] || [];
+          const filteredHidden = hidden.filter(id => id !== 'goals');
+          setHiddenWidgets(filteredHidden);
+          
+          // Cache the result
+          preferencesCache.set(userId, {
+            widgetOrder: widgetOrderData,
+            hiddenWidgets: filteredHidden,
+            timestamp: Date.now()
+          });
+
+          // Persist for an instant, correct first paint on the next launch.
+          writeSnapshot(`home_prefs:${userId}`, {
+            widgetOrder: widgetOrderData,
+            hiddenWidgets: filteredHidden,
+          });
+          
+          // Update DB if goals was hidden (in background)
+          if (hidden.includes('goals')) {
+            supabase
+              .from('user_preferences')
+              .update({ hidden_widgets: filteredHidden })
+              .eq('user_id', userId)
+              .then(() => {});
+          }
+        } else {
+          setShowOnboarding(true);
+        }
+      } catch (error) {
+        console.error('Error loading preferences:', error);
       }
     };
-    ensureGoalsVisible();
-  }, []);
 
-  useEffect(() => {
-    calculateProgress();
     loadPreferences();
-  }, [workoutSessions]);
-
-  // Read steps from the device step counter, or from saved history when
-  // the counter is unavailable (web) or permission was denied
-  useEffect(() => {
-    let cancelled = false;
-    let stepInterval: ReturnType<typeof setInterval> | undefined;
-
-    const refreshSteps = async () => {
-      const todaySteps = await HealthService.getStepsToday();
-      if (!cancelled) setSteps(todaySteps);
-    };
-
-    const initializeStepCounter = async () => {
-      const granted = await HealthService.requestPermissions();
-      if (cancelled) return;
-      setPermissionGranted(granted);
-      await refreshSteps();
-      if (granted && !cancelled) {
-        stepInterval = setInterval(refreshSteps, 60000);
-      }
-    };
-
+    
+    // Initialize step counter once
     initializeStepCounter();
+    
+    // Calculate progress
+    calculateProgress();
+  }, [userId, calculateProgress]);
 
-    return () => {
-      cancelled = true;
-      if (stepInterval) clearInterval(stepInterval);
-    };
+  // Light effect to recalculate progress when sessions change
+  useEffect(() => {
+    if (workoutSessions.length > 0) {
+      calculateProgress();
+    }
+  }, [workoutSessions.length, calculateProgress]);
+
+  /** Persist onboarding completion + initial widget prefs, then prompt for health perms. */
+  const handleOnboardingComplete = useCallback(async () => {
+    setShowOnboarding(false);
+    // Show health permission prompt right after tutorial
+    setShowHealthPrompt(true);
+    
+    if (userId) {
+      await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: userId,
+          widget_order: widgetOrder,
+          hidden_widgets: hiddenWidgets
+        }, { onConflict: 'user_id' });
+      
+      // Update cache
+      preferencesCache.set(userId, {
+        widgetOrder,
+        hiddenWidgets,
+        timestamp: Date.now()
+      });
+    }
+  }, [widgetOrder, hiddenWidgets, userId]);
+
+  /** Dismiss the health permission prompt and re-init the step counter. */
+  const handleHealthPromptComplete = useCallback(() => {
+    setShowHealthPrompt(false);
+    // Re-initialize step counter after permission is granted
+    initializeStepCounter();
   }, []);
 
-  const loadPreferences = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data } = await supabase
-      .from('user_preferences')
-      .select('widget_order, hidden_widgets')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (data) {
-      if (data.widget_order) setWidgetOrder(data.widget_order as string[]);
-      if (data.hidden_widgets) setHiddenWidgets(data.hidden_widgets as string[]);
+  /**
+   * Show cached steps immediately, then refresh from HealthKit / Health
+   * Connect in the background. Sets up a 1-min poll and a visibility
+   * listener to keep the count fresh while the app is open.
+   */
+  const initializeStepCounter = async () => {
+    // Step 1: Immediately load cached steps from database (instant display).
+    // Use LOCAL date so the key matches what HealthService writes (no UTC drift).
+    const today = formatLocalDate(new Date());
+    const cachedSteps = await HealthService.getStepsFromDatabase(today);
+    if (cachedSteps > 0) {
+      setSteps(cachedSteps);
+    }
+    
+    // Step 2: Request permissions and sync from HealthKit in background
+    const granted = await HealthService.requestPermissions();
+    setPermissionGranted(granted);
+    
+    if (granted) {
+      // Sync fresh data from HealthKit (non-blocking update)
+      HealthService.quickSyncToday().then((freshSteps) => {
+        if (freshSteps > 0) {
+          setSteps(freshSteps);
+        }
+      });
+      
+      // Sync steps periodically (every minute)
+      const stepInterval = setInterval(async () => {
+        const currentSteps = await HealthService.quickSyncToday();
+        if (currentSteps > 0) {
+          setSteps(currentSteps);
+        }
+      }, 60000);
+      
+      // Sync when app goes to background
+      const handleVisibilityChange = async () => {
+        if (document.visibilityState === 'hidden') {
+          await HealthService.syncTodaySteps();
+        } else if (document.visibilityState === 'visible') {
+          // Refresh when coming back to app
+          const freshSteps = await HealthService.quickSyncToday();
+          if (freshSteps > 0) {
+            setSteps(freshSteps);
+          }
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      
+      return () => {
+        clearInterval(stepInterval);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
+    } else {
+      // Fallback for web/simulator
+      const savedSteps = localStorage.getItem('daily-steps');
+      const todayStr = new Date().toDateString();
+      const savedStepsData = savedSteps ? JSON.parse(savedSteps) : {};
+      
+      if (savedStepsData.date === todayStr) {
+        setSteps(savedStepsData.steps || 0);
+      } else {
+        setSteps(0);
+        localStorage.setItem('daily-steps', JSON.stringify({ date: todayStr, steps: 0 }));
+      }
+      
+      return () => {};
     }
   };
 
-  const getWorkoutSessionsThisWeek = () => {
+  // Memoize expensive calculations
+  const workoutSessionsThisWeek = useMemo(() => {
     const today = new Date();
     const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay()); // Sunday
+    startOfWeek.setDate(today.getDate() - today.getDay());
     startOfWeek.setHours(0, 0, 0, 0);
     
     return workoutSessions.filter(session => 
       new Date(session.date) >= startOfWeek
     ).length;
-  };
+  }, [workoutSessions]);
 
-  const getTodayNutrition = () => {
-    const today = new Date().toISOString().split('T')[0];
+  const todayNutrition = useMemo(() => {
+    // Use LOCAL date to match how food entries are stored per-day.
+    const today = formatLocalDate(new Date());
     return getDailyNutrition(today);
-  };
+  }, [getDailyNutrition]);
 
-  const getWorkoutSummary = () => {
+  const summary = useMemo(() => {
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
     
@@ -159,10 +298,9 @@ export default function Home() {
       uniqueExercises: new Set(allRecentExercises.map(e => e.name)).size,
       totalWeight: allRecentExercises.reduce((sum, e) => sum + (e.weight * e.reps * e.sets), 0)
     };
-  };
+  }, [workoutSessions]);
 
-  const summary = getWorkoutSummary();
-
+  /** Open the existing plan for this type, or jump to /create-plan if none exists. */
   const handleWorkoutTypeClick = useCallback((workoutType: string) => {
     const existingPlan = workoutPlans.find(plan => plan.type === workoutType);
     if (existingPlan) {
@@ -172,6 +310,7 @@ export default function Home() {
     }
   }, [workoutPlans, navigate]);
 
+  /** Add a user-defined workout type with a randomly-picked accent color. */
   const handleAddCustomWorkout = useCallback(() => {
     if (customWorkoutName.trim()) {
       const colors = [
@@ -191,12 +330,14 @@ export default function Home() {
     }
   }, [customWorkoutName, addWorkoutType]);
 
+  /** Remove a workout type. stopPropagation prevents triggering the card click. */
   const handleDeleteWorkout = useCallback((workoutName: string, e: React.MouseEvent) => {
     e.stopPropagation();
     deleteWorkoutType(workoutName);
   }, [deleteWorkoutType]);
 
-  const handleDragEnd = async (event: DragEndEvent) => {
+  /** Reorder widgets after a drag, then persist the new order to Supabase + cache. */
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
@@ -205,61 +346,85 @@ export default function Home() {
         const newIndex = items.indexOf(over.id as string);
         const newOrder = arrayMove(items, oldIndex, newIndex);
         
-        const saveOrder = async () => {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            await supabase
-              .from('user_preferences')
-              .upsert({
-                user_id: user.id,
-                widget_order: newOrder,
-                hidden_widgets: hiddenWidgets
-              }, { onConflict: 'user_id' });
-          }
-        };
-        saveOrder();
+        // Save in background
+        if (userId) {
+          supabase
+            .from('user_preferences')
+            .upsert({
+              user_id: userId,
+              widget_order: newOrder,
+              hidden_widgets: hiddenWidgets
+            }, { onConflict: 'user_id' })
+            .then(() => {
+              // Update cache
+              preferencesCache.set(userId, {
+                widgetOrder: newOrder,
+                hiddenWidgets,
+                timestamp: Date.now()
+              });
+            });
+        }
         
         return newOrder;
       });
     }
-  };
+  }, [hiddenWidgets, userId]);
 
-  const handleRemoveWidget = async (widgetId: string) => {
+  /** Hide a widget from the dashboard and persist the change. */
+  const handleRemoveWidget = useCallback(async (widgetId: string) => {
     const newHidden = [...hiddenWidgets, widgetId];
     setHiddenWidgets(newHidden);
     
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
+    if (userId) {
       await supabase
         .from('user_preferences')
         .upsert({
-          user_id: user.id,
+          user_id: userId,
           widget_order: widgetOrder,
           hidden_widgets: newHidden
         }, { onConflict: 'user_id' });
+      
+      preferencesCache.set(userId, {
+        widgetOrder,
+        hiddenWidgets: newHidden,
+        timestamp: Date.now()
+      });
     }
-  };
+  }, [hiddenWidgets, widgetOrder, userId]);
 
-  const handleRestoreWidget = async (widgetId: string) => {
+  /** Re-show a previously hidden widget and persist the change. */
+  const handleRestoreWidget = useCallback(async (widgetId: string) => {
     const newHidden = hiddenWidgets.filter(id => id !== widgetId);
     setHiddenWidgets(newHidden);
     
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
+    if (userId) {
       await supabase
         .from('user_preferences')
         .upsert({
-          user_id: user.id,
+          user_id: userId,
           widget_order: widgetOrder,
           hidden_widgets: newHidden
         }, { onConflict: 'user_id' });
+      
+      preferencesCache.set(userId, {
+        widgetOrder,
+        hiddenWidgets: newHidden,
+        timestamp: Date.now()
+      });
     }
-  };
+  }, [hiddenWidgets, widgetOrder, userId]);
 
-  const visibleWidgets = widgetOrder.filter(id => !hiddenWidgets.includes(id));
-  const availableWidgets = widgetOrder.filter(id => hiddenWidgets.includes(id));
+  const visibleWidgets = useMemo(() =>
+    widgetOrder.filter(id => !hiddenWidgets.includes(id)), 
+    [widgetOrder, hiddenWidgets]
+  );
+  
+  const availableWidgets = useMemo(() => 
+    widgetOrder.filter(id => hiddenWidgets.includes(id)), 
+    [widgetOrder, hiddenWidgets]
+  );
 
-  const widgets: Record<string, JSX.Element> = {
+  const widgets: Record<string, JSX.Element> = useMemo(() => ({
     stats: (
       <Card className="border-2 border-[hsl(var(--widget-border))]">
         <CardContent className="p-4">
@@ -323,6 +488,7 @@ export default function Home() {
       <Card 
         className="border-2 border-[hsl(var(--widget-border))] cursor-pointer hover:shadow-lg transition-shadow"
         onClick={() => navigate('/step-history')}
+        onPointerDown={() => preloadPath('/step-history')}
       >
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
@@ -348,14 +514,20 @@ export default function Home() {
               ></div>
             </div>
           </div>
+          <div className="mt-3 pt-3 border-t border-border">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Heart className="w-3 h-3 text-red-500" />
+              <span>Uses Apple HealthKit to track steps</span>
+            </div>
+          </div>
         </CardContent>
       </Card>
     ),
     goals: (
       <FitnessGoalsWidget 
-        workoutSessionsThisWeek={getWorkoutSessionsThisWeek()}
-        totalCaloriesToday={getTodayNutrition().totalCalories}
-        totalProteinToday={getTodayNutrition().totalProtein}
+        workoutSessionsThisWeek={workoutSessionsThisWeek}
+        totalCaloriesToday={todayNutrition.totalCalories}
+        totalProteinToday={todayNutrition.totalProtein}
       />
     ),
     water: <WaterTracker />,
@@ -368,6 +540,7 @@ export default function Home() {
               variant="outline"
               size="sm"
               onClick={() => navigate('/templates')}
+        onPointerDown={() => preloadPath('/templates')}
               className="flex items-center gap-2"
             >
               Templates
@@ -465,6 +638,7 @@ export default function Home() {
       <Card 
         className="p-4 cursor-pointer hover:shadow-md transition-all border-2 border-widget bg-background"
         onClick={() => navigate("/diet-tracker")}
+        onPointerDown={() => preloadPath('/diet-tracker')}
       >
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center">
@@ -477,14 +651,32 @@ export default function Home() {
         </div>
       </Card>
     )
-  };
+  }), [
+    progressKg, lastWeekProgress, summary, getText, steps, stepGoal, navigate,
+    workoutSessionsThisWeek, todayNutrition, showCustomInput, customWorkoutName,
+    handleAddCustomWorkout, workoutTypes, workoutPlans, getWorkoutFrequency,
+    getWorkoutProgress, handleWorkoutTypeClick, handleDeleteWorkout
+  ]);
+
+  // Render immediately - no skeleton delay
 
   return (
-    <div className="min-h-screen p-6 space-y-6">
+    <>
+      <SEO
+        title="Planik — Your Fitness Dashboard"
+        description="Track workouts, steps, water, and nutrition in one dashboard. Plan your week, hit your goals, and watch progress add up with Planik."
+        path="/"
+      />
+      {showOnboarding && <OnboardingTour onComplete={handleOnboardingComplete} />}
+      {showHealthPrompt && <HealthPermissionPrompt onComplete={handleHealthPromptComplete} />}
+      <div className="min-h-screen p-6 space-y-6">
       {/* Header with Edit Toggle */}
       <div className="flex items-start justify-between gap-4">
         <div className="text-center flex-1">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{getText('dynamic_greeting')}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            <span className="sr-only">Planik — Your Fitness Dashboard. </span>
+            {getText('dynamic_greeting')}
+          </h1>
           <p className="text-sm sm:text-base text-muted-foreground mt-1">{getText('gym_companion')}</p>
         </div>
         <Button
@@ -492,6 +684,7 @@ export default function Home() {
           size="icon"
           onClick={() => setIsEditMode(!isEditMode)}
           className="shrink-0"
+          aria-label={isEditMode ? "Finish editing dashboard" : "Edit dashboard widgets"}
         >
           {isEditMode ? (
             <Check className="w-4 h-4" />
@@ -552,6 +745,7 @@ export default function Home() {
           </div>
         </SortableContext>
       </DndContext>
-    </div>
+      </div>
+    </>
   );
 }

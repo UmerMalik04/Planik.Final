@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://planik.org.uk/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://planik.org.uk/auth</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://planik.org.uk/auth/callback</loc><changefreq>yearly</changefreq><priority>0.1</priority></url>
+  <url><loc>https://planik.org.uk/demo</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://planik.org.uk/exercises</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://planik.org.uk/body-map</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://planik.org.uk/progress</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://planik.org.uk/history</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://planik.org.uk/diet-tracker</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://planik.org.uk/templates</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://planik.org.uk/create-plan</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://planik.org.uk/profile</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://planik.org.uk/settings</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://planik.org.uk/help</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+</urlset>

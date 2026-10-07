@@ -8,9 +8,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, Search, X, Dumbbell, Footprints, AlignVerticalSpaceAround, CircleDot, Heart, Activity, Zap } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { exercisesData, type Exercise } from '@/data/exercises_full';
+import { SEO } from '@/components/SEO';
 
 
 const muscleGroups = ['All', 'Legs', 'Back', 'Chest', 'Shoulders', 'Abs', 'Cardio', 'Triceps', 'Biceps'];
+const EXERCISE_THUMBNAIL_VERSION = '20260608';
 
 const muscleGroupIcons: Record<string, any> = {
   'All': Dumbbell,
@@ -24,6 +26,11 @@ const muscleGroupIcons: Record<string, any> = {
   'Biceps': Zap,
 };
 
+/**
+ * Exercises page ("/exercises").
+ * Searchable, filterable browser of the full exercise library, grouped by
+ * muscle group. Tapping an exercise opens its detail page.
+ */
 export default function Exercises() {
   const navigate = useNavigate();
   const { getText } = useSettings();
@@ -31,6 +38,7 @@ export default function Exercises() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
 
+  /** Format an ISO date as a friendly relative label (e.g. "2 days ago"). */
   const formatLastUsed = (dateString: string) => {
     if (!dateString) return 'Never';
     
@@ -74,6 +82,7 @@ export default function Exercises() {
     return filtered;
   }, [selectedMuscleGroup, searchQuery]);
 
+  /** Open the detail page for a chosen exercise (uses a slugified name in the URL). */
   const handleExerciseClick = (exercise: Exercise) => {
     const exerciseSlug = exercise.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
     navigate(`/exercises/${exerciseSlug}`);
@@ -81,6 +90,10 @@ export default function Exercises() {
 
   return (
     <div className="min-h-screen p-6 space-y-6">
+      <SEO
+        title="Exercise Library — Planik"
+        description="Browse 100+ strength, cardio, and mobility exercises organized by muscle group. Filter, search, and add them to your workout plans."
+      />
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button
@@ -88,6 +101,7 @@ export default function Exercises() {
           size="icon"
           onClick={() => navigate('/')}
           className="hover:bg-accent"
+          aria-label="Back to home"
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
@@ -100,6 +114,7 @@ export default function Exercises() {
           size="icon"
           onClick={() => setShowSearch(!showSearch)}
           className="hover:bg-accent"
+          aria-label={showSearch ? "Hide search" : "Search exercises"}
         >
           {showSearch ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
         </Button>
@@ -169,11 +184,20 @@ export default function Exercises() {
           >
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
+                {/* First 8 thumbnails are above-the-fold on most devices — eager-load
+                    with high fetch priority. The rest lazy-load as the user scrolls,
+                    keeping the initial paint near-instant even on cold launches. */}
                 <img
-                  src={exercise.thumbnail}
+                  src={`${exercise.thumbnail}?v=${EXERCISE_THUMBNAIL_VERSION}`}
                   alt={exercise.name}
+                  width={48}
+                  height={48}
+                  loading={index < 8 ? 'eager' : 'lazy'}
+                  {...({ fetchpriority: index < 8 ? 'high' : 'low' } as any)}
+                  decoding="async"
                   className="w-12 h-12 rounded-lg object-cover bg-muted"
                 />
+
                 <div className="flex-1">
                   <h3 className="font-semibold text-foreground">{exercise.name}</h3>
                   <div className="flex flex-wrap gap-1 mt-1">

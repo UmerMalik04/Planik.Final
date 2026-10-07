@@ -4,21 +4,28 @@ interface SplashScreenProps {
   onComplete: () => void;
 }
 
+/**
+ * Brand splash. It is rendered as an OVERLAY on top of the already-mounted app
+ * so route chunks, auth and data all load behind it — by the time it fades out
+ * the underlying screen is fully painted, so tapping into the app feels instant.
+ */
+
 export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false);
-      setTimeout(onComplete, 300); // Wait for fade out animation
-    }, 5000);
+      onComplete();
+    }, 900);
 
     return () => clearTimeout(timer);
   }, [onComplete]);
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-t from-purple-600 via-pink-500 to-orange-400 transition-opacity duration-300 ${
+      aria-hidden="true"
+      className={`fixed inset-0 z-50 pointer-events-none flex flex-col items-center justify-center bg-gradient-to-t from-purple-600 via-pink-500 to-orange-400 transition-opacity duration-300 ${
         isVisible ? 'opacity-100' : 'opacity-0'
       }`}
     >

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import UserProfile from './UserProfile';
 import { useSettings } from "@/contexts/SettingsContext";
+import { preloadPath } from "@/lib/routePreload";
 
 interface LayoutProps {
   children: ReactNode;
@@ -47,9 +48,10 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header with user profile */}
-      <header className="bg-card border-b border-border px-4 py-3">
+      <header className="bg-card border-b border-border px-4 py-3" role="banner">
         <div className="flex justify-between items-center">
-          <h1 className="text-xl font-bold text-foreground">Planik</h1>
+          {/* Brand mark — not a heading; each route owns its own <h1>. */}
+          <span className="text-xl font-bold text-foreground" aria-label="Planik home">Planik</span>
           <UserProfile />
         </div>
       </header>
@@ -71,6 +73,10 @@ export default function Layout({ children }: LayoutProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate(item.path)}
+                // Start downloading the target chunk as the finger lands, so
+                // the screen is usually ready before the tap completes.
+                onPointerDown={() => preloadPath(item.path)}
+                onMouseEnter={() => preloadPath(item.path)}
                 className={`flex flex-col items-center gap-1 p-2 h-auto ${
                   isActive ? 'text-primary' : 'text-muted-foreground'
                 }`}

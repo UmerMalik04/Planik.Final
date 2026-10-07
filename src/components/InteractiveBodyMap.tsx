@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useWorkoutStore } from '@/stores/useWorkoutStore';
+import { useSettings } from '@/contexts/SettingsContext';
 import { Activity, TrendingUp, TrendingDown, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import useEmblaCarousel from 'embla-carousel-react';
@@ -46,63 +47,64 @@ interface MuscleGroupOverlayProps {
 
 function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
   const { getExerciseHistory, workoutSessions } = useWorkoutStore();
+  const { formatWeight } = useSettings();
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
   const [currentSlide, setCurrentSlide] = useState(0);
   
-  // Get muscle-specific exercises based on muscle group
+  // Get muscle-specific exercises based on muscle group (weights in kg)
   const getExercisesForMuscle = (muscle: string) => {
     const exerciseMap = {
       chest: [
         { name: 'Push-ups', sets: 3, reps: 12, weight: 0 },
-        { name: 'Bench Press', sets: 4, reps: 8, weight: 135 },
-        { name: 'Incline Dumbbell Press', sets: 3, reps: 10, weight: 60 },
-        { name: 'Chest Flyes', sets: 3, reps: 12, weight: 25 }
+        { name: 'Bench Press', sets: 4, reps: 8, weight: 60 },
+        { name: 'Incline Dumbbell Press', sets: 3, reps: 10, weight: 27 },
+        { name: 'Chest Flyes', sets: 3, reps: 12, weight: 11 }
       ],
       shoulders: [
-        { name: 'Shoulder Press', sets: 3, reps: 10, weight: 40 },
-        { name: 'Lateral Raises', sets: 3, reps: 12, weight: 15 },
-        { name: 'Front Raises', sets: 3, reps: 12, weight: 15 },
-        { name: 'Rear Delt Flyes', sets: 3, reps: 12, weight: 12 }
+        { name: 'Shoulder Press', sets: 3, reps: 10, weight: 18 },
+        { name: 'Lateral Raises', sets: 3, reps: 12, weight: 7 },
+        { name: 'Front Raises', sets: 3, reps: 12, weight: 7 },
+        { name: 'Rear Delt Flyes', sets: 3, reps: 12, weight: 5 }
       ],
       arms: [
-        { name: 'Bicep Curls', sets: 3, reps: 12, weight: 25 },
+        { name: 'Bicep Curls', sets: 3, reps: 12, weight: 11 },
         { name: 'Tricep Dips', sets: 3, reps: 10, weight: 0 },
-        { name: 'Hammer Curls', sets: 3, reps: 10, weight: 25 },
-        { name: 'Close-Grip Bench Press', sets: 3, reps: 8, weight: 115 }
+        { name: 'Hammer Curls', sets: 3, reps: 10, weight: 11 },
+        { name: 'Close-Grip Bench Press', sets: 3, reps: 8, weight: 52 }
       ],
       forearms: [
-        { name: 'Wrist Curls', sets: 3, reps: 15, weight: 15 },
-        { name: 'Reverse Wrist Curls', sets: 3, reps: 15, weight: 10 },
-        { name: 'Farmer\'s Walk', sets: 3, reps: 30, weight: 40 },
-        { name: 'Hammer Curls', sets: 3, reps: 12, weight: 25 }
+        { name: 'Wrist Curls', sets: 3, reps: 15, weight: 7 },
+        { name: 'Reverse Wrist Curls', sets: 3, reps: 15, weight: 5 },
+        { name: 'Farmer\'s Walk', sets: 3, reps: 30, weight: 18 },
+        { name: 'Hammer Curls', sets: 3, reps: 12, weight: 11 }
       ],
       abs: [
         { name: 'Crunches', sets: 3, reps: 20, weight: 0 },
         { name: 'Planks', sets: 3, reps: 60, weight: 0 },
-        { name: 'Russian Twists', sets: 3, reps: 20, weight: 10 },
+        { name: 'Russian Twists', sets: 3, reps: 20, weight: 5 },
         { name: 'Mountain Climbers', sets: 3, reps: 30, weight: 0 }
       ],
       back: [
         { name: 'Pull-ups', sets: 3, reps: 8, weight: 0 },
-        { name: 'Barbell Rows', sets: 4, reps: 8, weight: 95 },
-        { name: 'Lat Pulldowns', sets: 3, reps: 10, weight: 80 },
-        { name: 'Deadlifts', sets: 4, reps: 6, weight: 185 }
+        { name: 'Barbell Rows', sets: 4, reps: 8, weight: 43 },
+        { name: 'Lat Pulldowns', sets: 3, reps: 10, weight: 36 },
+        { name: 'Deadlifts', sets: 4, reps: 6, weight: 84 }
       ],
       quads: [
-        { name: 'Squats', sets: 4, reps: 8, weight: 155 },
-        { name: 'Leg Press', sets: 3, reps: 12, weight: 200 },
-        { name: 'Lunges', sets: 3, reps: 12, weight: 30 },
-        { name: 'Leg Extensions', sets: 3, reps: 12, weight: 60 }
+        { name: 'Squats', sets: 4, reps: 8, weight: 70 },
+        { name: 'Leg Press', sets: 3, reps: 12, weight: 90 },
+        { name: 'Lunges', sets: 3, reps: 12, weight: 14 },
+        { name: 'Leg Extensions', sets: 3, reps: 12, weight: 27 }
       ],
       glutes: [
-        { name: 'Hip Thrusts', sets: 3, reps: 12, weight: 135 },
-        { name: 'Bulgarian Split Squats', sets: 3, reps: 10, weight: 25 },
-        { name: 'Glute Bridges', sets: 3, reps: 15, weight: 45 },
+        { name: 'Hip Thrusts', sets: 3, reps: 12, weight: 60 },
+        { name: 'Bulgarian Split Squats', sets: 3, reps: 10, weight: 11 },
+        { name: 'Glute Bridges', sets: 3, reps: 15, weight: 20 },
         { name: 'Clamshells', sets: 3, reps: 15, weight: 0 }
       ],
       calves: [
-        { name: 'Calf Raises', sets: 4, reps: 15, weight: 45 },
-        { name: 'Seated Calf Raises', sets: 3, reps: 15, weight: 35 },
+        { name: 'Calf Raises', sets: 4, reps: 15, weight: 20 },
+        { name: 'Seated Calf Raises', sets: 3, reps: 15, weight: 16 },
         { name: 'Jump Rope', sets: 3, reps: 60, weight: 0 },
         { name: 'Box Jumps', sets: 3, reps: 10, weight: 0 }
       ]
@@ -266,7 +268,7 @@ function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
     const crop = crops[muscleKey] || { x: 0, y: 0, width: 10, height: 50 };
     
     return {
-      backgroundImage: `url(/images/body-map-background.png)`,
+      backgroundImage: `url(/uploads/bb665430-4ad6-4640-b01c-96cdd7a186be.png)`,
       backgroundPosition: `-${crop.x}% -${crop.y}%`,
       backgroundSize: '1000% 200%',
       width: '100%',
@@ -336,7 +338,7 @@ function MuscleGroupOverlay({ muscleGroup, onClose }: MuscleGroupOverlayProps) {
                         <p className="font-medium text-sm">{exercise.name}</p>
                         <p className="text-xs text-muted-foreground">
                           {exercise.sets} sets × {exercise.reps} reps
-                          {exercise.weight > 0 && ` @ ${exercise.weight}lbs`}
+                          {exercise.weight > 0 && ` @ ${formatWeight(exercise.weight)}`}
                         </p>
                       </div>
                     </div>

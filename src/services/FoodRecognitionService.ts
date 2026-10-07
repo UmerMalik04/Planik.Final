@@ -1,5 +1,28 @@
+/**
+ * FoodRecognitionService — turns a food photo into a nutrition estimate.
+ *
+ * Primary path (`recognizeFood`):
+ *   1. Down-scale + JPEG-compress the image client-side (~768 px max) so
+ *      we ship the smallest payload that still preserves enough detail to
+ *      tell Biryani from Pulao.
+ *   2. POST it (base64) to the `recognize-food` Supabase Edge Function,
+ *      which calls the Google Gemini API directly.
+ *   3. Return a normalised FoodItem with calories + macros.
+ *
+ * Secondary paths (kept for fallback / experimentation):
+ *   - `recognizeWithSpoonacular` — direct Spoonacular classify+nutrition API,
+ *     only used if the user supplies their own key.
+ *   - `analyzeImageVisually` — naive offline classifier based on average
+ *     pixel colour. Never very accurate, but works fully offline as a
+ *     last resort.
+ *
+ * Auth: the edge function requires a valid Supabase session JWT, so we
+ * check `auth.getSession()` first and bail out with a clear message
+ * instead of letting the function 401.
+ */
 import { supabase } from '@/integrations/supabase/client';
 
+/** Normalised result shape returned to UI components. */
 export interface FoodItem {
   name: string;
   confidence: number;
@@ -20,96 +43,90 @@ export class FoodRecognitionService {
   }
 
   static async recognizeFood(imageFile: File): Promise<FoodItem> {
-    try {
-      console.log('Starting food recognition with AI...');
-      
-      // Check file size (limit to 2MB for faster processing)
-      const MAX_SIZE = 2 * 1024 * 1024; // 2MB
-      if (imageFile.size > MAX_SIZE) {
-        console.log('Compressing large image...');
-        imageFile = await this.compressImage(imageFile, MAX_SIZE);
-      }
-      
-      // Convert image to base64
-      const base64Image = await this.fileToBase64(imageFile);
-      
-      // Call the edge function for AI recognition with authentication
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('User must be authenticated to use food recognition');
-      }
+    const t0 = performance.now();
 
-      console.log('Sending request to AI...');
-      const { data, error } = await supabase.functions.invoke('recognize-food', {
-        body: { imageBase64: base64Image }
-      });
+    // Prepare the payload and read the session concurrently — the session read
+    // hits local storage, so it should never sit behind image encoding.
+    const [base64Image, sessionResult] = await Promise.all([
+      this.toCompressedDataUrl(imageFile),
+      supabase.auth.getSession(),
+    ]);
 
-      if (error) {
-        console.error('Edge function error:', error);
-        throw error;
-      }
-      
-      console.log('AI Response:', data);
-      
-      // Return the data or fallback
-      if (data && data.name && data.calories) {
-        return {
-          name: data.name,
-          confidence: data.confidence || 0.5,
-          calories: data.calories,
-          protein: data.protein || 0,
-          carbs: data.carbs || 0,
-          fat: data.fat || 0,
-          fiber: data.fiber || 0,
-          sugar: data.sugar || 0
-        };
-      }
-      
-      return data.fallback || this.getFallbackFood();
-    } catch (error) {
-      console.error('Error recognizing food:', error);
-      return this.getFallbackFood();
+    if (!sessionResult.data.session) {
+      throw new Error('Please sign in to use food recognition');
     }
+
+    const { data, error } = await supabase.functions.invoke('recognize-food', {
+      body: { imageBase64: base64Image }
+    });
+
+    console.log(`Food recognition round-trip: ${Math.round(performance.now() - t0)}ms`);
+
+    if (error) {
+      console.error('Edge function error:', error);
+      throw new Error(error.message || 'Food recognition failed');
+    }
+
+    if (!data || !data.name) {
+      throw new Error('No food detected. Try a clearer photo.');
+    }
+
+    if (data.name === 'Unrecognized') {
+      throw new Error("Couldn't recognize this food. Try a clearer photo or different angle.");
+    }
+
+    return {
+      name: data.name,
+      confidence: data.confidence || 0.5,
+      calories: Math.round(data.calories || 0),
+      protein: data.protein || 0,
+      carbs: data.carbs || 0,
+      fat: data.fat || 0,
+      fiber: data.fiber || 0,
+      sugar: data.sugar || 0,
+    };
   }
 
-  private static async compressImage(file: File, maxSize: number): Promise<File> {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          
-          // Calculate new dimensions (max 800px width/height)
-          const maxDim = 800;
-          if (width > height && width > maxDim) {
-            height = (height * maxDim) / width;
-            width = maxDim;
-          } else if (height > maxDim) {
-            width = (width * maxDim) / height;
-            height = maxDim;
-          }
-          
-          canvas.width = width;
-          canvas.height = height;
-          
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
-          
-          canvas.toBlob((blob) => {
-            if (blob) {
-              resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-            } else {
-              resolve(file);
-            }
-          }, 'image/jpeg', 0.7);
-        };
-        img.src = e.target?.result as string;
-      };
-      reader.readAsDataURL(file);
-    });
+  /**
+   * Down-scale + JPEG-encode straight to a data URL.
+   *
+   * - `createImageBitmap(..., { imageOrientation: 'from-image' })` bakes the
+   *   EXIF rotation into the pixels, so a photo taken sideways or upside-down
+   *   reaches the model the right way up. This is what makes "any angle" work.
+ * - 1024 px on the long edge at q0.8 keeps the detail needed to tell Biryani
+ *   from Pulao while keeping the upload small enough for mobile data.
+   * - Single decode + single encode (no FileReader round-trip) so the client
+   *   side of the pipeline costs tens of milliseconds, not hundreds.
+   */
+  private static async toCompressedDataUrl(file: File): Promise<string> {
+    // 1024 px @ q0.8 keeps gravy texture, garnish and bread detail visible —
+    // needed to tell e.g. Karahi from Korma or Daal Makhani from Rajma —
+    // while still being a modest upload on mobile data.
+    const MAX_DIM = 1024;
+    const QUALITY = 0.8;
+
+
+
+    try {
+      const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      const scale = Math.min(1, MAX_DIM / Math.max(bitmap.width, bitmap.height));
+      const width = Math.round(bitmap.width * scale);
+      const height = Math.round(bitmap.height * scale);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas unavailable');
+      ctx.drawImage(bitmap, 0, 0, width, height);
+      bitmap.close();
+
+      return canvas.toDataURL('image/jpeg', QUALITY);
+    } catch (err) {
+      // Older WebViews without createImageBitmap options: ship the original.
+      console.warn('Image preprocessing fell back to raw upload:', err);
+      return this.fileToBase64(file);
+    }
   }
 
   static async recognizeWithSpoonacular(imageFile: File, apiKey: string): Promise<FoodItem> {

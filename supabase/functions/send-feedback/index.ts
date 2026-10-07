@@ -15,9 +15,14 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-interface FeedbackRequest {
-  feedback: string;
-  userEmail?: string;
+// Escape HTML entities to prevent HTML/content injection in outgoing emails
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -45,6 +50,8 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const { feedback, userEmail } = validation.data;
+    const safeFeedback = escapeHtml(feedback);
+    const safeUserEmail = userEmail ? escapeHtml(userEmail) : "";
 
     const emailResponse = await resend.emails.send({
       from: "Planik Feedback <onboarding@resend.dev>",
@@ -57,16 +64,16 @@ const handler = async (req: Request): Promise<Response> => {
             New Feedback Received
           </h2>
           
-          ${userEmail ? `
+          ${safeUserEmail ? `
           <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
-            <strong>From:</strong> ${userEmail}
+            <strong>From:</strong> ${safeUserEmail}
           </div>
           ` : ''}
           
           <div style="margin: 20px 0;">
             <h3 style="color: #555;">Feedback:</h3>
             <div style="padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 5px;">
-              <p style="margin: 0; white-space: pre-wrap;">${feedback}</p>
+              <p style="margin: 0; white-space: pre-wrap;">${safeFeedback}</p>
             </div>
           </div>
           
@@ -90,7 +97,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in send-feedback function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Failed to send feedback" }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

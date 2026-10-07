@@ -1,3 +1,9 @@
+/**
+ * AuthCallback page ("/auth/callback").
+ * Redirect target after OAuth (e.g. Google). Reads the session Supabase
+ * created from the URL and routes the user into the app or back to /auth.
+ */
+
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,34 +14,32 @@ export default function AuthCallback() {
   const { toast } = useToast();
 
   useEffect(() => {
+    /** Resolve the post-OAuth session and redirect accordingly. */
     const handleAuthCallback = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
-        
+
         if (error) {
           toast({
-            title: "Authentication Error",
+            title: 'Authentication Error',
             description: error.message,
-            variant: "destructive",
+            variant: 'destructive',
           });
           navigate('/auth');
           return;
         }
 
         if (data.session) {
-          toast({
-            title: "Welcome!",
-            description: "You have been logged in successfully.",
-          });
+          toast({ title: 'Welcome!', description: 'You have been logged in successfully.' });
           navigate('/');
         } else {
           navigate('/auth');
         }
       } catch (error) {
         toast({
-          title: "Error",
-          description: "An unexpected error occurred.",
-          variant: "destructive",
+          title: 'Error',
+          description: 'An unexpected error occurred.',
+          variant: 'destructive',
         });
         navigate('/auth');
       }
