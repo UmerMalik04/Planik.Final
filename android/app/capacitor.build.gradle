@@ -13,8 +13,6 @@ dependencies {
     implementation project(':capacitor-mlkit-barcode-scanning')
     implementation project(':capacitor-camera')
     implementation project(':capacitor-device')
-    implementation project(':capacitor-haptics')
-    implementation project(':capacitor-local-notifications')
     implementation project(':capacitor-preferences')
     implementation project(':codetrix-studio-capacitor-google-auth')
 
