@@ -15,7 +15,7 @@ public class StepCounterPlugin: CAPPlugin, CAPBridgedPlugin {
     
     private let healthStore = HKHealthStore()
     
-    @objc func requestPermissions(_ call: CAPPluginCall) {
+    @objc override public func requestPermissions(_ call: CAPPluginCall) {
         print("StepCounterPlugin: requestPermissions called")
         
         // Check if HealthKit is available
@@ -115,9 +115,8 @@ public class StepCounterPlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
         
-        let dateFormatter = ISO8601DateFormatter()
-        guard let startDate = dateFormatter.date(from: startDateString),
-              let endDate = dateFormatter.date(from: endDateString) else {
+        guard let startDate = Self.parseISODate(startDateString),
+              let endDate = Self.parseISODate(endDateString) else {
             call.reject("Invalid date format. Use ISO8601 format")
             return
         }
@@ -148,6 +147,14 @@ public class StepCounterPlugin: CAPPlugin, CAPBridgedPlugin {
         }
         
         healthStore.execute(query)
+    }
+
+    /// Accepts JavaScript's toISOString() output ("2026-10-06T00:00:00.000Z"),
+    /// which a default ISO8601DateFormatter rejects because of the milliseconds.
+    private static func parseISODate(_ value: String) -> Date? {
+        let withFraction = ISO8601DateFormatter()
+        withFraction.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return withFraction.date(from: value) ?? ISO8601DateFormatter().date(from: value)
     }
 
     /// Daily step totals for a whole calendar month in ONE HealthKit query.

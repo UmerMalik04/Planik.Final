@@ -1,1 +1,0 @@
-import{W as e}from"./index-Bwdo5VR3.js";class n extends e{async requestPermissions(){return console.log("Step counter not available on web"),{granted:!1}}async getStepsToday(){return console.log("Step counter not available on web"),{steps:0}}async getStepsForDateRange(){return console.log("Step counter not available on web"),{steps:0}}}export{n as StepCounterWeb};
