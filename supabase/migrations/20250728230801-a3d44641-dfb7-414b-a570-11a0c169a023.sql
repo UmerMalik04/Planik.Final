@@ -16,7 +16,7 @@ BEGIN
   reset_token := NEW.confirmation_token;
   
   -- Build the reset URL
-  reset_url := 'https://ismbryaopmkffztxbpoi.supabase.co/auth/v1/verify?token=' || reset_token || '&type=recovery&redirect_to=' || 'https://preview--planik-flex-flow.lovable.app/auth';
+  reset_url := 'https://ismbryaopmkffztxbpoi.supabase.co/auth/v1/verify?token=' || reset_token || '&type=recovery&redirect_to=' || 'https://planik.org.uk/auth';
   
   -- Call our Resend email function
   PERFORM net.http_post(
