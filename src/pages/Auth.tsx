@@ -22,8 +22,7 @@ import { AppleAuthService } from '@/services/AppleAuthService';
 /**
  * Return a safe post-auth redirect target. Reads ?next=… from the current URL
  * and only accepts a same-origin relative path (must start with "/" and NOT
- * with "//"). Used so the MCP OAuth consent screen at /.lovable/oauth/consent
- * can bring the user back after signing in.
+ * with "//"), so a page that sent the user to sign in can bring them back.
  */
 function safeNextPath(fallback = "/"): string {
   try {
