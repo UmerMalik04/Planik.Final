@@ -27,7 +27,6 @@ export type RouteKey =
   | 'help'
   | 'healthKitSettings'
   | 'privacy'
-  | 'oauthConsent'
   | 'notFound';
 
 type Loader = () => Promise<{ default: React.ComponentType<any> }>;
@@ -53,7 +52,6 @@ export const routeLoaders: Record<RouteKey, Loader> = {
   help: () => import('@/pages/Help'),
   healthKitSettings: () => import('@/pages/HealthKitSettings'),
   privacy: () => import('@/pages/Privacy'),
-  oauthConsent: () => import('@/pages/OAuthConsent'),
   notFound: () => import('@/pages/NotFound'),
 };
 
