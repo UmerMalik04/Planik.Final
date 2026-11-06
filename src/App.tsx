@@ -58,7 +58,6 @@ const StepHistory = lazy(routeLoaders.stepHistory);
 const Help = lazy(routeLoaders.help);
 const HealthKitSettings = lazy(routeLoaders.healthKitSettings);
 const Privacy = lazy(routeLoaders.privacy);
-const OAuthConsent = lazy(routeLoaders.oauthConsent);
 const NotFound = lazy(routeLoaders.notFound);
 
 
@@ -170,7 +169,6 @@ function AppRoutes() {
         <Route path="/auth" element={<Auth />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/privacy" element={<Privacy />} />
-        <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
 
         {/* ---- Protected routes that share the persistent Layout shell ---- */}
         <Route element={<ProtectedLayout />}>
